@@ -11,7 +11,7 @@
 			"program": "${fileDirname}/${fileBasenameNoExtension}",
 			"args": ["fname", "2000"],
 			"stopAtEntry": true,
-			"cwd": "${workspaceFolder}",
+			"cwd": "${fileDirname}",
 			"environment": [],
 			"externalConsole": false,
 			"MIMode": "gdb",
@@ -26,7 +26,8 @@
 					"text": "-gdb-set disassembly-flavor intel",
 					"ignoreFailures": true
 				}
-			]
+			],
+			"preLaunchTask": "C/C++: gcc build active file"
 		}
 	]
 }
