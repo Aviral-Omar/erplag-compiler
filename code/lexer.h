@@ -1,4 +1,7 @@
 #include <stdio.h>
 
-extern const int bufferSize;
-extern const FILE* fp;
+#include "lexerDef.h"
+
+TokenInfo getNextToken();
+
+void removeComments(char *testcaseFile, char *cleanFile);

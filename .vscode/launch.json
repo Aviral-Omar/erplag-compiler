@@ -9,7 +9,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${fileDirname}/${fileBasenameNoExtension}",
-			"args": ["fname", "2000"],
+			"args": ["fname", "4096"],
 			"stopAtEntry": true,
 			"cwd": "${fileDirname}",
 			"environment": [],

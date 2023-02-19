@@ -15,8 +15,13 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	// All of these are global variables declared in lexerDef.h file
 	const FILE *fp = openFile(argv[1]);
 	const int bufferSize = checkBufferSize(argv[2]);
+
+	char buf1[bufferSize], buf2[bufferSize];
+	int lexemeBegin = 0;
+	int forward = 0;
 
 	return 0;
 }

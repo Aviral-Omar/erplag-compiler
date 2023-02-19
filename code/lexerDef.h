@@ -67,3 +67,10 @@ typedef struct {
 		float floatValue;
 	} data;
 } TokenInfo;
+
+extern const FILE *fp;
+extern const int bufferSize;
+extern char buf1[];
+extern char buf2[];
+extern int lexemeBegin;
+extern int forward;

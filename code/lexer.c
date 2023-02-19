@@ -1,11 +1,7 @@
+#include "lexer.h"
+
 #include <stdio.h>
 
-#include "lexerDef.h"
-
-
-FILE *getStream(FILE *fp)
-{
-}
 
 TokenInfo getNextToken()
 {
