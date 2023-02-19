@@ -1,3 +1,5 @@
+#ifndef LEXER_DEF
+#define LEXER_DEF
 typedef enum {
 	INTEGER,
 	REAL,
@@ -68,9 +70,18 @@ typedef struct {
 	} data;
 } TokenInfo;
 
-extern const FILE *fp;
+typedef enum {
+	FIRST,
+	SECOND
+} CurrentBuffer;
+
+extern const FILE* fp;
 extern const int bufferSize;
 extern char buf1[];
 extern char buf2[];
-extern int lexemeBegin;
-extern int forward;
+extern char* lexemeBegin;
+extern char* forward;
+extern int lineNumber;
+extern CurrentBuffer currBuffer;
+
+#endif

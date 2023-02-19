@@ -1,6 +1,6 @@
-#include <stdio.h>
+void getStream();
 
-#include "lexerDef.h"
+void checkOverflow();
 
 TokenInfo getNextToken();
 
