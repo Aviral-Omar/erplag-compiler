@@ -1,4 +1,4 @@
-enum Token {
+typedef enum {
 	INTEGER,
 	REAL,
 	BOOLEAN,
@@ -56,7 +56,14 @@ enum Token {
 	BO,
 	BC,
 	COMMENTMARK
-};
-/* TODO Delete
-https://www.geeksforgeeks.org/enumeration-enum-c/
-*/
+} Token;
+
+typedef struct {
+	Token token;
+	unsigned int lineNumber;
+	union lexemeData {
+		char lexeme[20];
+		int intValue;
+		float floatValue;
+	} data;
+} TokenInfo;
