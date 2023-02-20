@@ -1,5 +1,7 @@
 #include "lexerDef.h"
 
+void clearHeap();
+
 void getStream();
 
 void incrementForward();

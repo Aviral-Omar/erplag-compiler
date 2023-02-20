@@ -40,11 +40,12 @@ int main(int argc, char *argv[])
 
 		printf("%d ", tk->token);
 		fflush(stdout);
+
+		/*TODO remove this*/
+		free(tk);
 	}
 
-	free(buf1);
-	free(buf2);
-	deleteLookupTable();
+	clearHeap();
 
 	return 0;
 }

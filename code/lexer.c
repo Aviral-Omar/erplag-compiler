@@ -15,6 +15,13 @@ char *forward;
 int currLine = 1;
 int charsRead = 0;
 
+void clearHeap()
+{
+	free(buf1);
+	free(buf2);
+	deleteLookupTable();
+}
+
 void getStream()
 {
 	// Reads stream into buf1 or buf2
@@ -56,11 +63,40 @@ TokenInfo *getNextToken()
 	TokenInfo *tk = (TokenInfo *)malloc(sizeof(TokenInfo));
 
 	switch (*lexemeBegin) {
-	case '+': {
+	case '+':
 		tk->token = PLUS;
 		incrementForward();
 		break;
-	}
+	case '-':
+		break;
+	case '*':
+		break;
+	case '/':
+		break;
+	case '<':
+		break;
+	case '>':
+		break;
+	case '=':
+		break;
+	case '!':
+		break;
+	case ':':
+		break;
+	case '.':
+		break;
+	case ';':
+		break;
+	case ',':
+		break;
+	case '[':
+		break;
+	case ']':
+		break;
+	case '(':
+		break;
+	case ')':
+		break;
 	// Handles case of identifier
 	default: {
 		int charsRead = 0;
@@ -90,6 +126,10 @@ TokenInfo *getNextToken()
 			tk->token = ID;
 		} else if (isdigit(*lexemeBegin)) {
 			/*TODO handle numbers here*/
+		} else {
+			printf("Invalid character in line %d\n", currLine);
+			clearHeap();
+			exit(EXIT_FAILURE);
 		}
 	}
 	}
