@@ -3,6 +3,9 @@
 
 #include "lexer.h"
 #include "lexerDef.h"
+#include "lookupTable.h"
+
+#define MAX_BUFFER_SIZE 100000
 
 FILE *openFile(char *fileName);
 int checkBufferSize(char *buf);
@@ -27,13 +30,16 @@ int main(int argc, char *argv[])
 	CurrentBuffer currBuffer = FIRST;
 
 	/* TODO Move to parser function*/
+	populateLookupTable();
 	// First read is unconditional
 	getStream();
 
-	// Reading and throwing away tokens for testing
+	// TODO Reading and throwing away tokens for testing
 	while (*lexemeBegin != EOF) {
-		TokenInfo tk = getNextToken();
+		// TODO Store tokens in LinkedList in future
+		TokenInfo *tk = getNextToken();
 	}
+	deleteTable();
 
 	return 0;
 }
@@ -59,7 +65,7 @@ int checkBufferSize(char *buf)
 		exit(EXIT_FAILURE);
 	}
 	/* TODO buffer size check*/
-	if (size > 100000) {
+	if (size > MAX_BUFFER_SIZE) {
 		printf("Buffer size too large.\n");
 		exit(EXIT_FAILURE);
 	}

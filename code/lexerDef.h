@@ -1,5 +1,7 @@
 #ifndef LEXER_DEF
 #define LEXER_DEF
+
+#include "stdio.h"
 typedef enum {
 	INTEGER,
 	REAL,
@@ -64,7 +66,8 @@ typedef struct {
 	Token token;
 	unsigned int lineNumber;
 	union lexemeData {
-		char lexeme[20];
+		// TODO Storing as string for ease of conversion
+		char lexeme[21];
 		int intValue;
 		float floatValue;
 	} data;

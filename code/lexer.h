@@ -2,6 +2,6 @@ void getStream();
 
 void checkOverflow();
 
-TokenInfo getNextToken();
+TokenInfo *getNextToken();
 
 void removeComments(char *testcaseFile, char *cleanFile);

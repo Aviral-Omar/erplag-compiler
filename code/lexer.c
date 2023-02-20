@@ -1,7 +1,9 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "lexerDef.h"
+#include "lookupTable.h"
 
 void getStream()
 {
@@ -27,14 +29,32 @@ void checkOverflow()
 	}
 }
 
-TokenInfo getNextToken()
+TokenInfo *getNextToken()
 {
 	// keep getting tokens till EOF
-	/* TODO Might need dynamic allocation*/
-	TokenInfo tk;
-	switch (*forward) {
+	TokenInfo *tk = (TokenInfo *)malloc(sizeof(TokenInfo));
+	int charsRead = 0;
+
+	switch (*lexemeBegin) {
+	// Handles case of identifier
+	default: {
+		if (*lexemeBegin == '_' || isalpha(*lexemeBegin)) {
+			tk->data.lexeme[charsRead] = *lexemeBegin;
+			charsRead++;
+			forward++;
+			checkOverflow();
+			while (*forward == '_' || isalnum(*forward)) {
+				tk->data.lexeme[charsRead] = *forward;
+				charsRead++;
+				forward++;
+				checkOverflow();
+				if (charsRead > 20) {
+				}
+			}
+		}
 	}
-	/* TODO fix this*/
+	}
+
 	forward++;
 	checkOverflow();
 	lexemeBegin = forward;
