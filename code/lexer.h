@@ -1,6 +1,10 @@
+#include "lexerDef.h"
+
 void getStream();
 
-void checkOverflow();
+void incrementForward();
+
+void handleWhitespaces();
 
 TokenInfo *getNextToken();
 

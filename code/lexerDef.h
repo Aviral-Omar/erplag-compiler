@@ -1,7 +1,7 @@
 #ifndef LEXER_DEF
 #define LEXER_DEF
 
-#include "stdio.h"
+#include <stdio.h>
 typedef enum {
 	INTEGER,
 	REAL,
@@ -78,13 +78,14 @@ typedef enum {
 	SECOND
 } CurrentBuffer;
 
-extern const FILE* fp;
-extern const int bufferSize;
-extern char buf1[];
-extern char buf2[];
+extern FILE* fp;
+extern int bufferSize;
+extern char* buf1;
+extern char* buf2;
 extern char* lexemeBegin;
 extern char* forward;
-extern int lineNumber;
+extern int currLine;
+extern int charsRead;
 extern CurrentBuffer currBuffer;
 
 #endif

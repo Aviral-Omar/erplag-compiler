@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "lexer.h"
-#include "lexerDef.h"
 #include "lookupTable.h"
 
 #define MAX_BUFFER_SIZE 100000
@@ -19,27 +18,34 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// All of these are global variables declared in lexerDef.h file
-	const FILE *fp = openFile(argv[1]);
-	const int bufferSize = checkBufferSize(argv[2]);
-
-	char buf1[bufferSize], buf2[bufferSize];
-	char *lexemeBegin = 0;
-	char *forward = 0;
-	int lineNumber = 1;
-	CurrentBuffer currBuffer = FIRST;
+	// All of these are global variables declared in lexerDef.h file and defined in lexer.c
+	fp = openFile(argv[1]);
+	bufferSize = checkBufferSize(argv[2]);
+	buf1 = (char *)malloc(bufferSize * sizeof(char));
+	buf2 = (char *)malloc(bufferSize * sizeof(char));
+	lexemeBegin = (currBuffer == FIRST ? buf1 : buf2);
+	forward = lexemeBegin;
 
 	/* TODO Move to parser function*/
 	populateLookupTable();
 	// First read is unconditional
 	getStream();
-
+	// To remove initial whitespaces
+	handleWhitespaces();
 	// TODO Reading and throwing away tokens for testing
-	while (*lexemeBegin != EOF) {
+	// TODO eof is not a character
+	while (charsRead == bufferSize || lexemeBegin < (currBuffer == FIRST ? buf1 : buf2) + charsRead) {
 		// TODO Store tokens in LinkedList in future
+		// TODO free space used by token structs
 		TokenInfo *tk = getNextToken();
+
+		printf("%d ", tk->token);
+		fflush(stdout);
 	}
-	deleteTable();
+
+	free(buf1);
+	free(buf2);
+	deleteLookupTable();
 
 	return 0;
 }

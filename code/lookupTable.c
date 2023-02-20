@@ -1,12 +1,14 @@
 #include "lookupTable.h"
 
+#include <stdlib.h>
+
 KeywordPair* hashTable[TABLE_SIZE] = {NULL};
 
 int hash(char* key)
 {
 	int hashCode = -16;
 	for (int c = 0; key[c] != '\0'; c++)
-		hashCode += (key[c] - 'a');
+		hashCode += (key[c] - 'A');
 	return hashCode;
 }
 
@@ -23,6 +25,7 @@ void populateLookupTable()
 		// Used linear probing
 		while (hashTable[hashIndex])
 			hashIndex++;
+
 		KeywordPair* p = (KeywordPair*)malloc(sizeof(KeywordPair));
 		strcpy(p->keyword, keywords[i]);
 		p->token = tokens[i];
@@ -30,7 +33,7 @@ void populateLookupTable()
 	}
 }
 
-KeywordPair* search(char* key)
+KeywordPair* searchKeyword(char* key)
 {
 	int hashIndex = hash(key);
 	if (hashIndex < 0 || !hashTable[hashIndex])
@@ -46,7 +49,7 @@ KeywordPair* search(char* key)
 }
 
 /* TODO call at end of lexer */
-void deleteTable()
+void deleteLookupTable()
 {
 	for (int i = 0; i < TABLE_SIZE; i++) {
 		if (hashTable[i])

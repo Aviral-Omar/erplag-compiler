@@ -1,6 +1,6 @@
 #ifndef LOOKUP_TABLE
 #define LOOKUP_TABLE
-#include <stdlib.h>
+#include <string.h>
 
 #include "lexerDef.h"
 #define TABLE_SIZE 411
@@ -16,8 +16,8 @@ int hash(char* key);
 
 void populateLookupTable();
 
-KeywordPair* search(char* key);
+KeywordPair* searchKeyword(char* key);
 
-void deleteTable();
+void deleteLookupTable();
 
 #endif
