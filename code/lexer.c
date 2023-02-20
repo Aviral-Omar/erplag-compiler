@@ -54,11 +54,16 @@ TokenInfo *getNextToken()
 {
 	// keep getting tokens till EOF
 	TokenInfo *tk = (TokenInfo *)malloc(sizeof(TokenInfo));
-	int charsRead = 0;
 
 	switch (*lexemeBegin) {
+	case '+': {
+		tk->token = PLUS;
+		incrementForward();
+		break;
+	}
 	// Handles case of identifier
 	default: {
+		int charsRead = 0;
 		if (*lexemeBegin == '_' || isalpha(*lexemeBegin)) {
 			tk->data.lexeme[charsRead] = *lexemeBegin;
 			charsRead++;

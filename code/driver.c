@@ -33,7 +33,6 @@ int main(int argc, char *argv[])
 	// To remove initial whitespaces
 	handleWhitespaces();
 	// TODO Reading and throwing away tokens for testing
-	// TODO eof is not a character
 	while (charsRead == bufferSize || lexemeBegin < (currBuffer == FIRST ? buf1 : buf2) + charsRead) {
 		// TODO Store tokens in LinkedList in future
 		// TODO free space used by token structs
