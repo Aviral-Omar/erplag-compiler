@@ -8,10 +8,10 @@
 			"name": "(gdb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${fileDirname}/${fileBasenameNoExtension}",
-			"args": ["fname", "4096"],
+			"program": "${workspaceFolder}/code/a.out",
+			"args": ["test", "4096"],
 			"stopAtEntry": true,
-			"cwd": "${fileDirname}",
+			"cwd": "${workspaceFolder}/code",
 			"environment": [],
 			"externalConsole": false,
 			"MIMode": "gdb",
@@ -27,7 +27,7 @@
 					"ignoreFailures": true
 				}
 			],
-			"preLaunchTask": "C/C++: gcc build active file"
+			"preLaunchTask": "Build Project"
 		}
 	]
 }
