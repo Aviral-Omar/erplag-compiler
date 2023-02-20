@@ -10,7 +10,7 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/code/a.out",
 			"args": ["test", "4096"],
-			"stopAtEntry": true,
+			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}/code",
 			"environment": [],
 			"externalConsole": false,
