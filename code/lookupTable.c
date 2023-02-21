@@ -41,7 +41,7 @@ KeywordPair* searchKeyword(char* key)
 
 	// Linear Probing
 	while (hashTable[hashIndex]) {
-		if (strcmp(hashTable[hashIndex]->keyword, key))
+		if (!strcmp(hashTable[hashIndex]->keyword, key))
 			return hashTable[hashIndex];
 		hashIndex++;
 	}
