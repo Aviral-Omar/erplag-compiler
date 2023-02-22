@@ -4,7 +4,7 @@ void clearHeap();
 
 void getStream();
 
-void incrementForward();
+int incrementForward();
 
 void handleWhitespaces();
 
@@ -12,4 +12,4 @@ TokenInfo *getNextToken();
 
 void removeComments(char *testcaseFile, char *cleanFile);
 
-char * BUFEND();
+char *BUFEND();

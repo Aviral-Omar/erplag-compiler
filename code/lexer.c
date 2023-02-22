@@ -15,7 +15,8 @@ char *forward;
 int currLine = 1;
 int charsRead = 0;
 
-char* BUFEND(){
+char *BUFEND()
+{
 	return (currBuffer == FIRST ? buf1 : buf2) + charsRead;
 }
 
@@ -40,11 +41,12 @@ void getStream()
 			printf("Error closing file.\n");
 }
 
+// Returns 1 if EOF is reached, else returns 0
 int incrementForward()
 {
 	forward++;
-	if((charsRead < bufferSize)&&(forward == BUFEND())){
-		return 1; // error, EOF
+	if ((charsRead < bufferSize) && (forward == BUFEND())) {
+		return 1;  // error, EOF
 	}
 	if (forward - (currBuffer == FIRST ? buf1 : buf2) == bufferSize) {
 		// This toggles currBuffer between FIRST and SECOND
@@ -52,8 +54,7 @@ int incrementForward()
 		getStream();
 		forward = (currBuffer == FIRST ? buf1 : buf2);
 	}
-	return 0; // NO error
-
+	return 0;  // NO error
 }
 
 void handleWhitespaces()
@@ -61,20 +62,27 @@ void handleWhitespaces()
 	while (isblank(*forward) || *forward == '\n') {
 		if (*forward == '\n')
 			currLine++;
-		incrementForward();
+		if (incrementForward())
+			break;
 	}
 	lexemeBegin = forward;
 }
 
-int skipComment(){
-	while(forward < BUFEND()){
-		if(*forward == '*'){
-			incrementForward();
-			if((forward < BUFEND()) && (*forward == '*')) return 1;
+int skipComment()
+{
+	while (!incrementForward()) {
+		if (*forward == '\n')
+			currLine++;
+		else if (*forward == '*') {
+			if (incrementForward())
+				return 1;
+			if (*forward == '*') {
+				incrementForward();
+				return 0;
+			}
 		}
-		incrementForward();
 	}
-	return 0;
+	return 1;
 }
 
 TokenInfo *getNextToken()
@@ -82,7 +90,7 @@ TokenInfo *getNextToken()
 	// keep getting tokens till EOF
 	TokenInfo *tk = (TokenInfo *)malloc(sizeof(TokenInfo));
 	tk->lineNumber = currLine;
-	
+
 	switch (*lexemeBegin) {
 	case '+':
 		tk->token = PLUS;
@@ -93,104 +101,88 @@ TokenInfo *getNextToken()
 		incrementForward();
 		break;
 	case '*':
-		if(*forward == '*'){
-			incrementForward();
-			tk->token = COMMENTMARK;
-			if(skipComment()){
-				tk->token = COMMENTMARK;
-				incrementForward();
-			}
-			else{
-				printf("Lexical error: comment ending missing for comment starting at line %d\n",currLine);
+		if (incrementForward() || *forward != '*')
+			tk->token = MUL;
+		else {
+			free(tk);
+			tk = NULL;
+			if (skipComment()) {
+				printf("Lexical error: Comment ending missing for comment starting at line %d\n", currLine);
 				exit(EXIT_FAILURE);
 			}
 		}
-		else tk->token = MUL; 
 		break;
-
 	case '/':
 		tk->token = DIV;
 		incrementForward();
 		break;
 	case '<':
-		incrementForward();
-		if(*forward == '<'){
-			incrementForward();
-			if(*forward == '<'){
-				incrementForward();
-				tk->token = DRIVERDEF;
-			}
-			else tk->token = DEF;
-		}
-		else if(*forward == '='){
-			incrementForward();
+		if (incrementForward() || (*forward != '<' && *forward != '='))
+			tk->token = LT;
+		else if (*forward == '=') {
 			tk->token = LE;
+			incrementForward();
+		} else {
+			if (incrementForward() || *forward != '<')
+				tk->token = DEF;
+			else {
+				tk->token = DRIVERDEF;
+				incrementForward();
+			}
 		}
-		else tk->token = LT;
 		break;
 
 	case '>':
-		incrementForward();
-		if(*forward == '>'){
-			incrementForward();
-			if(*forward == '>'){
-				incrementForward();
-				tk->token = DRIVERENDDEF;
-			}
-			else tk->token = DRIVERDEF;
-		}
+		if (incrementForward() || (*forward != '>' && *forward != '='))
+			tk->token = GT;
 		else if (*forward == '=') {
-			incrementForward();
 			tk->token = GE;
+			incrementForward();
+		} else {
+			if (incrementForward() || *forward != '>')
+				tk->token = ENDDEF;
+			else {
+				tk->token = DRIVERENDDEF;
+				incrementForward();
+			}
 		}
-		else tk->token = GT;
 		break;
 
 	case '=':
-		incrementForward();
-		if(*forward == '='){
-			incrementForward();
-			tk->token = EQ;
-		}
-		else{
-			printf("Lexical error in line %d\n",currLine);
+		if (incrementForward() || *forward != '=') {
+			printf("Lexical error in line %d\n", currLine);
 			exit(EXIT_FAILURE);
+		} else {
+			tk->token = EQ;
+			incrementForward();
 		}
 		break;
 	case '!':
-		incrementForward();
-		if(*forward == '='){
-			incrementForward();
-			tk->token = NE;
-		}
-		else{
-			printf("Lexical error in line %d\n",currLine);
+		if (incrementForward() || *forward != '=') {
+			printf("Lexical error in line %d\n", currLine);
 			exit(EXIT_FAILURE);
+		} else {
+			tk->token = NE;
+			incrementForward();
 		}
 		break;
 	case ':':
-		incrementForward();
-		if(*forward == '='){
-			incrementForward();
-			tk->token = ASSIGNOP;
-		}
-		else{
+		if (incrementForward() || *forward != '=') {
 			tk->token = COLON;
-		}
-		break;
-
-	case '.':
-		incrementForward();
-		if(*forward == '.'){
+		} else {
+			tk->token = ASSIGNOP;
 			incrementForward();
-			tk->token = RANGEOP;
-		}
-		else{
-			printf("Lexical error in line %d\n",currLine);
-			exit(EXIT_FAILURE);
 		}
 		break;
-
+	case '.':
+		if (incrementForward() || *forward != '.') {
+			printf("Lexical error in line %d\n", currLine);
+			exit(EXIT_FAILURE);
+		} else {
+			tk->token = RANGEOP;
+			incrementForward();
+		}
+		break;
 	case ';':
 		tk->token = SEMICOL;
 		incrementForward();
@@ -215,7 +207,7 @@ TokenInfo *getNextToken()
 		tk->token = BC;
 		incrementForward();
 		break;
-	
+
 	// Handles case of identifier
 	default: {
 		int charsRead = 0;
@@ -245,10 +237,10 @@ TokenInfo *getNextToken()
 		} else if (isdigit(*lexemeBegin)) {
 			/*TODO handle numbers here*/
 			incrementForward();
-			while(isdigit(*forward)){
+			while (isdigit(*forward)) {
 				incrementForward();
 			}
-			//TODO check length limit of NUM
+			// TODO check length limit of NUM
 			tk->token = NUM;
 			// tk->intValue = par
 
@@ -260,7 +252,6 @@ TokenInfo *getNextToken()
 	}
 	}
 
-	lexemeBegin = forward;
 	handleWhitespaces();
 	return tk;
 }
@@ -303,38 +294,6 @@ void removeComments(char *testcaseFile, char *cleanFile)
 			p++;
 		}
 	}
-
-	/* TODO remove
-	// Read input file line by line
-	while (fgets(buffer, sizeof(buffer), inFile) != NULL) {
-		int i, len = strlen(buffer);
-		char newl = '\n';
-		// Check for start of comment
-		for (i = 0; i < len - 1; i++) {
-			if (buffer[i] == '*' && buffer[i + 1] == '*') {
-				insideComment = 1;
-				fprintf(outFile, "%c", newl);
-				break;
-			}
-		}
-
-		// Write non-comment lines to output file
-		if (!insideComment) {
-			fprintf(outFile, "%s", buffer);
-		}
-
-		// Check for end of comment
-		for (i = 0; i < len - 1; i++) {
-			if (buffer[i] == '*' && buffer[i + 1] == '*' && insideComment) {
-				insideComment = 0;
-				break;
-			}
-		}
-
-		// Increment line number
-		lineNum++;
-	}
-	*/
 
 	// Close input and output files
 	fclose(inFile);
