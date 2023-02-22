@@ -1,6 +1,7 @@
-#include "lookupTable.h"
-
 #include <stdlib.h>
+#include <string.h>
+
+#include "lookupTableDef.h"
 
 KeywordPair* hashTable[TABLE_SIZE] = {NULL};
 
