@@ -33,7 +33,8 @@ int main(int argc, char *argv[])
 	// To remove initial whitespaces
 	handleWhitespaces();
 	// TODO Reading and throwing away tokens for testing
-	while (charsRead == bufferSize || lexemeBegin < (currBuffer == FIRST ? buf1 : buf2) + charsRead) {
+	printf("Bufend: %p\n", BUFEND());
+	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
 		// TODO Store tokens in LinkedList in future
 		// TODO free space used by token structs
 		TokenInfo *tk = getNextToken();

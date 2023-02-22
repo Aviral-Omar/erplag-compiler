@@ -15,6 +15,10 @@ char *forward;
 int currLine = 1;
 int charsRead = 0;
 
+char* BUFEND(){
+	return (currBuffer == FIRST ? buf1 : buf2) + charsRead;
+}
+
 void clearHeap()
 {
 	free(buf1);
@@ -57,46 +61,157 @@ void handleWhitespaces()
 	lexemeBegin = forward;
 }
 
+int skipComment(){
+	while(forward < BUFEND()){
+		if(*forward == '*'){
+			incrementForward();
+			if((forward < BUFEND()) && (*forward == '*')) return 1;
+		}
+		incrementForward();
+	}
+	return 0;
+}
+
 TokenInfo *getNextToken()
 {
 	// keep getting tokens till EOF
 	TokenInfo *tk = (TokenInfo *)malloc(sizeof(TokenInfo));
-
+	tk->lineNumber = currLine;
+	
 	switch (*lexemeBegin) {
 	case '+':
 		tk->token = PLUS;
 		incrementForward();
 		break;
 	case '-':
+		tk->token = MINUS;
+		incrementForward();
 		break;
 	case '*':
+		incrementForward();
+		if(*forward == '*'){
+			incrementForward();
+			tk->token = COMMENTMARK;
+			if(skipComment()){
+				tk->token = COMMENTMARK;
+				incrementForward();
+			}
+			else{
+				printf("Lexical error in line %d\n",currLine);
+				exit(EXIT_FAILURE);
+			}
+		}
+		else tk->token = MUL;
 		break;
+
 	case '/':
+		tk->token = DIV;
+		incrementForward();
 		break;
 	case '<':
+		incrementForward();
+		if(*forward == '<'){
+			incrementForward();
+			if(*forward == '<'){
+				incrementForward();
+				tk->token = DRIVERDEF;
+			}
+			else tk->token = DEF;
+		}
+		else if(*forward == '='){
+			incrementForward();
+			tk->token = LE;
+		}
+		else tk->token = LT;
 		break;
+
 	case '>':
+		incrementForward();
+		if(*forward == '>'){
+			incrementForward();
+			if(*forward == '>'){
+				incrementForward();
+				tk->token = DRIVERENDDEF;
+			}
+			else tk->token = DRIVERDEF;
+		}
+		else if (*forward == '=') {
+			incrementForward();
+			tk->token = GE;
+		}
+		else tk->token = GT;
 		break;
+
 	case '=':
+		incrementForward();
+		if(*forward == '='){
+			incrementForward();
+			tk->token = EQ;
+		}
+		else{
+			printf("Lexical error in line %d\n",currLine);
+			exit(EXIT_FAILURE);
+		}
 		break;
 	case '!':
+		incrementForward();
+		if(*forward == '='){
+			incrementForward();
+			tk->token = NE;
+		}
+		else{
+			printf("Lexical error in line %d\n",currLine);
+			exit(EXIT_FAILURE);
+		}
 		break;
 	case ':':
+		incrementForward();
+		if(*forward == '='){
+			incrementForward();
+			tk->token = ASSIGNOP;
+		}
+		else{
+			tk->token = COLON;
+		}
 		break;
+
 	case '.':
+		incrementForward();
+		if(*forward == '.'){
+			incrementForward();
+			tk->token = RANGEOP;
+		}
+		else{
+			printf("Lexical error in line %d\n",currLine);
+			exit(EXIT_FAILURE);
+		}
 		break;
+
 	case ';':
+		tk->token = SEMICOL;
+		incrementForward();
 		break;
 	case ',':
+		tk->token = COMMA;
+		incrementForward();
 		break;
 	case '[':
+		tk->token = SQBO;
+		incrementForward();
 		break;
 	case ']':
+		tk->token = SQBC;
+		incrementForward();
 		break;
 	case '(':
+		tk->token = BO;
+		incrementForward();
 		break;
 	case ')':
+		tk->token = BC;
+		incrementForward();
 		break;
+	
 	// Handles case of identifier
 	default: {
 		int charsRead = 0;
@@ -118,7 +233,6 @@ TokenInfo *getNextToken()
 			tk->data.lexeme[charsRead] = '\0';
 			KeywordPair *p = searchKeyword(tk->data.lexeme);
 
-			tk->lineNumber = currLine;
 			if (p) {
 				tk->token = p->token;
 				break;
@@ -126,6 +240,14 @@ TokenInfo *getNextToken()
 			tk->token = ID;
 		} else if (isdigit(*lexemeBegin)) {
 			/*TODO handle numbers here*/
+			incrementForward();
+			while(isdigit(*forward)){
+				incrementForward();
+			}
+			//TODO check length limit of NUM
+			tk->token = NUM;
+			tk->intValue = par
+
 		} else {
 			printf("Invalid character in line %d\n", currLine);
 			clearHeap();

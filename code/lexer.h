@@ -11,3 +11,5 @@ void handleWhitespaces();
 TokenInfo *getNextToken();
 
 void removeComments(char *testcaseFile, char *cleanFile);
+
+char * BUFEND();
