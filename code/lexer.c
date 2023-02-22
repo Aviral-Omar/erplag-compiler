@@ -40,15 +40,20 @@ void getStream()
 			printf("Error closing file.\n");
 }
 
-void incrementForward()
+int incrementForward()
 {
 	forward++;
+	if((charsRead < bufferSize)&&(forward == BUFEND())){
+		return 1; // error, EOF
+	}
 	if (forward - (currBuffer == FIRST ? buf1 : buf2) == bufferSize) {
 		// This toggles currBuffer between FIRST and SECOND
 		currBuffer = (currBuffer + 1) & 1;
 		getStream();
 		forward = (currBuffer == FIRST ? buf1 : buf2);
 	}
+	return 0; // NO error
+
 }
 
 void handleWhitespaces()
@@ -88,7 +93,6 @@ TokenInfo *getNextToken()
 		incrementForward();
 		break;
 	case '*':
-		incrementForward();
 		if(*forward == '*'){
 			incrementForward();
 			tk->token = COMMENTMARK;
@@ -101,7 +105,7 @@ TokenInfo *getNextToken()
 				exit(EXIT_FAILURE);
 			}
 		}
-		else tk->token = MUL;
+		else tk->token = MUL; 
 		break;
 
 	case '/':
