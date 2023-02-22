@@ -97,7 +97,7 @@ TokenInfo *getNextToken()
 				incrementForward();
 			}
 			else{
-				printf("Lexical error in line %d\n",currLine);
+				printf("Lexical error: comment ending missing for comment starting at line %d\n",currLine);
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -265,7 +265,6 @@ void removeComments(char *testcaseFile, char *cleanFile)
 {
 	FILE *inFile, *outFile;
 	char buffer[bufferSize];
-	int lineNum = 1;
 	int lastAsterisk = 0;
 	int insideComment = 0;
 
@@ -284,11 +283,8 @@ void removeComments(char *testcaseFile, char *cleanFile)
 	}
 	while (!feof(inFile)) {
 		int len = fread(buffer, sizeof(char), bufferSize, inFile);
-		if (len)
-			printf("%d ", len);
 		char *p = buffer;
 		while (p - buffer < len) {
-			printf("%c", *p);
 			if (*p == '\n') {
 				fprintf(outFile, "%c", *p);
 			} else if (*p == '*') {
@@ -297,7 +293,7 @@ void removeComments(char *testcaseFile, char *cleanFile)
 				lastAsterisk = !lastAsterisk;
 			} else if (!insideComment) {
 				if (lastAsterisk)
-					fprintf(outFile, "*", *p);
+					fprintf(outFile, "*");
 				fprintf(outFile, "%c", *p);
 			}
 			p++;
