@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 	buf2 = (char *)malloc(bufferSize * sizeof(char));
 	lexemeBegin = (currBuffer == FIRST ? buf1 : buf2);
 	forward = lexemeBegin;
+	removeComments(argv[1], "cleaned");
 
 	/* TODO Move to parser function*/
 	populateLookupTable();

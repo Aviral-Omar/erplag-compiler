@@ -246,7 +246,7 @@ TokenInfo *getNextToken()
 			}
 			//TODO check length limit of NUM
 			tk->token = NUM;
-			tk->intValue = par
+			// tk->intValue = par
 
 		} else {
 			printf("Invalid character in line %d\n", currLine);
@@ -264,55 +264,79 @@ TokenInfo *getNextToken()
 void removeComments(char *testcaseFile, char *cleanFile)
 {
 	FILE *inFile, *outFile;
-    char buffer[1024];
-    int lineNum = 1;
-    int insideComment = 0;
-    
-    // Open input file for reading
-    inFile = fopen(testcaseFile, "r");
-    if (inFile == NULL) {
-        printf("Error opening input file\n");
-        exit(1);
-    }
-    
-    // Open output file for writing
-    outFile = fopen(cleanFile, "w");
-    if (outFile == NULL) {
-        printf("Error opening output file\n");
-        exit(1);
-    }
-    
-    // Read input file line by line
-    while (fgets(buffer, sizeof(buffer), inFile) != NULL) {
-        int i, len = strlen(buffer);
-        char newl = '\n';
-        // Check for start of comment
-        for (i = 0; i < len - 1; i++) {
-            if (buffer[i] == '*' && buffer[i+1] == '*') {
-                insideComment = 1;
-                fprintf(outFile, "%c", newl);
-                break;
-            }
-        }
-        
-        // Write non-comment lines to output file
-        if (!insideComment) {
-            fprintf(outFile, "%s", buffer);
-        }
-        
-        // Check for end of comment
-        for (i = 0; i < len - 1; i++) {
-            if (buffer[i] == '*' && buffer[i+1] == '*' && insideComment) {
-                insideComment = 0;
-                break;
-            }
-        }
-        
-        // Increment line number
-        lineNum++;
-    }
-    
-    // Close input and output files
-    fclose(inFile);
-    fclose(outFile);
+	char buffer[bufferSize];
+	int lineNum = 1;
+	int lastAsterisk = 0;
+	int insideComment = 0;
+
+	// Open input file for reading
+	inFile = fopen(testcaseFile, "r");
+	if (inFile == NULL) {
+		printf("Error opening input file\n");
+		exit(1);
+	}
+
+	// Open output file for writing
+	outFile = fopen(cleanFile, "w");
+	if (outFile == NULL) {
+		printf("Error opening output file\n");
+		exit(1);
+	}
+	while (!feof(inFile)) {
+		int len = fread(buffer, sizeof(char), bufferSize, inFile);
+		if (len)
+			printf("%d ", len);
+		char *p = buffer;
+		while (p - buffer < len) {
+			printf("%c", *p);
+			if (*p == '\n') {
+				fprintf(outFile, "%c", *p);
+			} else if (*p == '*') {
+				if (lastAsterisk)
+					insideComment = !insideComment;
+				lastAsterisk = !lastAsterisk;
+			} else if (!insideComment) {
+				if (lastAsterisk)
+					fprintf(outFile, "*", *p);
+				fprintf(outFile, "%c", *p);
+			}
+			p++;
+		}
+	}
+
+	/* TODO remove
+	// Read input file line by line
+	while (fgets(buffer, sizeof(buffer), inFile) != NULL) {
+		int i, len = strlen(buffer);
+		char newl = '\n';
+		// Check for start of comment
+		for (i = 0; i < len - 1; i++) {
+			if (buffer[i] == '*' && buffer[i + 1] == '*') {
+				insideComment = 1;
+				fprintf(outFile, "%c", newl);
+				break;
+			}
+		}
+
+		// Write non-comment lines to output file
+		if (!insideComment) {
+			fprintf(outFile, "%s", buffer);
+		}
+
+		// Check for end of comment
+		for (i = 0; i < len - 1; i++) {
+			if (buffer[i] == '*' && buffer[i + 1] == '*' && insideComment) {
+				insideComment = 0;
+				break;
+			}
+		}
+
+		// Increment line number
+		lineNum++;
+	}
+	*/
+
+	// Close input and output files
+	fclose(inFile);
+	fclose(outFile);
 }
