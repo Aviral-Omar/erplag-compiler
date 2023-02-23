@@ -59,13 +59,13 @@ void getStream()
 	// Reads stream into buf1 or buf2
 	charsRead = fread(currBuffer == FIRST ? buf1 : buf2, sizeof(char), bufferSize, fp);
 	if (ferror(fp)) {
-		printf("Error reading from file.\n");
+		fprintf(stderr, "Error reading from file.\n");
 		exit(EXIT_FAILURE);
 	}
 	if (feof(fp))
 		// fclose returns EOF when there is error else returns 0
 		if (fclose(fp) == EOF)
-			printf("Error closing file.\n");
+			fprintf(stderr, "Error closing file.\n");
 }
 
 // Returns 1 if EOF is reached, else returns 0
@@ -124,7 +124,7 @@ int skipComment()
 
 void handleLexicalError(char *errorMsg, int lineNumber)
 {
-	printf(errorMsg, lineNumber);
+	fprintf(stderr, errorMsg, lineNumber);
 	free(currToken);
 	currToken = NULL;
 }
@@ -350,14 +350,14 @@ void removeComments(char *testcaseFile, char *cleanFile)
 	// Open input file for reading
 	inFile = fopen(testcaseFile, "r");
 	if (inFile == NULL) {
-		printf("Error opening input file\n");
+		fprintf(stderr, "Error opening input file\n");
 		exit(1);
 	}
 
 	// Open output file for writing
 	outFile = fopen(cleanFile, "w");
 	if (outFile == NULL) {
-		printf("Error opening output file\n");
+		fprintf(stderr, "Error opening output file\n");
 		exit(1);
 	}
 	while (!feof(inFile)) {

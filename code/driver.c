@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 {
 	// Checks if program receives 2 arguments from command line
 	if (argc != 3) {
-		printf("Please enter the filename and buffer size as arguments respectively.\n");
+		fprintf(stderr, "Please enter the filename and buffer size as arguments respectively.\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -50,7 +50,7 @@ FILE *openFile(char *fileName)
 {
 	FILE *file = fopen(fileName, "r");
 	if (!file) {
-		printf("File does not exist or unable to access file.\n");
+		fprintf(stderr, "File does not exist or unable to access file.\n");
 		exit(EXIT_FAILURE);
 	}
 	return file;
@@ -62,12 +62,12 @@ int checkBufferSize(char *buf)
 	char *endPtr;
 	int size = (int)strtol(buf, &endPtr, 10);
 	if (*buf == '\0' || *endPtr != '\0') {
-		printf("Invalid buffer size.\n");
+		fprintf(stderr, "Invalid buffer size.\n");
 		exit(EXIT_FAILURE);
 	}
 	/* TODO buffer size check*/
 	if (size > MAX_BUFFER_SIZE) {
-		printf("Buffer size too large.\n");
+		fprintf(stderr, "Buffer size too large.\n");
 		exit(EXIT_FAILURE);
 	}
 	return size;
