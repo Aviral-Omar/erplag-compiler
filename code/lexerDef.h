@@ -68,6 +68,7 @@ typedef struct {
 	union lexemeData {
 		// TODO Storing as string for ease of conversion
 		char lexeme[21];
+		// TODO int/long float/double
 		int intValue;
 		float floatValue;
 	} data;

@@ -220,23 +220,24 @@ TokenInfo *getNextToken()
 
 	// Handles case of identifier
 	default: {
-		int charsRead = 0;
+		// TODO handle error in incrementForward
+		int lexLen = 0;
 		if (*lexemeBegin == '_' || isalpha(*lexemeBegin)) {
-			tk->data.lexeme[charsRead] = *lexemeBegin;
-			charsRead++;
+			tk->data.lexeme[lexLen] = *lexemeBegin;
+			lexLen++;
 			incrementForward();
 			while (*forward == '_' || isalnum(*forward)) {
-				tk->data.lexeme[charsRead] = *forward;
-				charsRead++;
+				tk->data.lexeme[lexLen] = *forward;
+				lexLen++;
 				incrementForward();
-				if (charsRead > 20) {
+				if (lexLen > 20) {
 					/* TODO confirm what action to take*/
 					printf("Identifier or keyword longer than 20 chars.\n");
 					exit(EXIT_FAILURE);
 				}
 			}
 
-			tk->data.lexeme[charsRead] = '\0';
+			tk->data.lexeme[lexLen] = '\0';
 			KeywordPair *p = searchKeyword(tk->data.lexeme);
 
 			if (p) {
@@ -246,14 +247,63 @@ TokenInfo *getNextToken()
 			tk->token = ID;
 		} else if (isdigit(*lexemeBegin)) {
 			/*TODO handle numbers here*/
-			incrementForward();
-			while (isdigit(*forward)) {
-				incrementForward();
-			}
+			int lexLen = 0;
+			do {
+				tk->data.lexeme[lexLen] = *forward;
+				lexLen++;
+				if (incrementForward() == 1 || (!isdigit(*forward) && *forward != '.')) {
+					tk->token = NUM;
+					tk->data.lexeme[lexLen] = '\0';
+					tk->data.intValue = atoi(tk->data.lexeme);
+					printf("INTEGER:%d ", tk->data.intValue);
+					handleWhitespaces();
+					return tk;
+				}
+			} while (isdigit(*forward));
 			// TODO check length limit of NUM
-			tk->token = NUM;
-			// tk->intValue = par
-
+			if (incrementForward() == 1 || (!isdigit(*forward) && *forward != '.')) {
+				printf("Incomplete number at line %d.\n", currLine);
+				exit(EXIT_FAILURE);
+			}
+			if (*forward == '.') {
+				retractForward();
+				tk->token = NUM;
+				tk->data.lexeme[lexLen] = '\0';
+				tk->data.intValue = atoi(tk->data.lexeme);
+				printf("INTEGER:%d ", tk->data.intValue);
+			} else if (isdigit(*forward)) {
+				tk->data.lexeme[lexLen] = '.';
+				lexLen++;
+				do {
+					tk->data.lexeme[lexLen] = *forward;
+					lexLen++;
+					if (incrementForward() == 1 || (!isdigit(*forward) && *forward != 'e' && *forward != 'E')) {
+						tk->token = RNUM;
+						tk->data.lexeme[lexLen] = '\0';
+						tk->data.floatValue = atof(tk->data.lexeme);
+						printf("FLOAT:%f ", tk->data.floatValue);
+						handleWhitespaces();
+						return tk;
+					}
+				} while (isdigit(*forward));
+				tk->data.lexeme[lexLen] = 'e';
+				lexLen++;
+				if (incrementForward() == 1 || (!isdigit(*forward) && *forward != '+' && *forward != '-')) {
+					printf("Incomplete floating point number at line %d.\n", currLine);
+					exit(EXIT_FAILURE);
+				}
+				do {
+					tk->data.lexeme[lexLen] = *forward;
+					lexLen++;
+					if (incrementForward() == 1 || !isdigit(*forward)) {
+						tk->token = RNUM;
+						tk->data.lexeme[lexLen] = '\0';
+						tk->data.floatValue = atof(tk->data.lexeme);
+						printf("FLOAT:%f ", tk->data.floatValue);
+						// Return is handled automatically here
+					}
+				} while (isdigit(*forward));
+			}
 		} else {
 			printf("Invalid character in line %d\n", currLine);
 			clearHeap();
