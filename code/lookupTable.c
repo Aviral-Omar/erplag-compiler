@@ -3,6 +3,11 @@
 
 #include "lookupTableDef.h"
 
+int hash(char* key);
+void populateLookupTable();
+KeywordPair* searchKeyword(char* key);
+void deleteLookupTable();
+
 KeywordPair* hashTable[TABLE_SIZE] = {NULL};
 
 int hash(char* key)
