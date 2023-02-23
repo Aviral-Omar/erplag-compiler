@@ -21,31 +21,23 @@ int main(int argc, char *argv[])
 	// All of these are global variables declared in lexerDef.h file and defined in lexer.c
 	fp = openFile(argv[1]);
 	bufferSize = checkBufferSize(argv[2]);
-	buf1 = (char *)malloc(bufferSize * sizeof(char));
-	buf2 = (char *)malloc(bufferSize * sizeof(char));
-	lexemeBegin = (currBuffer == FIRST ? buf1 : buf2);
-	forward = lexemeBegin;
-	removeComments(argv[1], "cleaned");
 
-	/* TODO Move to parser function*/
-	populateLookupTable();
-	// First read is unconditional
-	getStream();
-	// To remove initial whitespaces
-	handleWhitespaces();
+	removeComments(argv[1], "cleaned");
+	initLexer();
+
 	// TODO Reading and throwing away tokens for testing
 	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
-		// TODO Store tokens in LinkedList in future
 		// TODO free space used by token structs
-		TokenInfo *tk = getNextToken();
-		if (!tk)
+		getNextToken();
+		handleWhitespaces();
+		if (!currToken)
 			continue;
 
-		printf("%d ", tk->token);
+		printf("%d ", currToken->token);
 		fflush(stdout);
 
 		/*TODO remove this*/
-		free(tk);
+		free(currToken);
 	}
 
 	clearHeap();

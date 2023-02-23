@@ -5,6 +5,18 @@
 #include "lexerDef.h"
 #include "lookupTable.h"
 
+void initLexer();
+void clearHeap();
+void getStream();
+int incrementForward();
+void retractForward();
+void handleWhitespaces();
+int skipComment();
+char *BUFEND();
+void handleLexicalError(char *errorMsg, int lineNumber);
+void getNextToken();
+void removeComments(char *testcaseFile, char *cleanFile);
+
 FILE *fp;
 int bufferSize;
 char *buf1;
@@ -14,6 +26,21 @@ char *lexemeBegin;
 char *forward;
 int currLine = 1;
 int charsRead = 0;
+TokenInfo *currToken;
+
+void initLexer()
+{
+	buf1 = (char *)malloc(bufferSize * sizeof(char));
+	buf2 = (char *)malloc(bufferSize * sizeof(char));
+	lexemeBegin = (currBuffer == FIRST ? buf1 : buf2);
+	forward = lexemeBegin;
+
+	populateLookupTable();
+	// First read is unconditional
+	getStream();
+	// To remove initial whitespaces
+	handleWhitespaces();
+}
 
 char *BUFEND()
 {
@@ -95,48 +122,56 @@ int skipComment()
 	return 1;
 }
 
-TokenInfo *getNextToken()
+void handleLexicalError(char *errorMsg, int lineNumber)
+{
+	printf(errorMsg, lineNumber);
+	free(currToken);
+	currToken = NULL;
+}
+
+void getNextToken()
 {
 	// keep getting tokens till EOF
-	TokenInfo *tk = (TokenInfo *)malloc(sizeof(TokenInfo));
-	tk->lineNumber = currLine;
+	currToken = (TokenInfo *)malloc(sizeof(TokenInfo));
+	currToken->lineNumber = currLine;
 
 	switch (*lexemeBegin) {
 	case '+':
-		tk->token = PLUS;
+		currToken->token = PLUS;
 		incrementForward();
 		break;
 	case '-':
-		tk->token = MINUS;
+		currToken->token = MINUS;
 		incrementForward();
 		break;
 	case '*':
 		if (incrementForward() || *forward != '*')
-			tk->token = MUL;
+			currToken->token = MUL;
 		else {
-			free(tk);
-			tk = NULL;
+			int startLine = currLine;
 			if (skipComment()) {
-				printf("Lexical error: Comment ending missing for comment starting at line %d\n", currLine);
-				exit(EXIT_FAILURE);
+				handleLexicalError("Lexical Error: Comment ending missing for comment starting at line %d.\n", startLine);
+			} else {
+				free(currToken);
+				currToken = NULL;
 			}
 		}
 		break;
 	case '/':
-		tk->token = DIV;
+		currToken->token = DIV;
 		incrementForward();
 		break;
 	case '<':
 		if (incrementForward() || (*forward != '<' && *forward != '='))
-			tk->token = LT;
+			currToken->token = LT;
 		else if (*forward == '=') {
-			tk->token = LE;
+			currToken->token = LE;
 			incrementForward();
 		} else {
 			if (incrementForward() || *forward != '<')
-				tk->token = DEF;
+				currToken->token = DEF;
 			else {
-				tk->token = DRIVERDEF;
+				currToken->token = DRIVERDEF;
 				incrementForward();
 			}
 		}
@@ -144,15 +179,15 @@ TokenInfo *getNextToken()
 
 	case '>':
 		if (incrementForward() || (*forward != '>' && *forward != '='))
-			tk->token = GT;
+			currToken->token = GT;
 		else if (*forward == '=') {
-			tk->token = GE;
+			currToken->token = GE;
 			incrementForward();
 		} else {
 			if (incrementForward() || *forward != '>')
-				tk->token = ENDDEF;
+				currToken->token = ENDDEF;
 			else {
-				tk->token = DRIVERENDDEF;
+				currToken->token = DRIVERENDDEF;
 				incrementForward();
 			}
 		}
@@ -160,160 +195,149 @@ TokenInfo *getNextToken()
 
 	case '=':
 		if (incrementForward() || *forward != '=') {
-			printf("Lexical error in line %d\n", currLine);
-			exit(EXIT_FAILURE);
+			handleLexicalError("Lexical Error: Single '=' at line %d.\n", currLine);
 		} else {
-			tk->token = EQ;
+			currToken->token = EQ;
 			incrementForward();
 		}
 		break;
 	case '!':
 		if (incrementForward() || *forward != '=') {
-			printf("Lexical error in line %d\n", currLine);
-			exit(EXIT_FAILURE);
+			handleLexicalError("Lexical Error: Single '!' at line %d.\n", currLine);
 		} else {
-			tk->token = NE;
+			currToken->token = NE;
 			incrementForward();
 		}
 		break;
 	case ':':
 		if (incrementForward() || *forward != '=') {
-			tk->token = COLON;
+			currToken->token = COLON;
 		} else {
-			tk->token = ASSIGNOP;
+			currToken->token = ASSIGNOP;
 			incrementForward();
 		}
 		break;
 	case '.':
 		if (incrementForward() || *forward != '.') {
-			printf("Lexical error in line %d\n", currLine);
-			exit(EXIT_FAILURE);
+			handleLexicalError("Lexical Error: Single '.' at line %d.\n", currLine);
 		} else {
-			tk->token = RANGEOP;
+			currToken->token = RANGEOP;
 			incrementForward();
 		}
 		break;
 	case ';':
-		tk->token = SEMICOL;
+		currToken->token = SEMICOL;
 		incrementForward();
 		break;
 	case ',':
-		tk->token = COMMA;
+		currToken->token = COMMA;
 		incrementForward();
 		break;
 	case '[':
-		tk->token = SQBO;
+		currToken->token = SQBO;
 		incrementForward();
 		break;
 	case ']':
-		tk->token = SQBC;
+		currToken->token = SQBC;
 		incrementForward();
 		break;
 	case '(':
-		tk->token = BO;
+		currToken->token = BO;
 		incrementForward();
 		break;
 	case ')':
-		tk->token = BC;
+		currToken->token = BC;
 		incrementForward();
 		break;
 
 	// Handles case of identifier
 	default: {
-		// TODO handle error in incrementForward
 		int lexLen = 0;
 		if (*lexemeBegin == '_' || isalpha(*lexemeBegin)) {
-			tk->data.lexeme[lexLen] = *lexemeBegin;
+			currToken->data.lexeme[lexLen] = *lexemeBegin;
 			lexLen++;
-			incrementForward();
-			while (*forward == '_' || isalnum(*forward)) {
-				tk->data.lexeme[lexLen] = *forward;
+			while (!incrementForward() && (*forward == '_' || isalnum(*forward))) {
+				currToken->data.lexeme[lexLen] = *forward;
 				lexLen++;
-				incrementForward();
 				if (lexLen > 20) {
 					/* TODO confirm what action to take*/
-					printf("Identifier or keyword longer than 20 chars.\n");
-					exit(EXIT_FAILURE);
+					handleLexicalError("Lexical Error: Identifier or keyword longer than 20 chars on line %d.\n", currLine);
+					while (!incrementForward() && (*forward == '_' || isalnum(*forward)))
+						;
+					return;
 				}
 			}
 
-			tk->data.lexeme[lexLen] = '\0';
-			KeywordPair *p = searchKeyword(tk->data.lexeme);
+			currToken->data.lexeme[lexLen] = '\0';
+			KeywordPair *p = searchKeyword(currToken->data.lexeme);
 
-			if (p) {
-				tk->token = p->token;
-				break;
-			}
-			tk->token = ID;
+			currToken->token = p ? p->token : ID;
+
 		} else if (isdigit(*lexemeBegin)) {
-			/*TODO handle numbers here*/
 			int lexLen = 0;
 			do {
-				tk->data.lexeme[lexLen] = *forward;
+				currToken->data.lexeme[lexLen] = *forward;
 				lexLen++;
-				if (incrementForward() == 1 || (!isdigit(*forward) && *forward != '.')) {
-					tk->token = NUM;
-					tk->data.lexeme[lexLen] = '\0';
-					tk->data.intValue = atoi(tk->data.lexeme);
-					printf("INTEGER:%d ", tk->data.intValue);
-					handleWhitespaces();
-					return tk;
+				if (incrementForward() || (!isdigit(*forward) && *forward != '.')) {
+					currToken->token = NUM;
+					currToken->data.lexeme[lexLen] = '\0';
+					currToken->data.intValue = atoi(currToken->data.lexeme);
+					return;
 				}
 			} while (isdigit(*forward));
 			// TODO check length limit of NUM
-			if (incrementForward() == 1 || (!isdigit(*forward) && *forward != '.')) {
-				printf("Incomplete number at line %d.\n", currLine);
-				exit(EXIT_FAILURE);
-			}
-			if (*forward == '.') {
+			if (incrementForward() || (!isdigit(*forward) && *forward != '.')) {
+				handleLexicalError("Lexical Error: Incomplete number at line %d.\n", currLine);
+			} else if (*forward == '.') {
 				retractForward();
-				tk->token = NUM;
-				tk->data.lexeme[lexLen] = '\0';
-				tk->data.intValue = atoi(tk->data.lexeme);
-				printf("INTEGER:%d ", tk->data.intValue);
+				currToken->token = NUM;
+				currToken->data.lexeme[lexLen] = '\0';
+				currToken->data.intValue = atoi(currToken->data.lexeme);
 			} else if (isdigit(*forward)) {
-				tk->data.lexeme[lexLen] = '.';
+				currToken->data.lexeme[lexLen] = '.';
 				lexLen++;
 				do {
-					tk->data.lexeme[lexLen] = *forward;
+					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
-					if (incrementForward() == 1 || (!isdigit(*forward) && *forward != 'e' && *forward != 'E')) {
-						tk->token = RNUM;
-						tk->data.lexeme[lexLen] = '\0';
-						tk->data.floatValue = atof(tk->data.lexeme);
-						printf("FLOAT:%f ", tk->data.floatValue);
-						handleWhitespaces();
-						return tk;
+					if (incrementForward() || (!isdigit(*forward) && *forward != 'e' && *forward != 'E')) {
+						currToken->token = RNUM;
+						currToken->data.lexeme[lexLen] = '\0';
+						currToken->data.floatValue = atof(currToken->data.lexeme);
+						return;
 					}
 				} while (isdigit(*forward));
-				tk->data.lexeme[lexLen] = 'e';
+				currToken->data.lexeme[lexLen] = 'e';
 				lexLen++;
-				if (incrementForward() == 1 || (!isdigit(*forward) && *forward != '+' && *forward != '-')) {
-					printf("Incomplete floating point number at line %d.\n", currLine);
-					exit(EXIT_FAILURE);
+				if (incrementForward() || (!isdigit(*forward) && *forward != '+' && *forward != '-')) {
+					handleLexicalError("Lexical Error: Incomplete floating point number at line %d.\n", currLine);
+					return;
 				}
-				do {
-					tk->data.lexeme[lexLen] = *forward;
+				if (*forward == '+' || *forward == '-') {
+					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
-					if (incrementForward() == 1 || !isdigit(*forward)) {
-						tk->token = RNUM;
-						tk->data.lexeme[lexLen] = '\0';
-						tk->data.floatValue = atof(tk->data.lexeme);
-						printf("FLOAT:%f ", tk->data.floatValue);
+					if (incrementForward() || !isdigit(*forward)) {
+						handleLexicalError("Lexical Error: Incomplete floating point number at line %d.\n", currLine);
+						return;
+					}
+				}
+
+				do {
+					currToken->data.lexeme[lexLen] = *forward;
+					lexLen++;
+					if (incrementForward() || !isdigit(*forward)) {
+						currToken->token = RNUM;
+						currToken->data.lexeme[lexLen] = '\0';
+						currToken->data.floatValue = atof(currToken->data.lexeme);
 						// Return is handled automatically here
 					}
 				} while (isdigit(*forward));
 			}
 		} else {
-			printf("Invalid character in line %d\n", currLine);
-			clearHeap();
-			exit(EXIT_FAILURE);
+			handleLexicalError("Lexical Error: Invalid character at line %d\n", currLine);
+			incrementForward();
 		}
 	}
 	}
-
-	handleWhitespaces();
-	return tk;
 }
 
 void removeComments(char *testcaseFile, char *cleanFile)
@@ -347,8 +371,10 @@ void removeComments(char *testcaseFile, char *cleanFile)
 					insideComment = !insideComment;
 				lastAsterisk = !lastAsterisk;
 			} else if (!insideComment) {
-				if (lastAsterisk)
+				if (lastAsterisk) {
 					fprintf(outFile, "*");
+					lastAsterisk = !lastAsterisk;
+				}
 				fprintf(outFile, "%c", *p);
 			}
 			p++;

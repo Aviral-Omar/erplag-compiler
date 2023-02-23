@@ -88,5 +88,6 @@ extern char* forward;
 extern int currLine;
 extern int charsRead;
 extern CurrentBuffer currBuffer;
+extern TokenInfo* currToken;
 
 #endif

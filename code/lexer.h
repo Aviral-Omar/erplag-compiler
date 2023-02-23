@@ -1,16 +1,13 @@
+// Contains only functions accessed by files other than lexer.c
 #include "lexerDef.h"
+
+void initLexer();
 
 void clearHeap();
 
-void getStream();
-
-int incrementForward();
-
-void retractForward();
-
 void handleWhitespaces();
 
-TokenInfo *getNextToken();
+void getNextToken();
 
 void removeComments(char *testcaseFile, char *cleanFile);
 
