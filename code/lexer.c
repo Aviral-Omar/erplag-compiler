@@ -52,9 +52,19 @@ int incrementForward()
 		// This toggles currBuffer between FIRST and SECOND
 		currBuffer = (currBuffer + 1) & 1;
 		getStream();
-		forward = (currBuffer == FIRST ? buf1 : buf2);
+		forward = currBuffer == FIRST ? buf1 : buf2;
+	} else if (forward - (currBuffer == FIRST ? buf2 : buf1) == bufferSize) {
+		// Here, we check if forward was retracted without changing current buffer
+		forward = currBuffer == FIRST ? buf1 : buf2;
 	}
 	return 0;  // NO error
+}
+
+void retractForward()
+{
+	forward--;
+	if (forward < (currBuffer == FIRST ? buf1 : buf2))
+		forward = (currBuffer == FIRST ? buf2 : buf1) + bufferSize - 1;
 }
 
 void handleWhitespaces()

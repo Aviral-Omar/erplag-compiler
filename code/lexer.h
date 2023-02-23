@@ -6,6 +6,8 @@ void getStream();
 
 int incrementForward();
 
+void retractForward();
+
 void handleWhitespaces();
 
 TokenInfo *getNextToken();
