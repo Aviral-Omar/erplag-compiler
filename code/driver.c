@@ -4,7 +4,7 @@
 #include "lexer.h"
 #include "lookupTable.h"
 
-#define MAX_BUFFER_SIZE 100000
+#define MAX_BUFFER_SIZE 10000
 
 FILE *openFile(char *fileName);
 int checkBufferSize(char *buf);
@@ -33,7 +33,8 @@ int main(int argc, char *argv[])
 		if (!currToken)
 			continue;
 
-		printf("%d ", currToken->token);
+		printf("%-12s\tLine %d\n", tokenMap[currToken->token], currToken->lineNumber);
+
 		fflush(stdout);
 
 		/*TODO remove this*/
@@ -65,7 +66,7 @@ int checkBufferSize(char *buf)
 		fprintf(stderr, "Invalid buffer size.\n");
 		exit(EXIT_FAILURE);
 	}
-	/* TODO buffer size check*/
+	// checks max buffer size
 	if (size > MAX_BUFFER_SIZE) {
 		fprintf(stderr, "Buffer size too large.\n");
 		exit(EXIT_FAILURE);

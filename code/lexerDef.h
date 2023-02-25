@@ -59,7 +59,8 @@ typedef enum {
 	SQBC,
 	BO,
 	BC,
-	COMMENTMARK
+	COMMENTMARK,
+	EPSILON
 } Token;
 
 typedef struct {
@@ -79,6 +80,7 @@ typedef enum {
 	SECOND
 } CurrentBuffer;
 
+extern char* tokenMap[];
 extern FILE* fp;
 extern int bufferSize;
 extern char* buf1;

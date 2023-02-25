@@ -27,6 +27,64 @@ char *forward;
 int currLine = 1;
 int charsRead = 0;
 TokenInfo *currToken;
+char *tokenMap[58] = {"INTEGER",
+					  "REAL",
+					  "BOOLEAN",
+					  "OF",
+					  "ARRAY",
+					  "START",
+					  "END",
+					  "DECLARE",
+					  "MODULE",
+					  "DRIVER",
+					  "PROGRAM",
+					  "GET_VALUE",
+					  "PRINT",
+					  "USE",
+					  "WITH",
+					  "PARAMETERS",
+					  "TAKES",
+					  "INPUT",
+					  "RETURNS",
+					  "FOR",
+					  "IN",
+					  "SWITCH",
+					  "CASE",
+					  "BREAK",
+					  "DEFAULT",
+					  "WHILE",
+					  "ID",
+					  "NUM",
+					  "RNUM",
+					  "AND",
+					  "OR",
+					  "TRUE",
+					  "FALSE",
+					  "PLUS",
+					  "MINUS",
+					  "MUL",
+					  "DIV",
+					  "LT",
+					  "LE",
+					  "GE",
+					  "GT",
+					  "EQ",
+					  "NE",
+					  "DEF",
+					  "ENDDEF",
+					  "DRIVERDEF",
+					  "DRIVERENDDEF",
+					  "COLON",
+					  "RANGEOP",
+					  "SEMICOL",
+					  "COMMA",
+					  "ASSIGNOP",
+					  "SQBO",
+					  "SQBC",
+					  "BO",
+					  "BC",
+					  "COMMENTMARK",
+					  "EPSILON"};
 
 void initLexer()
 {
@@ -131,6 +189,8 @@ void handleLexicalError(char *errorMsg, int lineNumber)
 
 void getNextToken()
 {
+	/* TODO handle ID, NUM, RNUM max lengths*/
+	/* TODO remove isdigit, isalnum, isalpha calls*/
 	// keep getting tokens till EOF
 	currToken = (TokenInfo *)malloc(sizeof(TokenInfo));
 	currToken->lineNumber = currLine;
