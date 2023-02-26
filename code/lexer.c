@@ -191,6 +191,11 @@ void handleLexicalError(char *errorMsg, int lineNumber)
 	currToken = NULL;
 }
 
+void handleNumberLengthWarning(char *errorMsg, int lineNumber){
+	fprintf(stderr, errorMsg, lineNumber);
+
+}
+
 void getNextToken()
 {
 	/* TODO handle ID, NUM, RNUM max lengths*/
@@ -346,10 +351,18 @@ void getNextToken()
 					currToken->token = NUM;
 					currToken->data.lexeme[lexLen] = '\0';
 					currToken->data.intValue = atoi(currToken->data.lexeme);
+
+					if(lexLen > 11){
+						handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented on line %d.\n", currLine);
+					}
+
 					return;
 				}
 			} while (isDigit(*forward));
 			// TODO check length limit of NUM
+			// Checking length of Integer, throw error if length >10
+
+
 			if (incrementForward() || (!isDigit(*forward) && *forward != '.')) {
 				handleLexicalError("Lexical Error: Incomplete number at line %d.\n", currLine);
 			} else if (*forward == '.') {
@@ -360,13 +373,19 @@ void getNextToken()
 			} else if (isDigit(*forward)) {
 				currToken->data.lexeme[lexLen] = '.';
 				lexLen++;
+				int decimalpartLen = 0;
+				int exponentpartLen = 0;
 				do {
 					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
+					decimalpartLen++;
 					if (incrementForward() || (!isDigit(*forward) && *forward != 'e' && *forward != 'E')) {
 						currToken->token = RNUM;
 						currToken->data.lexeme[lexLen] = '\0';
 						currToken->data.floatValue = atof(currToken->data.lexeme);
+						if(decimalpartLen > 11 && lexLen >21){
+							handleNumberLengthWarning("Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented on line %d.\n", currLine);
+						}
 						return;
 					}
 				} while (isDigit(*forward));
@@ -388,10 +407,14 @@ void getNextToken()
 				do {
 					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
+					exponentpartLen++;
 					if (incrementForward() || !isDigit(*forward)) {
 						currToken->token = RNUM;
 						currToken->data.lexeme[lexLen] = '\0';
 						currToken->data.floatValue = atof(currToken->data.lexeme);
+						if(exponentpartLen >11 && lexLen > 21){
+							handleNumberLengthWarning("Warning: Exponent is too big, there is a possibility that it may be misrepresented on line %d.\n", currLine);
+						}
 						// Return is handled automatically here
 					}
 				} while (isDigit(*forward));
