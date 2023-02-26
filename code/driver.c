@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
 
 	readGrammar();
 	// printGrammar();
+	computeFirstAndFollowSets();
 
 	return 0;
 }

@@ -3,13 +3,14 @@
 
 #include "lexerDef.h"
 
+/* TODO change later*/
+#define GRAMMAR_FILE "grammar.txt"
+#define RULE_COUNT 142
+#define NON_TERMINAL_COUNT 73
+#define TERMINAL_COUNT 58
+#define GRAMMAR_BUFFER_SIZE 4300
 typedef enum {
 	// TODO populate using grammar
-	E,
-	Edash,
-	T,
-	Tdash,
-	F
 	N_program,
 	N_moduleDeclarations,
 	N_otherModules,
@@ -95,7 +96,7 @@ struct LexicalSymbol {
 		Terminal t;
 	} data;
 	LexicalSymbol* next;
-	char type;
+	char type;	// may be 'T', 'N', 'e'
 };
 
 typedef struct TerminalInfo TerminalInfo;
@@ -106,19 +107,21 @@ struct TerminalInfo {
 };
 
 typedef struct {
-	NonTerminal nt; //TODO No need for this nt here imo
-	//TODO initialize both First,Follow below to NULL
+	// TODO initialize both First,Follow below to NULL
 	TerminalInfo* first;
 	TerminalInfo* follow;
 } FirstFollowEntry;
 
-typedef struct{
-	int rule; // -1 if its error
-	// created a struct in case we want to add some other info later.
+typedef struct {
+	int rule;  // -1 if its error
+			   // created a struct in case we want to add some other info later.
 } ParseTableEntry;
 
-extern LexicalSymbol* grammar[];
-extern char* nonTerminalMap[];
-extern char* terminalMap[];
+// TODO make sure all are cleaned
+extern LexicalSymbol* grammar[RULE_COUNT];
+extern char* nonTerminalMap[NON_TERMINAL_COUNT];
+extern char* terminalMap[TERMINAL_COUNT];
+extern ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];
+extern FirstFollowEntry ffTable[NON_TERMINAL_COUNT];
 
 #endif
