@@ -104,7 +104,7 @@ N_N10 T_BO N_arrExpr T_BC
 N_arrExpr N_anyTerm N_arrN4
 N_arrN4 N_op1 N_arrTerm N_arrN4
 N_arrN4 epsilon
-N_anyTerm N_arrFactor N_arrN5
+N_arrTerm N_arrFactor N_arrN5
 N_arrN5 N_op2 N_arrFactor N_arrN5
 N_arrN5 epsilon
 N_arrFactor T_ID
@@ -135,6 +135,7 @@ N_default T_DEFAULT T_COLON N_statements T_BREAK T_SEMICOL
 N_default epsilon
 N_iterativeStmt T_FOR T_BO T_ID T_IN N_rangeForLoop T_BC T_START N_statements T_END
 N_iterativeStmt T_WHILE T_BO N_arithmeticOrBooleanExpr T_BC T_START N_statements T_END
+N_rangeForLoop N_indexForLoop T_RANGEOP N_indexForLoop
 N_indexForLoop N_signForLoop N_newIndexForLoop
 N_newIndexForLoop T_NUM
 N_signForLoop T_PLUS
