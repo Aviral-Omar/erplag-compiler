@@ -5,7 +5,11 @@
 
 typedef enum {
 	// TODO populate using grammar
-	N_PROGRAM
+	E,
+	Edash,
+	T,
+	Tdash,
+	F
 } NonTerminal;
 
 // aliasing Token enum
@@ -27,10 +31,16 @@ typedef struct {
 } TerminalInfo;
 
 typedef struct {
-	NonTerminal nt;
+	NonTerminal nt; //TODO No need for this nt here imo
+	//TODO initialize both First,Follow below to NULL
 	TerminalInfo* first;
 	TerminalInfo* follow;
 } FirstFollowEntry;
+
+typedef struct{
+	int rule; // -1 if its error
+	// created a struct in case we want to add some other info later.
+} ParseTableEntry;
 
 extern LexicalSymbol* grammar[];
 extern char* nonTerminalMap[];
