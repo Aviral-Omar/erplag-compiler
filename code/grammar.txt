@@ -61,7 +61,7 @@ N_moduleReuseStmt N_optional T_USE T_MODULE T_ID T_WITH T_PARAMETERS N_actualPar
 N_actualParaList T_NUM
 N_actualParaList T_RNUM
 N_actualParaList N_boolConstt
-N_actualParaList ID N_N11
+N_actualParaList T_ID N_N11
 N_optional T_SQBO N_idList T_SQBC T_ASSIGNOP
 N_optional epsilon
 N_idList T_ID N_N3
@@ -99,7 +99,7 @@ N_N11 T_SQBO N_elementIndexWithExpressions T_SQBC
 N_N11 epsilon
 N_elementIndexWithExpressions N_sign N_N10
 N_elementIndexWithExpressions N_arrExpr
-N_N10 N_newIndex 
+N_N10 N_newIndex
 N_N10 T_BO N_arrExpr T_BC
 N_arrExpr N_anyTerm N_arrN4
 N_arrN4 N_op1 N_arrTerm N_arrN4
