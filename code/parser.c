@@ -34,10 +34,7 @@ char *nonTerminalMap[NON_TERMINAL_COUNT] = {"N_program",
 											"N_iterativeStmt",
 											"N_varPrint",
 											"N_P1",
-											"N_boolConstt",
-											"N_idNumRnum",
-											"N_arrayElementForPrint",
-											"N_newIndex",
+											"N_boolConst",
 											"N_moduleReuseStmt",
 											"N_assignmentStmt",
 											"N_whichStmt",
@@ -46,6 +43,7 @@ char *nonTerminalMap[NON_TERMINAL_COUNT] = {"N_program",
 											"N_expression",
 											"N_elementIndexWithExpressions",
 											"N_sign",
+											"N_newIndex",
 											"N_optional",
 											"N_actualParaList",
 											"N_N11",
@@ -145,9 +143,14 @@ char *terminalMap[TERMINAL_COUNT] = {"T_INTEGER",
 int findSymbol(char *symbol);
 void readGrammar();
 void printGrammar();
-void insertIntoFirst(NonTerminal nt, Terminal t, int rule);
-void computeFirst();
+void insertIntoFirst(NonTerminal nt, Terminal t);
+void computeFirstSets();
 void printFirstSets();
+void insertIntoFollow(NonTerminal nt, Terminal t);
+int insertFirstIntoFollow(NonTerminal firstNT, NonTerminal followNT);
+void insertFollowIntoFollow(NonTerminal nt1, NonTerminal nt2);
+void computeFollowSets();
+void printFollowSets();
 void computeFirstAndFollowSets();
 void createParseTable();
 
@@ -192,6 +195,7 @@ void readGrammar()
 		head->type = 'N';
 		head->data.nt = findSymbol(wordBuf);
 		head->next = NULL;
+		head->followCalculated = '0';
 		grammar[i] = head;
 		LexicalSymbol *nextPtr = head;
 		while (*ptr != '\n') {
@@ -211,6 +215,7 @@ void readGrammar()
 			else
 				nextPtr->data.t = findSymbol(wordBuf);
 			nextPtr->next = NULL;
+			nextPtr->followCalculated = '0';
 		}
 		ptr++;
 	}
@@ -231,7 +236,7 @@ void printGrammar()
 	}
 }
 
-void insertIntoFirst(NonTerminal nt, Terminal t, int rule)
+void insertIntoFirst(NonTerminal nt, Terminal t)
 {
 	TerminalInfo *ti;
 
@@ -239,7 +244,6 @@ void insertIntoFirst(NonTerminal nt, Terminal t, int rule)
 	if (firstPtr == NULL) {
 		ti = (TerminalInfo *)malloc(sizeof(TerminalInfo));
 		ti->tr = t;
-		ti->rule = rule;
 		ti->next = NULL;
 		ffTable[nt].first = ti;
 	} else {
@@ -248,14 +252,13 @@ void insertIntoFirst(NonTerminal nt, Terminal t, int rule)
 		if (firstPtr->tr != t) {
 			ti = (TerminalInfo *)malloc(sizeof(TerminalInfo));
 			ti->tr = t;
-			ti->rule = rule;
 			ti->next = NULL;
 			firstPtr->next = ti;
 		}
 	}
 }
 
-void computeFirst()
+void computeFirstSets()
 {
 	int rulesRemaining[NON_TERMINAL_COUNT] = {0};
 	for (int i = 0; i < RULE_COUNT; i++)
@@ -263,19 +266,19 @@ void computeFirst()
 
 	int ruleFlag[RULE_COUNT] = {0};
 
-
 	LexicalSymbol *symbolPtr;
-	// TODO change this
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
+		int changeFlag = 0;
 		for (int j = 0; j < RULE_COUNT; j++) {
 			if (ruleFlag[j])
 				continue;
+			changeFlag = 1;
 
 			NonTerminal nt = grammar[j]->data.nt;
 
 			symbolPtr = grammar[j]->next;
 			if (symbolPtr->type == 'e') {
-				insertIntoFirst(nt, EPSILON, j);
+				insertIntoFirst(nt, EPSILON);
 				ruleFlag[j] = 1;
 				rulesRemaining[nt]--;
 				continue;
@@ -301,7 +304,7 @@ void computeFirst()
 					insertEpsilon = 0;
 					while (tPtr) {
 						if (tPtr->tr != EPSILON)
-							insertIntoFirst(nt, tPtr->tr, j);
+							insertIntoFirst(nt, tPtr->tr);
 						else {
 							insertEpsilon = 1;
 							toContinue = 1;
@@ -310,21 +313,26 @@ void computeFirst()
 					}
 				} else {
 					insertEpsilon = 0;
-					insertIntoFirst(nt, symbolPtr->data.t, j);
+					insertIntoFirst(nt, symbolPtr->data.t);
 				}
 				symbolPtr = symbolPtr->next;
 			} while (toContinue && symbolPtr);
 
 			if (insertEpsilon)
-				insertIntoFirst(nt, EPSILON, j);
+				insertIntoFirst(nt, EPSILON);
 			ruleFlag[j] = 1;
 			rulesRemaining[nt]--;
 		}
+
+		// breaks loop when there are no more changes from last iteration
+		if (!changeFlag)
+			break;
 	}
 }
 
 void printFirstSets()
 {
+	printf("\nFIRST Sets:\n");
 	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
 		printf("%s: ", nonTerminalMap[i]);
 		TerminalInfo *tiPtr = ffTable[i].first;
@@ -334,12 +342,134 @@ void printFirstSets()
 		}
 		printf("\n");
 	}
+	printf("\n");
+}
+
+void insertIntoFollow(NonTerminal nt, Terminal t)
+{
+	TerminalInfo *ti;
+
+	TerminalInfo *followPtr = ffTable[nt].follow;
+	if (followPtr == NULL) {
+		ti = (TerminalInfo *)malloc(sizeof(TerminalInfo));
+		ti->tr = t;
+		ti->next = NULL;
+		ffTable[nt].follow = ti;
+	} else {
+		while (followPtr->next != NULL && followPtr->tr != t)
+			followPtr = followPtr->next;
+		if (followPtr->tr != t) {
+			ti = (TerminalInfo *)malloc(sizeof(TerminalInfo));
+			ti->tr = t;
+			ti->next = NULL;
+			followPtr->next = ti;
+		}
+	}
+}
+
+// Returns 1 if first contains epsilon else returns 0
+int insertFirstIntoFollow(NonTerminal firstNT, NonTerminal followNT)
+{
+	TerminalInfo *firstPtr = ffTable[firstNT].first;
+	int hasEpsilon = 0;
+	while (firstPtr != NULL) {
+		if (firstPtr->tr == EPSILON)
+			hasEpsilon = 1;
+		else
+			insertIntoFollow(followNT, firstPtr->tr);
+		firstPtr = firstPtr->next;
+	}
+	return hasEpsilon;
+}
+
+void insertFollowIntoFollow(NonTerminal nt1, NonTerminal nt2)
+{
+	TerminalInfo *followPtr = ffTable[nt1].follow;
+	while (followPtr != NULL) {
+		// printf("Inserting %s into %s\n", terminalMap[followPtr->tr], nonTerminalMap[nt2]);
+		insertIntoFollow(nt2, followPtr->tr);
+		followPtr = followPtr->next;
+	}
+}
+
+void computeFollowSets()
+{
+	// inserting DOLLAR in start symbol follow set
+	TerminalInfo *dollarInfo = (TerminalInfo *)malloc(sizeof(TerminalInfo));
+	dollarInfo->tr = DOLLAR;
+	dollarInfo->next = NULL;
+	ffTable[0].follow = dollarInfo;
+	grammar[0]->followCalculated = '1';
+
+	int occurencesRemaining[NON_TERMINAL_COUNT] = {0};
+	for (int i = 0; i < RULE_COUNT; i++) {
+		LexicalSymbol *symbolPtr = grammar[i]->next;
+		while (symbolPtr) {
+			if (symbolPtr->type == 'N')
+				occurencesRemaining[symbolPtr->data.nt]++;
+			symbolPtr = symbolPtr->next;
+		}
+	}
+
+	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
+		int changeFlag = 0;
+		for (int j = 0; j < RULE_COUNT; j++) {
+			LexicalSymbol *symbolPtr = grammar[j]->next;
+			while (symbolPtr != NULL) {
+				if (symbolPtr->type == 'T' || symbolPtr->type == 'e' || symbolPtr->followCalculated == '1') {
+					symbolPtr = symbolPtr->next;
+					continue;
+				}
+				changeFlag = 1;
+				LexicalSymbol *forwardPtr = symbolPtr;
+				do {
+					forwardPtr = forwardPtr->next;
+					if (!forwardPtr) {
+						if (!occurencesRemaining[grammar[j]->data.nt] || (symbolPtr->data.nt == grammar[j]->data.nt && occurencesRemaining[grammar[j]->data.nt] == 1)) {
+							insertFollowIntoFollow(grammar[j]->data.nt, symbolPtr->data.nt);
+							symbolPtr->followCalculated = '1';
+							occurencesRemaining[symbolPtr->data.nt]--;
+						}
+					} else if (forwardPtr->type == 'T') {
+						insertIntoFollow(symbolPtr->data.nt, forwardPtr->data.t);
+						symbolPtr->followCalculated = '1';
+						occurencesRemaining[symbolPtr->data.nt]--;
+						break;
+					} else if (!insertFirstIntoFollow(forwardPtr->data.nt, symbolPtr->data.nt)) {
+						symbolPtr->followCalculated = '1';
+						occurencesRemaining[symbolPtr->data.nt]--;
+						break;
+					}
+				} while (forwardPtr);
+				symbolPtr = symbolPtr->next;
+			}
+		}
+		if (!changeFlag)
+			break;
+	}
+}
+
+void printFollowSets()
+{
+	printf("\nFOLLOW Sets:\n");
+	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
+		printf("%s: ", nonTerminalMap[i]);
+		TerminalInfo *tiPtr = ffTable[i].follow;
+		while (tiPtr) {
+			printf("%s ", terminalMap[tiPtr->tr]);
+			tiPtr = tiPtr->next;
+		}
+		printf("\n");
+	}
+	printf("\n");
 }
 
 void computeFirstAndFollowSets()
 {
-	computeFirst();
+	computeFirstSets();
 	printFirstSets();
+	computeFollowSets();
+	printFollowSets();
 }
 
 void createParseTable()
@@ -369,14 +499,14 @@ void createParseTable()
 				// now take a look at follow of X too.
 				wasEpsilon = 1;
 			} else {
-				parseTable[non_termi][curr_first_info->tr].rule = curr_first_info->rule;
+				// parseTable[non_termi][curr_first_info->tr].rule = curr_first_info->rule;
 				curr_first_info = curr_first_info->next;
 			}
 		}
 		if (wasEpsilon) {
 			TerminalInfo *curr_follow_info = currFollow;
 			while (curr_follow_info) {
-				parseTable[non_termi][curr_follow_info->tr].rule = curr_follow_info->rule;
+				// parseTable[non_termi][curr_follow_info->tr].rule = curr_follow_info->rule;
 				curr_follow_info = curr_follow_info->next;
 			}
 			// TODO handle case of $, have to add $ to TerminalInfo data struct somehow

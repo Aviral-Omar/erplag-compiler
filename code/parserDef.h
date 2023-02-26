@@ -5,8 +5,8 @@
 
 /* TODO change later*/
 #define GRAMMAR_FILE "grammar.txt"
-#define RULE_COUNT 143
-#define NON_TERMINAL_COUNT 73
+#define RULE_COUNT 139
+#define NON_TERMINAL_COUNT 71
 #define TERMINAL_COUNT 58
 #define GRAMMAR_BUFFER_SIZE 4500
 
@@ -37,10 +37,7 @@ typedef enum {
 	N_iterativeStmt,
 	N_varPrint,
 	N_P1,
-	N_boolConstt,
-	N_idNumRnum,
-	N_arrayElementForPrint,
-	N_newIndex,
+	N_boolConst,
 	N_moduleReuseStmt,
 	N_assignmentStmt,
 	N_whichStmt,
@@ -49,6 +46,7 @@ typedef enum {
 	N_expression,
 	N_elementIndexWithExpressions,
 	N_sign,
+	N_newIndex,
 	N_optional,
 	N_actualParaList,
 	N_N11,
@@ -97,13 +95,13 @@ struct LexicalSymbol {
 		Terminal t;
 	} data;
 	LexicalSymbol* next;
-	char type;	// may be 'T', 'N', 'e'
+	char type;				// may be 'T', 'N', 'e'
+	char followCalculated;	// used during follow computation
 };
 
 typedef struct TerminalInfo TerminalInfo;
 struct TerminalInfo {
 	Terminal tr;
-	int rule;
 	TerminalInfo* next;
 };
 
