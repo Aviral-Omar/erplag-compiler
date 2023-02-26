@@ -35,14 +35,10 @@ N_ioStmt T_PRINT T_BO N_varPrint T_BC T_SEMICOL
 N_varPrint T_ID N_P1
 N_varPrint T_NUM
 N_varPrint T_RNUM
-N_varPrint N_boolConstt
-N_boolConstt T_TRUE
-N_boolConstt T_FALSE
-N_idNumRnum T_ID
-N_idNumRnum T_NUM
-N_idNumRnum T_RNUM
-N_arrayElementForPrint T_ID T_SQBO N_indexArr T_SQBC
-N_P1 T_SQBO N_newIndex T_SQBC
+N_varPrint N_boolConst
+N_boolConst T_TRUE
+N_boolConst T_FALSE
+N_P1 T_SQBO N_indexArr T_SQBC
 N_P1 epsilon
 N_simpleStmt N_moduleReuseStmt
 N_simpleStmt N_assignmentStmt
@@ -60,7 +56,7 @@ N_sign epsilon
 N_moduleReuseStmt N_optional T_USE T_MODULE T_ID T_WITH T_PARAMETERS N_actualParaList T_SEMICOL
 N_actualParaList T_NUM
 N_actualParaList T_RNUM
-N_actualParaList N_boolConstt
+N_actualParaList N_boolConst
 N_actualParaList T_ID N_N11
 N_optional T_SQBO N_idList T_SQBC T_ASSIGNOP
 N_optional epsilon
@@ -81,7 +77,7 @@ N_arithmeticOrBooleanExpr N_anyTerm N_N7
 N_N7 N_logicalOp N_anyTerm N_N7
 N_N7 epsilon
 N_anyTerm N_arithmeticExpr N_N8
-N_anyTerm N_boolConstt
+N_anyTerm N_boolConst
 N_N8 N_relationalOp N_arithmeticExpr
 N_N8 epsilon
 N_arithmeticExpr N_term N_N4
@@ -90,10 +86,10 @@ N_N4 epsilon
 N_term N_factor N_N5
 N_N5 N_op2 N_factor N_N5
 N_N5 epsilon
-N_factor T_BO N_arithmeticExpr T_BC
+N_factor T_BO N_arithmeticOrBooleanExpr T_BC
 N_factor T_NUM
 N_factor T_RNUM
-N_factor N_boolConstt
+N_factor N_boolConst
 N_factor T_ID N_N11
 N_N11 T_SQBO N_elementIndexWithExpressions T_SQBC
 N_N11 epsilon
@@ -109,7 +105,7 @@ N_arrN5 N_op2 N_arrFactor N_arrN5
 N_arrN5 epsilon
 N_arrFactor T_ID
 N_arrFactor T_NUM
-N_arrFactor N_boolConstt
+N_arrFactor N_boolConst
 N_arrFactor T_BO N_arrExpr T_BC
 N_op1 T_PLUS
 N_op1 T_MINUS
