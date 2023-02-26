@@ -2,7 +2,9 @@
 #include <stdlib.h>
 
 #include "lexer.h"
+// TODO remove lexer.h
 #include "lookupTable.h"
+#include "parser.h"
 
 #define MAX_BUFFER_SIZE 10000
 
@@ -42,6 +44,9 @@ int main(int argc, char *argv[])
 	}
 
 	clearHeap();
+
+	readGrammar();
+	// printGrammar();
 
 	return 0;
 }

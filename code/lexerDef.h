@@ -59,8 +59,9 @@ typedef enum {
 	SQBC,
 	BO,
 	BC,
-	COMMENTMARK,
-	EPSILON
+	EPSILON,
+	DOLLAR,
+	COMMENTMARK
 } Token;
 
 typedef struct {
