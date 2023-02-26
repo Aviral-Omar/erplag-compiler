@@ -5,12 +5,13 @@
 
 /* TODO change later*/
 #define GRAMMAR_FILE "grammar.txt"
-#define RULE_COUNT 142
+#define RULE_COUNT 143
 #define NON_TERMINAL_COUNT 73
 #define TERMINAL_COUNT 58
-#define GRAMMAR_BUFFER_SIZE 4300
+#define GRAMMAR_BUFFER_SIZE 4500
+
+// TODO rename Non Terminals in grammar
 typedef enum {
-	// TODO populate using grammar
 	N_program,
 	N_moduleDeclarations,
 	N_otherModules,
