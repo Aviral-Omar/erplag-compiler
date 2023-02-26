@@ -31,7 +31,7 @@ char *forward;
 int currLine = 1;
 int charsRead = 0;
 TokenInfo *currToken;
-char *tokenMap[58] = {"INTEGER",
+char *tokenMap[59] = {"INTEGER",
 					  "REAL",
 					  "BOOLEAN",
 					  "OF",
@@ -87,8 +87,9 @@ char *tokenMap[58] = {"INTEGER",
 					  "SQBC",
 					  "BO",
 					  "BC",
-					  "COMMENTMARK",
-					  "EPSILON"};
+					  "EPSILON",
+					  "DOLLAR",
+					  "COMMENTMARK"};
 
 void initLexer()
 {
