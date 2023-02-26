@@ -5,6 +5,10 @@
 #include "lexerDef.h"
 #include "lookupTable.h"
 
+#define isAlpha(x) ((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z'))
+#define isDigit(x) (x >= '0' && x <= '9')
+#define isAlnum(x) ( ((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')) || (x >= '0' && x <= '9') )
+
 void initLexer();
 void clearHeap();
 void getStream();
@@ -188,10 +192,14 @@ void handleLexicalError(char *errorMsg, int lineNumber)
 	currToken = NULL;
 }
 
+void handleNumberLengthWarning(char *errorMsg, int lineNumber){
+	fprintf(stderr, errorMsg, lineNumber);
+
+}
+
 void getNextToken()
 {
 	/* TODO handle ID, NUM, RNUM max lengths*/
-	/* TODO remove isdigit, isalnum, isalpha calls*/
 	// keep getting tokens till EOF
 	currToken = (TokenInfo *)malloc(sizeof(TokenInfo));
 	currToken->lineNumber = currLine;
@@ -314,16 +322,17 @@ void getNextToken()
 	// Handles case of identifier
 	default: {
 		int lexLen = 0;
-		if (*lexemeBegin == '_' || isalpha(*lexemeBegin)) {
+		if (*lexemeBegin == '_' || isAlpha(*lexemeBegin)) {
 			currToken->data.lexeme[lexLen] = *lexemeBegin;
 			lexLen++;
-			while (!incrementForward() && (*forward == '_' || isalnum(*forward))) {
+			while (!incrementForward() && (*forward == '_' || isAlnum(*forward))) {
 				currToken->data.lexeme[lexLen] = *forward;
 				lexLen++;
 				if (lexLen > 20) {
 					/* TODO confirm what action to take*/
+					
 					handleLexicalError("Lexical Error: Identifier or keyword longer than 20 chars on line %d.\n", currLine);
-					while (!incrementForward() && (*forward == '_' || isalnum(*forward)))
+					while (!incrementForward() && (*forward == '_' || isAlnum(*forward)))
 						;
 					return;
 				}
@@ -334,49 +343,63 @@ void getNextToken()
 
 			currToken->token = p ? p->token : ID;
 
-		} else if (isdigit(*lexemeBegin)) {
+		} else if (isDigit(*lexemeBegin)) {
 			int lexLen = 0;
 			do {
 				currToken->data.lexeme[lexLen] = *forward;
 				lexLen++;
-				if (incrementForward() || (!isdigit(*forward) && *forward != '.')) {
+				if (incrementForward() || (!isDigit(*forward) && *forward != '.')) {
 					currToken->token = NUM;
 					currToken->data.lexeme[lexLen] = '\0';
 					currToken->data.intValue = atoi(currToken->data.lexeme);
+
+					if(lexLen > 11){
+						handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented on line %d.\n", currLine);
+					}
+
 					return;
 				}
-			} while (isdigit(*forward));
+			} while (isDigit(*forward));
 			// TODO check length limit of NUM
-			if (incrementForward() || (!isdigit(*forward) && *forward != '.')) {
+			// Checking length of Integer, throw error if length >10
+
+
+			if (incrementForward() || (!isDigit(*forward) && *forward != '.')) {
 				handleLexicalError("Lexical Error: Incomplete number at line %d.\n", currLine);
 			} else if (*forward == '.') {
 				retractForward();
 				currToken->token = NUM;
 				currToken->data.lexeme[lexLen] = '\0';
 				currToken->data.intValue = atoi(currToken->data.lexeme);
-			} else if (isdigit(*forward)) {
+			} else if (isDigit(*forward)) {
 				currToken->data.lexeme[lexLen] = '.';
 				lexLen++;
+				int decimalpartLen = 0;
+				int exponentpartLen = 0;
 				do {
 					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
-					if (incrementForward() || (!isdigit(*forward) && *forward != 'e' && *forward != 'E')) {
+					decimalpartLen++;
+					if (incrementForward() || (!isDigit(*forward) && *forward != 'e' && *forward != 'E')) {
 						currToken->token = RNUM;
 						currToken->data.lexeme[lexLen] = '\0';
 						currToken->data.floatValue = atof(currToken->data.lexeme);
+						if(decimalpartLen > 11 && lexLen >21){
+							handleNumberLengthWarning("Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented on line %d.\n", currLine);
+						}
 						return;
 					}
-				} while (isdigit(*forward));
+				} while (isDigit(*forward));
 				currToken->data.lexeme[lexLen] = 'e';
 				lexLen++;
-				if (incrementForward() || (!isdigit(*forward) && *forward != '+' && *forward != '-')) {
+				if (incrementForward() || (!isDigit(*forward) && *forward != '+' && *forward != '-')) {
 					handleLexicalError("Lexical Error: Incomplete floating point number at line %d.\n", currLine);
 					return;
 				}
 				if (*forward == '+' || *forward == '-') {
 					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
-					if (incrementForward() || !isdigit(*forward)) {
+					if (incrementForward() || !isDigit(*forward)) {
 						handleLexicalError("Lexical Error: Incomplete floating point number at line %d.\n", currLine);
 						return;
 					}
@@ -385,13 +408,17 @@ void getNextToken()
 				do {
 					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
-					if (incrementForward() || !isdigit(*forward)) {
+					exponentpartLen++;
+					if (incrementForward() || !isDigit(*forward)) {
 						currToken->token = RNUM;
 						currToken->data.lexeme[lexLen] = '\0';
 						currToken->data.floatValue = atof(currToken->data.lexeme);
+						if(exponentpartLen >11 && lexLen > 21){
+							handleNumberLengthWarning("Warning: Exponent is too big, there is a possibility that it may be misrepresented on line %d.\n", currLine);
+						}
 						// Return is handled automatically here
 					}
-				} while (isdigit(*forward));
+				} while (isDigit(*forward));
 			}
 		} else {
 			handleLexicalError("Lexical Error: Invalid character at line %d\n", currLine);
