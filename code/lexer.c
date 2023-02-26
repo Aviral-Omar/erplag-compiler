@@ -1,4 +1,3 @@
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -7,7 +6,7 @@
 
 #define isAlpha(x) ((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z'))
 #define isDigit(x) (x >= '0' && x <= '9')
-#define isAlnum(x) ( ((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')) || (x >= '0' && x <= '9') )
+#define isAlnum(x) (((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')) || (x >= '0' && x <= '9'))
 
 void initLexer();
 void clearHeap();
@@ -159,7 +158,7 @@ void retractForward()
 
 void handleWhitespaces()
 {
-	while (isblank(*forward) || *forward == '\n') {
+	while (*forward == ' ' || *forward == '\t' || *forward == '\n') {
 		if (*forward == '\n')
 			currLine++;
 		if (incrementForward())
@@ -192,9 +191,9 @@ void handleLexicalError(char *errorMsg, int lineNumber)
 	currToken = NULL;
 }
 
-void handleNumberLengthWarning(char *errorMsg, int lineNumber){
+void handleNumberLengthWarning(char *errorMsg, int lineNumber)
+{
 	fprintf(stderr, errorMsg, lineNumber);
-
 }
 
 void getNextToken()
@@ -330,7 +329,7 @@ void getNextToken()
 				lexLen++;
 				if (lexLen > 20) {
 					/* TODO confirm what action to take*/
-					
+
 					handleLexicalError("Lexical Error: Identifier or keyword longer than 20 chars on line %d.\n", currLine);
 					while (!incrementForward() && (*forward == '_' || isAlnum(*forward)))
 						;
@@ -353,7 +352,7 @@ void getNextToken()
 					currToken->data.lexeme[lexLen] = '\0';
 					currToken->data.intValue = atoi(currToken->data.lexeme);
 
-					if(lexLen > 11){
+					if (lexLen > 9) {
 						handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented on line %d.\n", currLine);
 					}
 
@@ -384,7 +383,7 @@ void getNextToken()
 						currToken->token = RNUM;
 						currToken->data.lexeme[lexLen] = '\0';
 						currToken->data.floatValue = atof(currToken->data.lexeme);
-						if(decimalpartLen > 11 && lexLen >21){
+						if (decimalpartLen > 11 && lexLen > 21) {
 							handleNumberLengthWarning("Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented on line %d.\n", currLine);
 						}
 						return;
@@ -413,7 +412,7 @@ void getNextToken()
 						currToken->token = RNUM;
 						currToken->data.lexeme[lexLen] = '\0';
 						currToken->data.floatValue = atof(currToken->data.lexeme);
-						if(exponentpartLen >11 && lexLen > 21){
+						if (exponentpartLen > 11 && lexLen > 21) {
 							handleNumberLengthWarning("Warning: Exponent is too big, there is a possibility that it may be misrepresented on line %d.\n", currLine);
 						}
 						// Return is handled automatically here
