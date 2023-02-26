@@ -59,8 +59,8 @@ typedef enum {
 	SQBC,
 	BO,
 	BC,
-	EPSILON,
 	DOLLAR,
+	EPSILON,
 	COMMENTMARK
 } Token;
 
