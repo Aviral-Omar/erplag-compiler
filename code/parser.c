@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "parserDef.h"
+#include "stackDef.h"
 
 /* TODO clean up grammar later*/
 LexicalSymbol *grammar[RULE_COUNT];
@@ -154,137 +155,60 @@ void insertFollowIntoFollow(NonTerminal nt1, NonTerminal nt2);
 void computeFollowSets();
 void printFollowSets();
 void computeFirstAndFollowSets();
-void createParseTable();
+ParseTree *CreateParseTree(union nodeData d);
+int addNode(ParseTNode *node, union nodeData d);
+ParseTNode *child(ParseTNode *node);
+ParseTNode *sibling(ParseTNode *node);
+ParseTNode *parent(ParseTNode *node);
 
-Stack* Create()
+
+ParseTree *CreateParseTree(union nodeData d)
 {
-    Stack* q= (Stack*)malloc(sizeof(struct StackType));
-    (q)->top = NULL;
-    return q;
+	ParseTNode *node;
+	node->child = NULL;
+	node->parent = NULL;
+	node->sibling = NULL;
+
+	ParseTree *p = (ParseTree *)malloc(sizeof(struct ParseTreeType));
+	(node)->data = d;
+	return p;
 }
 
-
-int pushLex(Stack* s, LexicalSymbol *nextSymbol)
+int addNode(ParseTNode *node, union nodeData d)
 {
-    SNode* temp;
-    ParseTNode* treenode;
+	ParseTNode *temp, *trav;  // creating new node and one for traversal(to find the terminal node)
+	temp->data.S = d.S;
+	temp->parent = node;
+	temp->child = NULL;
+	temp->sibling = NULL;
 
-
-    if (isFull(s)) return FALSE;
-
-    temp = (SNode*)malloc(sizeof(SNode));
-    temp->data.S = nextSymbol;
-    temp->next = s->top;
-    s-> top = temp;
-
-
-
-    return TRUE;
+	if (node->child == NULL) {
+		node->child = temp;
+	} else {
+		trav = node->child;
+		while (trav->sibling != NULL) {
+			trav = trav->sibling;
+		}
+		trav->sibling = temp;
+	}
+	return 1;
 }
-
-int pushTok(Stack* s, TokenInfo *T)
-{
-    SNode* temp;
-    ParseTNode* treenode;
-
-
-    if (isFull(s)) return FALSE;
-
-    temp = (SNode*)malloc(sizeof(SNode));
-    temp->data.T = T;
-    temp->next = s->top;
-    s-> top = temp;
-
-
-
-    return TRUE;
-}
-
-
-int pop(Stack* s)
-{
-    SNode* temp;
-
-    if (isEmpty(s)) return FALSE;
-    else
-    {   
-        temp = s->top;
-        temp->Treenode->data.T = temp->data.T;
-        s->top = s->top->next;
-        free(temp);
-
-    }
-    return TRUE;
-}
-
-TokenInfo *top(Stack* s)
-{
-    return s->top->Token;
-}
-
-
-int isEmpty(Stack* s)
-{
-    return ((s)->top == NULL);
-}
-
-int isFull(Queue* q)
-{
-    return FALSE;
-}
-
-
-ParseTree *CreateParseTree(union nodeData *d)
-{   
-    ParseTNode *node;
-    node->child = NULL;
-    node->parent = NULL;
-    node->sibling = NULL;
-
-    ParseTree* p= (ParseTree*)malloc(sizeof(struct ParseTreeType));
-    (node)->data = d;
-    return p;
-}
-
-int addNode(ParseTNode *node,union nodeData *d)
-{
-    ParseTNode *temp, *trav; //creating new node and one for traversal(to find the terminal node)
-    temp->data.S = d.S;
-    temp->parent = node;
-    temp->child = NULL;
-    temp->sibling = NULL;
-
-    if(node->child == NULL){
-        node->child = temp;
-    }
-    else{
-        trav = node->child;
-        while(trav->sibling != NULL){
-            trav = trav->sibling;
-        }
-        trav->sibling = temp;
-    }
-    return 1;
-
-}
-
 
 
 ParseTNode *child(ParseTNode *node)
 {
-    return node->child;
+	return node->child;
 }
 
 ParseTNode *sibling(ParseTNode *node)
 {
-    return node->sibling;
+	return node->sibling;
 }
 
 ParseTNode *parent(ParseTNode *node)
 {
-    return node->parent;
+	return node->parent;
 }
-
 
 
 int findSymbol(char *symbol)
@@ -604,7 +528,8 @@ void computeFirstAndFollowSets()
 	printFollowSets();
 }
 
-void printParseTable() {
+void printParseTable()
+{
 	int row = NON_TERMINAL_COUNT;
 	int col = TERMINAL_COUNT;
 
@@ -625,50 +550,47 @@ void createParseTable()
 			parseTable[i][j].rule = -1;	 // Initialize everything to error
 		}
 	}
-	
-	for(int rule=0; rule<RULE_COUNT; rule++){
-		LexicalSymbol* LHS =  grammar[rule];
-		LexicalSymbol* RHS =  LHS->next;
+
+	for (int rule = 0; rule < RULE_COUNT; rule++) {
+		LexicalSymbol *LHS = grammar[rule];
+		LexicalSymbol *RHS = LHS->next;
 		int wasEpsilon = 1;
 		int needFollow = 0;
 
-		while(wasEpsilon){
-			if(RHS == NULL || RHS->type == 'e'){
-				//NULL means we have reached end of RHS
-				//go to follow of LHS
+		while (wasEpsilon) {
+			if (RHS == NULL || RHS->type == 'e') {
+				// NULL means we have reached end of RHS
+				// go to follow of LHS
 				needFollow = 1;
 				break;
 			}
-			if(RHS->type == 'N'){
-				wasEpsilon=0;
-				TerminalInfo * currFirst = ffTable[RHS->data.nt].first;
-				while(currFirst){
-					if(currFirst->tr == EPSILON){
-						wasEpsilon=1;
-					}
-					else{
+			if (RHS->type == 'N') {
+				wasEpsilon = 0;
+				TerminalInfo *currFirst = ffTable[RHS->data.nt].first;
+				while (currFirst) {
+					if (currFirst->tr == EPSILON) {
+						wasEpsilon = 1;
+					} else {
 						parseTable[LHS->data.nt][currFirst->tr].rule = rule;
 					}
 					currFirst = currFirst->next;
 				}
-				if(wasEpsilon){
+				if (wasEpsilon) {
 					RHS = RHS->next;
 				}
-			}
-			else if(RHS->type == 'T'){
+			} else if (RHS->type == 'T') {
 				parseTable[LHS->data.nt][RHS->data.t].rule = rule;
-				wasEpsilon=0; // to Break the while loop
-			}
-			else{
+				wasEpsilon = 0;	 // to Break the while loop
+			} else {
 				perror("Invalid Type Entered\n");
 			}
 		}
 
-		if(needFollow){
-			//We need follow of LHS
-			TerminalInfo * currFollow = ffTable[LHS->data.nt].follow;
-			while(currFollow){
-				parseTable[LHS->data.nt][currFollow->tr].rule = rule; //This means we can derive e from LHS directly or indirectly
+		if (needFollow) {
+			// We need follow of LHS
+			TerminalInfo *currFollow = ffTable[LHS->data.nt].follow;
+			while (currFollow) {
+				parseTable[LHS->data.nt][currFollow->tr].rule = rule;  // This means we can derive e from LHS directly or indirectly
 				currFollow = currFollow->next;
 			}
 		}

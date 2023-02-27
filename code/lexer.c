@@ -392,7 +392,7 @@ void getNextToken()
 
 					printf("\t");
 					if (lexLen > 9) {
-						handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented.");
+						handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented.\n");
 					}
 					return;
 				}
@@ -406,7 +406,7 @@ void getNextToken()
 			} else if (*forward == '.') {
 				printf("\t");
 				if (lexLen > 9) {
-					handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented.");
+					handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented.\n");
 				}
 				retractForward();
 				currToken->token = NUM;
@@ -429,7 +429,7 @@ void getNextToken()
 						currToken->data.floatValue = atof(currToken->data.lexeme);
 						printf("\t");
 						if (decimalpartLen > 11 && lexLen > 21) {
-							handleNumberLengthWarning("Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented.");
+							handleNumberLengthWarning("Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented.\n");
 						}
 						return;
 					}
@@ -464,7 +464,7 @@ void getNextToken()
 						currToken->data.floatValue = atof(currToken->data.lexeme);
 						if (exponentpartLen > 11 && lexLen > 21) {
 							printf("\t");
-							handleNumberLengthWarning("Warning: Exponent is too big, there is a possibility that it may be misrepresented.");
+							handleNumberLengthWarning("Warning: Exponent is too big, there is a possibility that it may be misrepresented.\n");
 						}
 						// Return is handled automatically here
 					}
