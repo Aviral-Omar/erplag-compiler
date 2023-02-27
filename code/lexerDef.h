@@ -92,5 +92,6 @@ extern int currLine;
 extern int charsRead;
 extern CurrentBuffer currBuffer;
 extern TokenInfo* currToken;
+extern int syntaxCorrect;
 
 #endif

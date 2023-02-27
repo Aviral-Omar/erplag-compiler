@@ -175,13 +175,13 @@ void readGrammar()
 {
 	FILE *g = fopen(GRAMMAR_FILE, "r");
 	if (!g) {
-		fprintf(stderr, "grammar.txt does not exist.\n");
+		printf("grammar.txt does not exist.\n");
 		exit(EXIT_FAILURE);
 	}
 	char grammarBuf[GRAMMAR_BUFFER_SIZE] = {'\0'};
 	int fileLen = fread(grammarBuf, sizeof(char), GRAMMAR_BUFFER_SIZE, g);
 	if (fclose(g) == EOF)
-		fprintf(stderr, "Error closing file.\n");
+		printf("Error closing file.\n");
 
 	char *ptr = grammarBuf;
 	char wordBuf[31];

@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 {
 	// Checks if program receives 2 arguments from command line
 	if (argc != 3) {
-		fprintf(stderr, "Please enter the filename and buffer size as arguments respectively.\n");
+		printf("Please enter the filename and buffer size as arguments respectively.\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -35,13 +35,15 @@ int main(int argc, char *argv[])
 		if (!currToken)
 			continue;
 
-		printf("%-12s\tLine %d\n", tokenMap[currToken->token], currToken->lineNumber);
+		printf("\t%-12s\n", tokenMap[currToken->token]);
 
 		fflush(stdout);
 
 		/*TODO remove this*/
 		free(currToken);
 	}
+	if (syntaxCorrect)
+		printf("\nInput source code is syntactically correct.\n");
 
 	clearHeap();
 
@@ -57,7 +59,7 @@ FILE *openFile(char *fileName)
 {
 	FILE *file = fopen(fileName, "r");
 	if (!file) {
-		fprintf(stderr, "File does not exist or unable to access file.\n");
+		printf("File does not exist or unable to access file.\n");
 		exit(EXIT_FAILURE);
 	}
 	return file;
@@ -69,12 +71,12 @@ int checkBufferSize(char *buf)
 	char *endPtr;
 	int size = (int)strtol(buf, &endPtr, 10);
 	if (*buf == '\0' || *endPtr != '\0') {
-		fprintf(stderr, "Invalid buffer size.\n");
+		printf("Invalid buffer size.\n");
 		exit(EXIT_FAILURE);
 	}
 	// checks max buffer size
 	if (size > MAX_BUFFER_SIZE) {
-		fprintf(stderr, "Buffer size too large.\n");
+		printf("Buffer size too large.\n");
 		exit(EXIT_FAILURE);
 	}
 	return size;
