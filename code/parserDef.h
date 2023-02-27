@@ -123,4 +123,54 @@ extern char* terminalMap[TERMINAL_COUNT];
 extern ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];
 extern FirstFollowEntry ffTable[NON_TERMINAL_COUNT];
 
+
+typedef struct SNodeType
+{
+    union nodeData {
+		LexicalSymbol *S;
+		TokenInfo *T;
+	}data;
+
+    struct SNodeType* next;
+    struct ParseTNode* Treenode;
+
+}SNode;
+
+typedef struct StackType
+{
+    SNode* top;
+}Stack;
+
+Stack create(void);
+int isEmpty(Stack* s);
+int isFull(Stack* s);
+int pushLex(Stack* s, LexicalSymbol *nextSymbol);
+int pushTok(Stack* s, TokenInfo *T);
+int pop(Stack* s);
+TokenInfo *top(Stack* s);
+
+
+typedef struct ParseTNodeType
+{
+	union nodeData {
+		LexicalSymbol *S;
+		TokenInfo *T;
+	}data;
+
+	ParseTNodeType* child, parent, sibling;
+
+}ParseTNode;
+
+typedef struct ParseTreeType
+{
+	ParseTNode* node;
+}ParseTree;
+
+
+ParseTree *CreateParseTree(union nodeData *d);
+int addNode(ParseTNode *node,union nodeData *d);
+ParseTNode *child(ParseTNode *node);
+ParseTNode *sibling(ParseTNode *node);
+ParseTNode *parent(ParseTNode *node);
+
 #endif
