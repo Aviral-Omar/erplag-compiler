@@ -156,6 +156,136 @@ void printFollowSets();
 void computeFirstAndFollowSets();
 void createParseTable();
 
+Stack* Create()
+{
+    Stack* q= (Stack*)malloc(sizeof(struct StackType));
+    (q)->top = NULL;
+    return q;
+}
+
+
+int pushLex(Stack* s, LexicalSymbol *nextSymbol)
+{
+    SNode* temp;
+    ParseTNode* treenode;
+
+
+    if (isFull(s)) return FALSE;
+
+    temp = (SNode*)malloc(sizeof(SNode));
+    temp->data.S = nextSymbol;
+    temp->next = s->top;
+    s-> top = temp;
+
+
+
+    return TRUE;
+}
+
+int pushTok(Stack* s, TokenInfo *T)
+{
+    SNode* temp;
+    ParseTNode* treenode;
+
+
+    if (isFull(s)) return FALSE;
+
+    temp = (SNode*)malloc(sizeof(SNode));
+    temp->data.T = T;
+    temp->next = s->top;
+    s-> top = temp;
+
+
+
+    return TRUE;
+}
+
+
+int pop(Stack* s)
+{
+    SNode* temp;
+
+    if (isEmpty(s)) return FALSE;
+    else
+    {   
+        temp = s->top;
+        temp->Treenode->data.T = temp->data.T;
+        s->top = s->top->next;
+        free(temp);
+
+    }
+    return TRUE;
+}
+
+TokenInfo *top(Stack* s)
+{
+    return s->top->Token;
+}
+
+
+int isEmpty(Stack* s)
+{
+    return ((s)->top == NULL);
+}
+
+int isFull(Queue* q)
+{
+    return FALSE;
+}
+
+
+ParseTree *CreateParseTree(union nodeData *d)
+{   
+    ParseTNode *node;
+    node->child = NULL;
+    node->parent = NULL;
+    node->sibling = NULL;
+
+    ParseTree* p= (ParseTree*)malloc(sizeof(struct ParseTreeType));
+    (node)->data = d;
+    return p;
+}
+
+int addNode(ParseTNode *node,union nodeData *d)
+{
+    ParseTNode *temp, *trav; //creating new node and one for traversal(to find the terminal node)
+    temp->data.S = d.S;
+    temp->parent = node;
+    temp->child = NULL;
+    temp->sibling = NULL;
+
+    if(node->child == NULL){
+        node->child = temp;
+    }
+    else{
+        trav = node->child;
+        while(trav->sibling != NULL){
+            trav = trav->sibling;
+        }
+        trav->sibling = temp;
+    }
+    return 1;
+
+}
+
+
+
+ParseTNode *child(ParseTNode *node)
+{
+    return node->child;
+}
+
+ParseTNode *sibling(ParseTNode *node)
+{
+    return node->sibling;
+}
+
+ParseTNode *parent(ParseTNode *node)
+{
+    return node->parent;
+}
+
+
 
 int findSymbol(char *symbol)
 {
