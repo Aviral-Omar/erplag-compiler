@@ -474,44 +474,74 @@ void computeFirstAndFollowSets()
 	printFollowSets();
 }
 
+void printParseTable() {
+	int row = NON_TERMINAL_COUNT;
+	int col = TERMINAL_COUNT;
+
+	for (int i = 0; i < row; i++) {
+		for (int j = 0; j < col; j++) {
+			printf("%d", parseTable[i][j].rule);
+			printf(" ");
+		}
+		printf("\n");
+	}
+}
+
 void createParseTable()
 {  // Requires First and Follow sets of all non terminals
 
 	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
 		for (int j = 0; j < TERMINAL_COUNT; j++) {
-			parseTable[i][j].rule = -1;	 // set everything to error
+			parseTable[i][j].rule = -1;	 // Initialize everything to error
 		}
 	}
+	
+	for(int rule=0; rule<RULE_COUNT; rule++){
+		LexicalSymbol* LHS =  grammar[rule];
+		LexicalSymbol* RHS =  LHS->next;
+		int wasEpsilon = 1;
+		int needFollow = 0;
 
-	FirstFollowEntry ff_entry;
-	TerminalInfo *currFirst;
-	TerminalInfo *currFollow;
-	// we have to iterate through FF table for each non termi
-	for (int non_termi = 0; non_termi < NON_TERMINAL_COUNT; non_termi++) {
-		// Note that i represents enum of a Non Terminal
-		ff_entry = ffTable[non_termi];
-		currFirst = ff_entry.first;
-		currFollow = ff_entry.follow;
-
-		int wasEpsilon = 0;
-
-		TerminalInfo *curr_first_info = currFirst;	// 1st element of First(X). X is FF_table[i]
-		while (curr_first_info) {
-			if (curr_first_info->tr == EPSILON) {
-				// now take a look at follow of X too.
-				wasEpsilon = 1;
-			} else {
-				// parseTable[non_termi][curr_first_info->tr].rule = curr_first_info->rule;
-				curr_first_info = curr_first_info->next;
+		while(wasEpsilon){
+			if(RHS == NULL || RHS->type == 'e'){
+				//NULL means we have reached end of RHS
+				//go to follow of LHS
+				needFollow = 1;
+				break;
+			}
+			if(RHS->type == 'N'){
+				wasEpsilon=0;
+				TerminalInfo * currFirst = ffTable[RHS->data.nt].first;
+				while(currFirst){
+					if(currFirst->tr == EPSILON){
+						wasEpsilon=1;
+					}
+					else{
+						parseTable[LHS->data.nt][currFirst->tr].rule = rule;
+					}
+					currFirst = currFirst->next;
+				}
+				if(wasEpsilon){
+					RHS = RHS->next;
+				}
+			}
+			else if(RHS->type == 'T'){
+				parseTable[LHS->data.nt][RHS->data.t].rule = rule;
+				wasEpsilon=0; // to Break the while loop
+			}
+			else{
+				perror("Invalid Type Entered\n");
 			}
 		}
-		if (wasEpsilon) {
-			TerminalInfo *curr_follow_info = currFollow;
-			while (curr_follow_info) {
-				// parseTable[non_termi][curr_follow_info->tr].rule = curr_follow_info->rule;
-				curr_follow_info = curr_follow_info->next;
+
+		if(needFollow){
+			//We need follow of LHS
+			TerminalInfo * currFollow = ffTable[LHS->data.nt].follow;
+			while(currFollow){
+				parseTable[LHS->data.nt][currFollow->tr].rule = rule; //This means we can derive e from LHS directly or indirectly
+				currFollow = currFollow->next;
 			}
-			// TODO handle case of $, have to add $ to TerminalInfo data struct somehow
 		}
 	}
+	printParseTable();
 }
