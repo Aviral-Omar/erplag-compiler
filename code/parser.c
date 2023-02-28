@@ -162,6 +162,19 @@ void computeFirstAndFollowSets();
 void populateSyn();
 void synRecovery();
 
+void printParseTree(ParseTNode *node)
+{
+	printParseTree(node->child);
+
+	printf("%s\n", node->data);
+
+	ParseTNode *sibling = node->child->sibling;
+	while (sibling != NULL) {
+		printParseTree(sibling);
+		sibling = sibling->sibling;
+	}
+}
+
 void initParser()
 {
 	readGrammar();
