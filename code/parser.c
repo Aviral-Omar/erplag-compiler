@@ -161,6 +161,17 @@ ParseTNode *child(ParseTNode *node);
 ParseTNode *sibling(ParseTNode *node);
 ParseTNode *parent(ParseTNode *node);
 
+void initParser() {
+	readGrammar();
+	// printGrammar();
+	computeFirstAndFollowSets();
+	createParseTable();
+
+	// TODO init stack
+	// TODO create parse tree
+	CreateParseTree()
+}
+
 
 ParseTree *CreateParseTree(union nodeData d)
 {

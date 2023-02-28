@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
 	removeComments(argv[1], "cleaned");
 	initLexer();
 
+	initParser();
 	// TODO Reading and throwing away tokens for testing
 	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
 		// TODO free space used by token structs
@@ -46,10 +47,6 @@ int main(int argc, char *argv[])
 		printf("\nInput source code is syntactically correct.\n");
 
 	clearHeap();
-
-	readGrammar();
-	// printGrammar();
-	computeFirstAndFollowSets();
 
 	return 0;
 }

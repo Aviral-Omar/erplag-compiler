@@ -3,6 +3,9 @@
 	"files.associations": {
 		"stdlib.h": "c",
 		"stdio.h": "c",
-		"parser.h": "c"
+		"parser.h": "c",
+		"parserdef.h": "c",
+		"stackdef.h": "c",
+		"lexerdef.h": "c"
 	}
 }
