@@ -69,9 +69,9 @@ int pop(Stack *s)
 	return TRUE;
 }
 
-TokenInfo *top(Stack *s)
+union nodeData *top(Stack *s)
 {
-	return s->top->Token;
+	return s->top->data;
 }
 
 
@@ -80,7 +80,7 @@ int isEmpty(Stack *s)
 	return ((s)->top == NULL);
 }
 
-int isFull(Queue *q)
-{
+int isFull(Stack *s)
+{ //TODO Stack limit
 	return FALSE;
 }
