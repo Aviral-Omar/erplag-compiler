@@ -10,26 +10,23 @@ int isFull(Stack *s);
 SNode *pushTok(Stack *s, Symbol T, char type);
 int pop(Stack *s);
 SNode *top(Stack *s);
+void deleteStack(Stack *s);
 
 
 Stack *createStack()
 {
-	Stack *q = (Stack *)malloc(sizeof(Stack));
-	q->size = 0;
-	q->top = NULL;
-	return q;
+	Stack *st = (Stack *)malloc(sizeof(Stack));
+	st->size = 0;
+	st->top = NULL;
+	return st;
 }
 
 SNode *pushTok(Stack *s, Symbol T, char type)
 {
-	SNode *temp;
+	SNode *temp = (SNode *)malloc(sizeof(SNode));
 	ParseTNode *treenode = NULL;
 	// ParseTNode *treenode = addNode(s,T);
 
-
-	// if (isFull(s)) return FALSE;
-
-	temp = (SNode *)malloc(sizeof(SNode));
 	temp->data = T;
 	temp->next = s->top;
 	temp->treenode = treenode;
@@ -65,6 +62,17 @@ SNode *top(Stack *s)
 int isEmpty(Stack *s)
 {
 	return (s->size == 0);
+}
+
+void deleteStack(Stack *s)
+{
+	SNode *cur = s->top, *next;
+	do {
+		next = cur->next;
+		free(cur);
+		cur = next;
+	} while (cur);
+	free(s);
 }
 
 int isFull(Stack *q)
