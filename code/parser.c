@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "lexer.h"
 #include "parserDef.h"
 #include "stack.h"
 #include "tree.h"
@@ -10,6 +11,7 @@
 LexicalSymbol *grammar[RULE_COUNT];
 ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];	 // will be filled by CreateParseTable()
 FirstFollowEntry ffTable[NON_TERMINAL_COUNT] = {{NULL, NULL}};	 // will be populated by function calculating first and follow sets
+Stack *s;
 
 char *nonTerminalMap[NON_TERMINAL_COUNT] = {
 	"N_program",
@@ -144,6 +146,7 @@ char *terminalMap[TERMINAL_COUNT] = {
 	"dollar",
 	"epsilon"};
 
+void initParser();
 int findSymbol(char *symbol);
 void readGrammar();
 void printGrammar();
@@ -158,9 +161,6 @@ void printFollowSets();
 void computeFirstAndFollowSets();
 void populateSyn();
 void synRecovery();
-ParseTNode *createParseTree(union symbol d, char type);
-ParseTNode *addNode(ParseTNode *node, union symbol d, char type);
-int updateData(ParseTNode *node, union symbol d, char type);
 
 void initParser()
 {
@@ -170,7 +170,7 @@ void initParser()
 	// createParseTable();
 
 	s = createStack();
-	union symbol temp0, temp1;
+	Symbol temp0, temp1;
 	temp0.t = DOLLAR;
 	pushTok(s, temp0, 'T');	 // pushing dollar to the stack initially
 
@@ -507,7 +507,7 @@ void printParseTable()
 
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
-			printf("%d", parseTable[i][j].rule);
+			printf("%d", parseTable[i][j]);
 			printf(" ");
 		}
 		printf("\n");
@@ -516,10 +516,10 @@ void printParseTable()
 
 void createParseTable()
 {  // Requires First and Follow sets of all non terminals
-
+	// TODO check LL1 grammar
 	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
 		for (int j = 0; j < TERMINAL_COUNT; j++) {
-			parseTable[i][j].rule = -1;	 // Initialize everything to error
+			parseTable[i][j] = -1;	// Initialize everything to error
 		}
 	}
 
@@ -543,7 +543,7 @@ void createParseTable()
 					if (currFirst->tr == EPSILON) {
 						wasEpsilon = 1;
 					} else {
-						parseTable[LHS->data.nt][currFirst->tr].rule = rule;
+						parseTable[LHS->data.nt][currFirst->tr] = rule;
 					}
 					currFirst = currFirst->next;
 				}
@@ -551,7 +551,7 @@ void createParseTable()
 					RHS = RHS->next;
 				}
 			} else if (RHS->type == 'T') {
-				parseTable[LHS->data.nt][RHS->data.t].rule = rule;
+				parseTable[LHS->data.nt][RHS->data.t] = rule;
 				wasEpsilon = 0;	 // to Break the while loop
 			} else {
 				perror("Invalid Type Entered\n");
@@ -562,7 +562,7 @@ void createParseTable()
 			// We need follow of LHS
 			TerminalInfo *currFollow = ffTable[LHS->data.nt].follow;
 			while (currFollow) {
-				parseTable[LHS->data.nt][currFollow->tr].rule = rule;  // This means we can derive e from LHS directly or indirectly
+				parseTable[LHS->data.nt][currFollow->tr] = rule;  // This means we can derive e from LHS directly or indirectly
 				currFollow = currFollow->next;
 			}
 		}
@@ -599,7 +599,7 @@ void parser()
 		}
 	} else {  // Assuming 'e' is not in stack
 		// Case of non-terminal
-		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol].rule;
+		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
 		if (ruleNumber == -1) {
 			// Error and Recovery
 			perror("Syntax Error: input symbol can't be derived from top of stack Non Terminal\n");
@@ -624,8 +624,8 @@ void populateSyn()
 	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
 		TerminalInfo *currFollow = ffTable[i].follow;
 		while (currFollow) {
-			if (parseTable[i][currFollow->tr].rule == -1) {
-				parseTable[i][currFollow->tr].rule = -2;
+			if (parseTable[i][currFollow->tr] == -1) {
+				parseTable[i][currFollow->tr] = -2;
 			}
 			currFollow = currFollow->next;
 		}
@@ -650,7 +650,7 @@ void synRecovery()
 		SNode *stackTop = top(s);
 
 		// Case of non-terminal
-		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol].rule;
+		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
 		if (ruleNumber == -1) {
 			fflush(stdout);
 			free(currToken);

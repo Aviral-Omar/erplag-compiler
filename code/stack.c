@@ -1,12 +1,13 @@
 #include <stdlib.h>
 
+#include "stackDef.h"
 #include "treeDef.h"
 
 
-Stack *createStack(void);
+Stack *createStack();
 int isEmpty(Stack *s);
 int isFull(Stack *s);
-SNode *pushTok(Stack *s, union symbol T, char type);
+SNode *pushTok(Stack *s, Symbol T, char type);
 int pop(Stack *s);
 SNode *top(Stack *s);
 
@@ -19,14 +20,14 @@ Stack *createStack()
 	return q;
 }
 
-SNode *pushTok(Stack *s, union symbol T, char type)
+SNode *pushTok(Stack *s, Symbol T, char type)
 {
 	SNode *temp;
 	ParseTNode *treenode = NULL;
 	// ParseTNode *treenode = addNode(s,T);
 
 
-	if (isFull(s)) return FALSE;
+	// if (isFull(s)) return FALSE;
 
 	temp = (SNode *)malloc(sizeof(SNode));
 	temp->data = T;

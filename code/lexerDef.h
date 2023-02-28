@@ -2,75 +2,14 @@
 #define LEXER_DEF
 
 #include <stdio.h>
-typedef enum {
-	INTEGER,
-	REAL,
-	BOOLEAN,
-	OF,
-	ARRAY,
-	START,
-	END,
-	DECLARE,
-	MODULE,
-	DRIVER,
-	PROGRAM,
-	GET_VALUE,
-	PRINT,
-	USE,
-	WITH,
-	PARAMETERS,
-	TAKES,
-	INPUT,
-	RETURNS,
-	FOR,
-	IN,
-	SWITCH,
-	CASE,
-	BREAK,
-	DEFAULT,
-	WHILE,
-	ID,
-	NUM,
-	RNUM,
-	AND,
-	OR,
-	TRUE,
-	FALSE,
-	PLUS,
-	MINUS,
-	MUL,
-	DIV,
-	LT,
-	LE,
-	GE,
-	GT,
-	EQ,
-	NE,
-	DEF,
-	ENDDEF,
-	DRIVERDEF,
-	DRIVERENDDEF,
-	COLON,
-	RANGEOP,
-	SEMICOL,
-	COMMA,
-	ASSIGNOP,
-	SQBO,
-	SQBC,
-	BO,
-	BC,
-	DOLLAR,
-	EPSILON,
-	COMMENTMARK
-} Token;
+
+#include "symbolDef.h"
 
 typedef struct {
 	Token token;
 	unsigned int lineNumber;
 	union lexemeData {
-		// TODO Storing as string for ease of conversion
 		char lexeme[21];
-		// TODO int/long float/double
 		int intValue;
 		float floatValue;
 	} data;

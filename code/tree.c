@@ -2,12 +2,12 @@
 
 #include "treeDef.h"
 
-ParseTNode *createParseTree(union symbol d, char type);
-ParseTNode *addNode(ParseTNode *node, union symbol d, char type);
-int updateData(ParseTNode *node, union symbol d, char type);
+ParseTNode *createParseTree(Symbol d, char type);
+ParseTNode *addNode(ParseTNode *node, Symbol d, char type);
+int updateData(ParseTNode *node, Symbol d, char type);
 
 
-ParseTNode *createParseTree(union symbol d, char type)
+ParseTNode *createParseTree(Symbol d, char type)
 {
 	ParseTNode *node;
 
@@ -20,11 +20,11 @@ ParseTNode *createParseTree(union symbol d, char type)
 	return p;
 }
 
-ParseTNode *addNode(ParseTNode *parent, union symbol d, char type)
+ParseTNode *addNode(ParseTNode *parent, Symbol d, char type)
 {
 	ParseTNode *temp, *trav;  // creating new node and one for traversal(to find the terminal node)
 
-	ParseTNode *temp = (ParseTNode *)malloc(sizeof(struct ParseTNodeType));
+	temp = (ParseTNode *)malloc(sizeof(struct ParseTNodeType));
 	temp->data = d;
 	temp->parent = parent;
 	temp->child = NULL;
@@ -42,7 +42,7 @@ ParseTNode *addNode(ParseTNode *parent, union symbol d, char type)
 	return temp;
 }
 
-int updateData(ParseTNode *node, union symbol d, char type)
+int updateData(ParseTNode *node, Symbol d, char type)
 {
 	node->data = d;
 	node->type = type;
