@@ -1,4 +1,4 @@
-compileAll: lookupTable.o lookupTable.h lexer.o lexer.h parser.o parser.h
+compileAll: lookupTable.o lexer.o lexer.h parser.o parser.h
 	gcc driver.c lookupTable.o lexer.o parser.o stack.o tree.o
 
 lookupTable.o: lookupTable.c lookupTable.h

@@ -20,7 +20,7 @@ void handleLexicalError(char *errorMsg, int lineNumber);
 void getNextToken();
 void removeComments(char *testcaseFile, char *cleanFile);
 
-FILE *fp;
+FILE *src;
 int bufferSize;
 char *buf1;
 char *buf2;
@@ -30,6 +30,7 @@ char *forward;
 int currLine = 1;
 int charsRead = 0;
 int syntaxCorrect = 1;
+int lexerPrint = 0;
 TokenInfo *currToken;
 char *tokenMap[59] = {"INTEGER",
 					  "REAL",
@@ -120,14 +121,14 @@ void clearHeap()
 void getStream()
 {
 	// Reads stream into buf1 or buf2
-	charsRead = fread(currBuffer == FIRST ? buf1 : buf2, sizeof(char), bufferSize, fp);
-	if (ferror(fp)) {
+	charsRead = fread(currBuffer == FIRST ? buf1 : buf2, sizeof(char), bufferSize, src);
+	if (ferror(src)) {
 		printf("Error reading from file.\n");
 		exit(EXIT_FAILURE);
 	}
-	if (feof(fp))
+	if (feof(src))
 		// fclose returns EOF when there is error else returns 0
-		if (fclose(fp) == EOF)
+		if (fclose(src) == EOF)
 			printf("Error closing file.\n");
 }
 
@@ -195,36 +196,36 @@ void handleLexicalError(char *errorMsg, int lineNumber)
 
 void handleNumberLengthWarning(char *errorMsg)
 {
-	printf(errorMsg);
+	printf(errorMsg, currLine);
 }
+
 
 void getNextToken()
 {
-	/* TODO handle ID, NUM, RNUM max lengths*/
-	// keep getting tokens till EOF
+	// Keep getting tokens till EOF
 	currToken = (TokenInfo *)malloc(sizeof(TokenInfo));
 	currToken->lineNumber = currLine;
 
 	switch (*lexemeBegin) {
 	case '+':
 		currToken->token = PLUS;
-		printf("%d\t%c\t", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c\t\t%-12s\n", currLine, *forward, tokenMap[currToken->token]);
 		incrementForward();
 		break;
 	case '-':
 		currToken->token = MINUS;
-		printf("%d\t%c\t", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c\t\t%-12s\n", currLine, *forward, tokenMap[currToken->token]);
 		incrementForward();
 		break;
 	case '*':
 		if (incrementForward() || *forward != '*') {
-			printf("%d\t*\t", currLine);
 			currToken->token = MUL;
+			if (lexerPrint) printf("%d\t*\t\t%-12s\n", currLine, tokenMap[currToken->token]);
 		} else {
 			int startLine = currLine;
-			printf("%d\t**\t\tCOMMENT\n", currLine);
+			if (lexerPrint) printf("%d\t**\t\tCOMMENT\n", currLine);
 			if (skipComment()) {
-				handleLexicalError("\tLexical Error: Comment ending missing for comment starting at line %d.\n", startLine);
+				handleLexicalError("Lexical Error: Comment ending missing for comment starting: Line %d\n", startLine);
 			} else {
 				free(currToken);
 				currToken = NULL;
@@ -233,166 +234,166 @@ void getNextToken()
 		break;
 	case '/':
 		currToken->token = DIV;
-		printf("%d\t%c\t", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c\t\t%-12s\n", currLine, *forward, tokenMap[currToken->token]);
 		incrementForward();
 		break;
 	case '<':
-		printf("%d\t%c", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c", currLine, *forward);
 		if (incrementForward() || (*forward != '<' && *forward != '='))
 			currToken->token = LT;
 		else if (*forward == '=') {
 			currToken->token = LE;
-			printf("%c", *forward);
+			if (lexerPrint) printf("%c", *forward);
 			incrementForward();
 		} else {
-			printf("%c", *forward);
+			if (lexerPrint) printf("%c", *forward);
 			if (incrementForward() || *forward != '<')
 				currToken->token = DEF;
 			else {
 				currToken->token = DRIVERDEF;
-				printf("%c", *forward);
+				if (lexerPrint) printf("%c", *forward);
 				incrementForward();
 			}
 		}
-		printf("\t");
+		if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 		break;
 
 	case '>':
-		printf("%d\t%c", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c", currLine, *forward);
 		if (incrementForward() || (*forward != '>' && *forward != '='))
 			currToken->token = GT;
 		else if (*forward == '=') {
 			currToken->token = GE;
-			printf("%c", *forward);
+			if (lexerPrint) printf("%c", *forward);
 			incrementForward();
 		} else {
-			printf("%c", *forward);
+			if (lexerPrint) printf("%c", *forward);
 			if (incrementForward() || *forward != '>')
 				currToken->token = ENDDEF;
 			else {
 				currToken->token = DRIVERENDDEF;
-				printf("%c", *forward);
+				if (lexerPrint) printf("%c", *forward);
 				incrementForward();
 			}
 		}
-		printf("\t");
+		if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 		break;
 
 	case '=':
-		printf("%d\t%c", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c", currLine, *forward);
 		if (incrementForward() || *forward != '=') {
-			printf("\t");
-			handleLexicalError("\tLexical Error: Single '=' at line %d.\n", currLine);
+			if (lexerPrint) printf("\n");
+			handleLexicalError("Lexical Error: Single '=': Line %d\n", currLine);
 		} else {
 			currToken->token = EQ;
-			printf("%c\t", *forward);
+			if (lexerPrint) printf("%c\t\t%-12s\n", *forward, tokenMap[currToken->token]);
 			incrementForward();
 		}
 		break;
 	case '!':
-		printf("%d\t%c", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c", currLine, *forward);
 		if (incrementForward() || *forward != '=') {
-			printf("\t");
-			handleLexicalError("\tLexical Error: Single '!' at line %d.\n", currLine);
+			if (lexerPrint) printf("\n");
+			handleLexicalError("Lexical Error: Single '!': Line %d\n", currLine);
 		} else {
 			currToken->token = NE;
-			printf("%c\t", *forward);
+			if (lexerPrint) printf("%c\t\t%-12s\n", *forward, tokenMap[currToken->token]);
 			incrementForward();
 		}
 		break;
 	case ':':
-		printf("%d\t%c", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c", currLine, *forward);
 		if (incrementForward() || *forward != '=') {
 			currToken->token = COLON;
 		} else {
 			currToken->token = ASSIGNOP;
-			printf("%c", *forward);
+			if (lexerPrint) printf("%c", *forward);
 			incrementForward();
 		}
-		printf("\t");
+		if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 		break;
 	case '.':
-		printf("%d\t%c", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c", currLine, *forward);
 		if (incrementForward() || *forward != '.') {
-			printf("\t");
-			handleLexicalError("\tLexical Error: Single '.' at line %d.\n", currLine);
+			if (lexerPrint) printf("\n");
+			handleLexicalError("Lexical Error: Single '.': Line %d\n", currLine);
 		} else {
 			currToken->token = RANGEOP;
-			printf("%c\t", *forward);
+			if (lexerPrint) printf("%c\t\t%-12s\n", *forward, tokenMap[currToken->token]);
 			incrementForward();
 		}
 		break;
 	case ';':
 		currToken->token = SEMICOL;
-		printf("%d\t%c\t", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c\t\t%-12s\n", currLine, *forward, tokenMap[currToken->token]);
 		incrementForward();
 		break;
 	case ',':
 		currToken->token = COMMA;
-		printf("%d\t%c\t", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c\t\t%-12s\n", currLine, *forward, tokenMap[currToken->token]);
 		incrementForward();
 		break;
 	case '[':
 		currToken->token = SQBO;
-		printf("%d\t%c\t", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c\t\t%-12s\n", currLine, *forward, tokenMap[currToken->token]);
 		incrementForward();
 		break;
 	case ']':
 		currToken->token = SQBC;
-		printf("%d\t%c\t", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c\t\t%-12s\n", currLine, *forward, tokenMap[currToken->token]);
 		incrementForward();
 		break;
 	case '(':
 		currToken->token = BO;
-		printf("%d\t%c\t", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c\t\t%-12s\n", currLine, *forward, tokenMap[currToken->token]);
 		incrementForward();
 		break;
 	case ')':
 		currToken->token = BC;
-		printf("%d\t%c\t", currLine, *forward);
+		if (lexerPrint) printf("%d\t%c\t\t%-12s\n", currLine, *forward, tokenMap[currToken->token]);
 		incrementForward();
 		break;
 
 	default: {
 		int lexLen = 0;
 		if (*lexemeBegin == '_' || isAlpha(*lexemeBegin)) {
-			printf("%d\t%c", currLine, *forward);
+			if (lexerPrint) printf("%d\t%c", currLine, *forward);
 			currToken->data.lexeme[lexLen] = *lexemeBegin;
 			lexLen++;
 			while (!incrementForward() && (*forward == '_' || isAlnum(*forward))) {
-				printf("%c", *forward);
+				if (lexerPrint) printf("%c", *forward);
 				currToken->data.lexeme[lexLen] = *forward;
 				lexLen++;
 				if (lexLen > 20) {
 					while (!incrementForward() && (*forward == '_' || isAlnum(*forward)))
-						printf("%c", *forward);
-					printf("\t");
-					handleLexicalError("Lexical Error: Identifier or keyword longer than 20 chars on line %d.\n", currLine);
+						if (lexerPrint) printf("%c", *forward);
+					if (lexerPrint) printf("\n");
+					handleLexicalError("Lexical Error: Identifier or keyword longer than 20 chars: Line %d\n", currLine);
 					return;
 				}
 			}
 
-			printf("\t");
 			currToken->data.lexeme[lexLen] = '\0';
 			KeywordPair *p = searchKeyword(currToken->data.lexeme);
 
 			currToken->token = p ? p->token : ID;
+			if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 
 		} else if (isDigit(*lexemeBegin)) {
 			int lexLen = 0;
-			printf("%d\t", currLine);
+			if (lexerPrint) printf("%d\t", currLine);
 			do {
 				currToken->data.lexeme[lexLen] = *forward;
 				lexLen++;
-				printf("%c", *forward);
+				if (lexerPrint) printf("%c", *forward);
 				if (incrementForward() || (!isDigit(*forward) && *forward != '.')) {
 					currToken->token = NUM;
 					currToken->data.lexeme[lexLen] = '\0';
 					currToken->data.intValue = atoi(currToken->data.lexeme);
 
-					printf("\t");
+					if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 					if (lexLen > 9) {
-						handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented.\n");
+						handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented: Line %d\n");
 					}
 					return;
 				}
@@ -401,19 +402,19 @@ void getNextToken()
 
 
 			if (incrementForward() || (!isDigit(*forward) && *forward != '.')) {
-				printf(".\t\t");
-				handleLexicalError("Lexical Error: Incomplete number at line %d.\n", currLine);
+				if (lexerPrint) printf(".\n");
+				handleLexicalError("Lexical Error: Incomplete number: Line %d\n", currLine);
 			} else if (*forward == '.') {
-				printf("\t");
-				if (lexLen > 9) {
-					handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented.\n");
-				}
 				retractForward();
 				currToken->token = NUM;
 				currToken->data.lexeme[lexLen] = '\0';
 				currToken->data.intValue = atoi(currToken->data.lexeme);
+				if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
+				if (lexLen > 9) {
+					handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented: Line %d\n");
+				}
 			} else if (isDigit(*forward)) {
-				printf(".");
+				if (lexerPrint) printf(".");
 				currToken->data.lexeme[lexLen] = '.';
 				lexLen++;
 				int decimalpartLen = 0;
@@ -422,33 +423,33 @@ void getNextToken()
 					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
 					decimalpartLen++;
-					printf("%c", *forward);
+					if (lexerPrint) printf("%c", *forward);
 					if (incrementForward() || (!isDigit(*forward) && *forward != 'e' && *forward != 'E')) {
 						currToken->token = RNUM;
 						currToken->data.lexeme[lexLen] = '\0';
 						currToken->data.floatValue = atof(currToken->data.lexeme);
-						printf("\t");
+						if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 						if (decimalpartLen > 11 && lexLen > 21) {
-							handleNumberLengthWarning("Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented.\n");
+							handleNumberLengthWarning("Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented: Line %d\n");
 						}
 						return;
 					}
 				} while (isDigit(*forward));
 				currToken->data.lexeme[lexLen] = 'e';
 				lexLen++;
-				printf("%c", *forward);
+				if (lexerPrint) printf("%c", *forward);
 				if (incrementForward() || (!isDigit(*forward) && *forward != '+' && *forward != '-')) {
-					printf("\t\t");
-					handleLexicalError("Lexical Error: Incomplete floating point number at line %d.\n", currLine);
+					if (lexerPrint) printf("\n");
+					handleLexicalError("Lexical Error: Incomplete floating point number: Line %d\n", currLine);
 					return;
 				}
 				if (*forward == '+' || *forward == '-') {
 					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
-					printf("%c", *forward);
+					if (lexerPrint) printf("%c", *forward);
 					if (incrementForward() || !isDigit(*forward)) {
-						printf("\t\t");
-						handleLexicalError("Lexical Error: Incomplete floating point number at line %d.\n", currLine);
+						if (lexerPrint) printf("\n");
+						handleLexicalError("Lexical Error: Incomplete floating point number: Line %d\n", currLine);
 						return;
 					}
 				}
@@ -457,22 +458,21 @@ void getNextToken()
 					currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
 					exponentpartLen++;
-					printf("%c", *forward);
+					if (lexerPrint) printf("%c", *forward);
 					if (incrementForward() || !isDigit(*forward)) {
 						currToken->token = RNUM;
 						currToken->data.lexeme[lexLen] = '\0';
 						currToken->data.floatValue = atof(currToken->data.lexeme);
+						if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 						if (exponentpartLen > 11 && lexLen > 21) {
-							printf("\t");
-							handleNumberLengthWarning("Warning: Exponent is too big, there is a possibility that it may be misrepresented.\n");
+							handleNumberLengthWarning("Warning: Exponent is too big, there is a possibility that it may be misrepresented: Line %d\n");
 						}
-						// Return is handled automatically here
+						return;
 					}
 				} while (isDigit(*forward));
-				printf("\t");
 			}
 		} else {
-			printf("%c\t", *forward);
+			if (lexerPrint) printf("%d\t%c\n", currLine, *forward);
 			handleLexicalError("Lexical Error: Invalid character at line %d\n", currLine);
 			incrementForward();
 		}
@@ -498,7 +498,7 @@ void removeComments(char *testcaseFile, char *cleanFile)
 	outFile = fopen(cleanFile, "w");
 	if (outFile == NULL) {
 		printf("Error opening output file\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	while (!feof(inFile)) {
 		int len = fread(buffer, sizeof(char), bufferSize, inFile);
@@ -506,6 +506,7 @@ void removeComments(char *testcaseFile, char *cleanFile)
 		while (p - buffer < len) {
 			if (*p == '\n') {
 				fprintf(outFile, "%c", *p);
+				printf("%c", *p);
 			} else if (*p == '*') {
 				if (lastAsterisk)
 					insideComment = !insideComment;
@@ -513,9 +514,11 @@ void removeComments(char *testcaseFile, char *cleanFile)
 			} else if (!insideComment) {
 				if (lastAsterisk) {
 					fprintf(outFile, "*");
+					printf("*");
 					lastAsterisk = !lastAsterisk;
 				}
 				fprintf(outFile, "%c", *p);
+				printf("%c", *p);
 			}
 			p++;
 		}
