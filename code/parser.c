@@ -159,6 +159,8 @@ void insertFollowIntoFollow(NonTerminal nt1, NonTerminal nt2);
 void computeFollowSets();
 void printFollowSets();
 void computeFirstAndFollowSets();
+void createParseTable();
+void printParseTable();
 void populateSyn();
 void synRecovery();
 
@@ -178,7 +180,6 @@ void printParseTree(ParseTNode *node)
 void initParser()
 {
 	readGrammar();
-	// printGrammar();
 	computeFirstAndFollowSets();
 	// createParseTable();
 
@@ -190,7 +191,9 @@ void initParser()
 	temp1.nt = PROGRAM;
 	SNode *root = pushTok(s, temp1, 'N');  // pushing start symbol
 
-	root->treenode = createParseTree(temp1, 'N');
+	createParseTable();
+	printParseTable();
+	// root->treenode = createParseTree(temp1, 'N');
 	// TODO create parse tree
 	// CreateParseTree();
 }
@@ -508,23 +511,31 @@ void printFollowSets()
 void computeFirstAndFollowSets()
 {
 	computeFirstSets();
-	printFirstSets();
 	computeFollowSets();
-	printFollowSets();
 }
 
 void printParseTable()
 {
 	int row = NON_TERMINAL_COUNT;
 	int col = TERMINAL_COUNT;
-
-	for (int i = 0; i < row; i++) {
-		for (int j = 0; j < col; j++) {
-			printf("%d", parseTable[i][j]);
-			printf(" ");
-		}
-		printf("\n");
+	FILE *outFile = fopen("parseTable", "w");
+	if (outFile == NULL) {
+		printf("Error opening output file\n");
+		exit(EXIT_FAILURE);
 	}
+
+	fprintf(outFile, "\t\t\t");
+	for (int i = 0; i < col; i++) {
+		fprintf(outFile, "%-12s\t", terminalMap[i]);
+	}
+	for (int i = 0; i < row; i++) {
+		fprintf(outFile, "%-12s\t", nonTerminalMap[i]);
+		for (int j = 0; j < col; j++) {
+			fprintf(outFile, "%d\t", parseTable[i][j]);
+		}
+		fprintf(outFile, "\n");
+	}
+	fclose(outFile);
 }
 
 void createParseTable()
@@ -580,7 +591,6 @@ void createParseTable()
 			}
 		}
 	}
-	printParseTable();
 }
 
 void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
