@@ -13,8 +13,8 @@
 #define SYN -2
 
 // TODO insert comment against each data struct, and in which function it is used.
-
 typedef struct LexicalSymbol LexicalSymbol;
+// Used to represent grammar
 struct LexicalSymbol {
 	Symbol data;
 	LexicalSymbol* next;
@@ -23,6 +23,7 @@ struct LexicalSymbol {
 };
 
 typedef struct TerminalInfo TerminalInfo;
+// Used to store terminals in first and follow sets
 struct TerminalInfo {
 	Terminal tr;
 	TerminalInfo* next;

@@ -7,7 +7,7 @@ lookupTable.o: lookupTable.c lookupTable.h
 lexer.o: lexer.c lookupTable.h lexerDef.h
 	gcc -c lexer.c
 
-parser.o: parser.c lexer.h parserDef.h stack.h tree.h
+parser.o: parser.c lexer.h parserDef.h stack.o stack.h tree.o tree.h
 	gcc -c parser.c
 
 stack.o: stack.c stackDef.h treeDef.h

@@ -17,6 +17,7 @@ void handleWhitespaces();
 int skipComment();
 char *BUFEND();
 void handleLexicalError(char *errorMsg, int lineNumber);
+void handleNumberLengthWarning(char *errorMsg);
 void getNextToken();
 void removeComments(char *testcaseFile, char *cleanFile);
 

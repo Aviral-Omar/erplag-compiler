@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "lexer.h"
 #include "parser.h"
@@ -67,12 +68,32 @@ int main(int argc, char *argv[])
 			}
 			if (syntaxCorrect)
 				printf("\nInput source code is syntactically correct.\n");
-			lexerPrint = 0;
 			clearHeap();
 		} else if (option == 3) {
+			// TODO parser calls
+			lexerPrint = 0;
 			initParser();
-		}
+		} else if (option == 4) {
+			// TODO confirm what to benchmark
+			clock_t start_time, end_time;
 
+			double total_CPU_time, total_CPU_time_in_seconds;
+
+			start_time = clock();
+
+			lexerPrint = 0;
+			// TODO parser calls
+			initParser();
+
+			end_time = clock();
+
+			total_CPU_time = (double)(end_time - start_time);
+
+			total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
+
+			printf("Total CPU Time: %Lf", total_CPU_time);
+			printf("Total CPU Time in seconds: %Lf", total_CPU_time_in_seconds);
+		}
 	} while (option);
 
 
