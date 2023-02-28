@@ -70,7 +70,7 @@ int pop(Stack *s)
 	return TRUE;
 }
 
-TokenInfo *top(Stack *s)
+union nodeData *top(Stack *s)
 {
 	return s->top->data;
 }
