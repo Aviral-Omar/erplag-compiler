@@ -158,9 +158,23 @@ void printFollowSets();
 void computeFirstAndFollowSets();
 void populateSyn();
 void synRecovery();
+void printParseTree(struct ParseTNode* node);
 ParseTNode *createParseTree(union symbol d, char type);
 ParseTNode *addNode(ParseTNode *node, union symbol d, char type);
 int updateData(ParseTNode *node, union symbol d, char type);
+
+void printParseTree(struct ParseTNode* node)
+{
+    printParseTree(node->child);
+
+    printf("%s\n",node->data );
+
+    ParseTNode *sibling = node->child->sibling;
+    while(sibling != NULL){
+        printParseTree(sibling);
+        sibling = sibling->sibling;
+    }
+}
 
 void initParser()
 {
