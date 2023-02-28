@@ -1,21 +1,20 @@
 #include <stdlib.h>
 
-#include "stack.h"
-#include "parser.h"
-#include "tree.h"
+#include "treeDef.h"
 
-// Stack *createStack(void);
-// int isEmpty(Stack *s);
-// int isFull(Stack *s);
-// int pushTok(Stack *s, union symbol T, char type);
-// int pop(Stack *s);
-// union symbol top(Stack *s);
+
+Stack *createStack(void);
+int isEmpty(Stack *s);
+int isFull(Stack *s);
+SNode *pushTok(Stack *s, union symbol T, char type);
+int pop(Stack *s);
+SNode *top(Stack *s);
 
 
 Stack *createStack()
 {
 	Stack *q = (Stack *)malloc(sizeof(Stack));
-	q->size=0;
+	q->size = 0;
 	q->top = NULL;
 	return q;
 }
@@ -56,7 +55,7 @@ int pop(Stack *s)
 	return TRUE;
 }
 
-SNode* top(Stack *s)
+SNode *top(Stack *s)
 {
 	return s->top;
 }

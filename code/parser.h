@@ -1,3 +1,5 @@
+#include "parserDef.h"
+
 int findSymbol(char *symbol);
 void readGrammar();
 void printGrammar();

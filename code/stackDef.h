@@ -2,11 +2,12 @@
 #define STACK_DEF
 
 #include "parserDef.h"
+#include "treeDef.h"
 
 typedef struct SNodeType SNode;
 struct SNodeType {
 	union symbol data;
-	char type; // 'T', 'N' or 'e'
+	char type;	// 'T', 'N' or 'e'
 	struct SNodeType* next;
 	ParseTNode* treenode;
 };
