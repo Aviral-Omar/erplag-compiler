@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "parserDef.h"
-#include "stackDef.h"
+#include "parser.h"
+#include "stack.h"
+#include "tree.h"
 
 /* TODO clean up grammar later*/
 LexicalSymbol *grammar[RULE_COUNT];
@@ -143,83 +144,28 @@ char *terminalMap[TERMINAL_COUNT] = {
 	"dollar",
 	"epsilon"};
 
-int findSymbol(char *symbol);
-void readGrammar();
-void printGrammar();
-void insertIntoFirst(NonTerminal nt, Terminal t);
-void computeFirstSets();
-void printFirstSets();
-void insertIntoFollow(NonTerminal nt, Terminal t);
-int insertFirstIntoFollow(NonTerminal firstNT, NonTerminal followNT);
-void insertFollowIntoFollow(NonTerminal nt1, NonTerminal nt2);
-void computeFollowSets();
-void printFollowSets();
-void computeFirstAndFollowSets();
-ParseTree *CreateParseTree(union nodeData d);
-int addNode(ParseTNode *node, union nodeData d);
-ParseTNode *child(ParseTNode *node);
-ParseTNode *sibling(ParseTNode *node);
-ParseTNode *parent(ParseTNode *node);
-
 void initParser() {
 	readGrammar();
 	// printGrammar();
 	computeFirstAndFollowSets();
-	createParseTable();
+	// createParseTable();
 
-	// TODO init stack
+	s = createStack();
+	union symbol temp0, temp1;
+	temp0.t = DOLLAR;
+	pushTok(s, temp0, 'T'); // pushing dollar to the stack initially
+
+	temp1.nt = PROGRAM;
+	SNode* root = pushTok(s, temp1, 'N'); // pushing start symbol
+	
+	root->treenode = createParseTree(temp1, 'N');
 	// TODO create parse tree
-	CreateParseTree()
+	// CreateParseTree();
 }
 
 
-ParseTree *CreateParseTree(union nodeData d)
-{
-	ParseTNode *node;
-	node->child = NULL;
-	node->parent = NULL;
-	node->sibling = NULL;
-
-	ParseTree *p = (ParseTree *)malloc(sizeof(struct ParseTreeType));
-	(node)->data = d;
-	return p;
-}
-
-int addNode(ParseTNode *node, union nodeData d)
-{
-	ParseTNode *temp, *trav;  // creating new node and one for traversal(to find the terminal node)
-	temp->data.S = d.S;
-	temp->parent = node;
-	temp->child = NULL;
-	temp->sibling = NULL;
-
-	if (node->child == NULL) {
-		node->child = temp;
-	} else {
-		trav = node->child;
-		while (trav->sibling != NULL) {
-			trav = trav->sibling;
-		}
-		trav->sibling = temp;
-	}
-	return 1;
-}
 
 
-ParseTNode *child(ParseTNode *node)
-{
-	return node->child;
-}
-
-ParseTNode *sibling(ParseTNode *node)
-{
-	return node->sibling;
-}
-
-ParseTNode *parent(ParseTNode *node)
-{
-	return node->parent;
-}
 
 
 int findSymbol(char *symbol)
@@ -607,4 +553,111 @@ void createParseTable()
 		}
 	}
 	printParseTable();
+}
+
+void pushRuleTokens(Stack *s, LexicalSymbol* RHS, ParseTNode* parent) {
+	if (RHS == NULL) {
+		return;
+	}
+
+	pushRuleTokens(s, RHS->next, parent);
+	SNode* tempS = pushTok(s, RHS->data, RHS->type);
+	ParseTNode* tempT = addNode(parent, RHS->data, RHS->type);
+	tempS->treenode = tempT;
+}
+
+void parser() {
+	// Assuming Stack and Tree are already initialized
+	// 
+	Token inputSymbol = currToken->token;
+	SNode* stackTop = top(s); //get this from top of stack;
+
+	if(stackTop->type == 'T'){
+		//pop and input++;
+		if(stackTop->data.t == inputSymbol){
+			pop(s);
+		}
+		else{
+			//Error and recovery
+			pop(s);
+			perror("Syntax Error: Terminal present at inappropriate position\n");
+		}
+	}
+	else{ //Assuming 'e' is not in stack
+		//Case of non-terminal
+		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol].rule;
+		if(ruleNumber == -1){
+			//Error and Recovery
+			perror("Syntax Error: input symbol can't be derived from top of stack Non Terminal\n");
+			synRecovery();
+		}
+		else{
+			LexicalSymbol *LHS = grammar[ruleNumber];
+			LexicalSymbol *RHS = LHS->next;
+
+			// Now pop stack top and put RHS in reverse order
+			ParseTNode *parent =  s->top->treenode;
+			pop(s);
+			pushRuleTokens(s, RHS, parent);
+		}
+	}
+}
+
+// Populates Syn to the respective fields where the cell is blank after filling parse table
+// -2 will indicate presence of Syn in a particular cell
+//TODO insert SEMICOLON in appropriate syn set
+void populateSyn() {
+	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
+		TerminalInfo* currFollow = ffTable[i].follow;
+		while(currFollow){
+			if (parseTable[i][currFollow->tr].rule == -1) {
+				parseTable[i][currFollow->tr].rule = -2;
+			}
+			currFollow = currFollow->next;
+		}
+	}
+}
+
+void synRecovery(){
+	//We are here because Non termi at stack top can't derive input symbol
+
+	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
+		// TODO free space used by token structs
+		getNextToken();
+		handleWhitespaces();  // TODO doubt about their order
+		
+		if (!currToken)
+			continue;
+
+		// printf("\t%-12s\n", tokenMap[currToken->token]);
+
+		Token inputSymbol = currToken->token;
+		SNode* stackTop = top(s);
+		
+		//Case of non-terminal
+		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol].rule;
+		if(ruleNumber == -1){
+			fflush(stdout);
+			free(currToken);
+			continue; // go to next token
+		}
+		else if(ruleNumber == -2){ //it means input symbol is in sync set of top of stack.
+			pop(s);
+		}
+		else{ //This means we found input symbol in first(top of stack) 
+			LexicalSymbol *LHS = grammar[ruleNumber];
+			LexicalSymbol *RHS = LHS->next;
+
+			// Now pop stack top and put RHS in reverse order
+			ParseTNode *parent =  s->top->treenode;
+			pop(s);
+			pushRuleTokens(s, RHS, parent);
+		}
+
+		fflush(stdout);
+
+		/*TODO remove this*/
+		free(currToken);
+		return;
+	}
 }

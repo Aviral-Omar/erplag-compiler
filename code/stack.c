@@ -1,57 +1,42 @@
 #include <stdlib.h>
 
-#include "stackDef.h"
+#include "stack.h"
+#include "parser.h"
+#include "tree.h"
 
-Stack create(void);
-int isEmpty(Stack *s);
-int isFull(Stack *s);
-int pushLex(Stack *s, LexicalSymbol *nextSymbol);
-int pushTok(Stack *s, TokenInfo *T);
-int pop(Stack *s);
-TokenInfo *top(Stack *s);
+// Stack *createStack(void);
+// int isEmpty(Stack *s);
+// int isFull(Stack *s);
+// int pushTok(Stack *s, union symbol T, char type);
+// int pop(Stack *s);
+// union symbol top(Stack *s);
 
 
-Stack *Create()
+Stack *createStack()
 {
-	Stack *q = (Stack *)malloc(sizeof(struct StackType));
-	(q)->top = NULL;
+	Stack *q = (Stack *)malloc(sizeof(Stack));
+	q->size=0;
+	q->top = NULL;
 	return q;
 }
 
-
-
-int pushLex(Stack *s, LexicalSymbol *nextSymbol)
+SNode *pushTok(Stack *s, union symbol T, char type)
 {
 	SNode *temp;
-	ParseTNode *treenode;
+	ParseTNode *treenode = NULL;
+	// ParseTNode *treenode = addNode(s,T);
 
 
 	if (isFull(s)) return FALSE;
 
 	temp = (SNode *)malloc(sizeof(SNode));
-	temp->data.S = nextSymbol;
+	temp->data = T;
 	temp->next = s->top;
+	temp->treenode = treenode;
 	s->top = temp;
+	s->size++;
 
-
-	return TRUE;
-}
-
-int pushTok(Stack *s, TokenInfo *T)
-{
-	SNode *temp;
-	ParseTNode *treenode;
-
-
-	if (isFull(s)) return FALSE;
-
-	temp = (SNode *)malloc(sizeof(SNode));
-	temp->data.T = T;
-	temp->next = s->top;
-	s->top = temp;
-
-
-	return TRUE;
+	return temp;
 }
 
 
@@ -63,25 +48,27 @@ int pop(Stack *s)
 		return FALSE;
 	else {
 		temp = s->top;
-		temp->Treenode->data.T = temp->data.T;
+		temp->treenode->data = temp->data;
 		s->top = s->top->next;
 		free(temp);
 	}
+	s->size--;
 	return TRUE;
 }
 
-union nodeData *top(Stack *s)
+SNode* top(Stack *s)
 {
-	return s->top->data;
+	return s->top;
 }
 
 
 int isEmpty(Stack *s)
 {
-	return ((s)->top == NULL);
+	return (s->size == 0);
 }
 
-int isFull(Queue *q)
+int isFull(Stack *q)
 {
+	// TODO waiting for Stack size limit
 	return FALSE;
 }

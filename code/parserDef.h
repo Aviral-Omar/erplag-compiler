@@ -2,6 +2,7 @@
 #define PARSER_DEF
 
 #include "lexerDef.h"
+#include "stackDef.h"
 
 /* TODO change later*/
 #define GRAMMAR_FILE "grammar.txt"
@@ -9,8 +10,11 @@
 #define NON_TERMINAL_COUNT 71
 #define TERMINAL_COUNT 58
 #define GRAMMAR_BUFFER_SIZE 4500
+#define SYN -2
 
 // TODO rename Non Terminals in grammar
+
+// TODO insert comment against each data struct, and in which function it is used.
 typedef enum {
 	N_program,
 	N_moduleDeclarations,
@@ -89,11 +93,12 @@ typedef enum {
 typedef Token Terminal;
 
 typedef struct LexicalSymbol LexicalSymbol;
+union symbol {
+	NonTerminal nt;
+	Terminal t;
+};
 struct LexicalSymbol {
-	union symbolData {
-		NonTerminal nt;
-		Terminal t;
-	} data;
+	union symbol data;
 	LexicalSymbol* next;
 	char type;				// may be 'T', 'N', 'e'
 	char followCalculated;	// used during follow computation
@@ -116,28 +121,11 @@ typedef struct {
 			   // created a struct in case we want to add some other info later.
 } ParseTableEntry;
 
-union nodeData {
-	LexicalSymbol* S;
-	TokenInfo* T;
-};
-
-typedef struct ParseTNodeType ParseTNode;
-struct ParseTNodeType {
-	union nodeData data;
-	ParseTNode* child;
-	ParseTNode* parent;
-	ParseTNode* sibling;
-};
-
-typedef struct ParseTreeType {
-	ParseTNode* node;
-} ParseTree;
-
 // TODO make sure all are cleaned
 extern LexicalSymbol* grammar[RULE_COUNT];
 extern char* nonTerminalMap[NON_TERMINAL_COUNT];
 extern char* terminalMap[TERMINAL_COUNT];
 extern ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];
 extern FirstFollowEntry ffTable[NON_TERMINAL_COUNT];
-
+extern Stack *s;
 #endif

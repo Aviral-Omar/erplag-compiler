@@ -1,10 +1,8 @@
 #include "stackDef.h"
 
-Stack create(void);
+Stack* createStack(void);
 int isEmpty(Stack *s);
 int isFull(Stack *s);
-int pushLex(Stack *s, LexicalSymbol *nextSymbol);
-int pushTok(Stack *s, TokenInfo *T);
+SNode *pushTok(Stack *s, union symbol T, char type);
 int pop(Stack *s);
-union nodeData *top(Stack *s);
-
+SNode* top(Stack *s);

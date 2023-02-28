@@ -1,16 +1,19 @@
 #ifndef STACK_DEF
 #define STACK_DEF
+
 #include "parserDef.h"
 
 typedef struct SNodeType SNode;
 struct SNodeType {
-	union nodeData data;
+	union symbol data;
+	char type; // 'T', 'N' or 'e'
 	struct SNodeType* next;
-	ParseTNode* Treenode;
+	ParseTNode* treenode;
 };
 
 typedef struct StackType {
 	SNode* top;
+	int size;
 } Stack;
 
 #endif
