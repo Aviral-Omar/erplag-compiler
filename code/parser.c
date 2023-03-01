@@ -484,8 +484,12 @@ void computeFollowSets()
 				do {
 					forwardPtr = forwardPtr->next;
 					if (!forwardPtr) {
-						if (!occurencesRemaining[grammar[j]->data.nt] || (symbolPtr->data.nt == grammar[j]->data.nt && occurencesRemaining[grammar[j]->data.nt] == 1)) {
+						if (!occurencesRemaining[grammar[j]->data.nt]) {
 							insertFollowIntoFollow(grammar[j]->data.nt, symbolPtr->data.nt);
+							symbolPtr->followCalculated = '1';
+							occurencesRemaining[symbolPtr->data.nt]--;
+						} else if (symbolPtr->data.nt == grammar[j]->data.nt && occurencesRemaining[grammar[j]->data.nt] == 1) {
+							// Recursive case
 							symbolPtr->followCalculated = '1';
 							occurencesRemaining[symbolPtr->data.nt]--;
 						}
@@ -526,9 +530,9 @@ void printFollowSets()
 void computeFirstAndFollowSets()
 {
 	computeFirstSets();
-	// printFirstSets();
+	printFirstSets();
 	computeFollowSets();
-	// printFollowSets();
+	printFollowSets();
 }
 
 void printParseTable()
