@@ -20,6 +20,7 @@ void handleLexicalError(char *errorMsg, int lineNumber);
 void handleNumberLengthWarning(char *errorMsg);
 void getNextToken();
 void removeComments(char *testcaseFile, char *cleanFile);
+void runOnlyLexer();
 
 FILE *src;
 int bufferSize;
@@ -529,4 +530,20 @@ void removeComments(char *testcaseFile, char *cleanFile)
 	// Close input and output files
 	fclose(inFile);
 	fclose(outFile);
+}
+
+void runOnlyLexer(){
+	lexerPrint = 1;
+	printf("Line Number\tLexeme\t\t\tToken Name\n");
+	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
+		getNextToken();
+		handleWhitespaces();
+		if (!currToken)
+			continue;
+
+		free(currToken);
+	}
+	if (syntaxCorrect)
+		printf("\nInput source code is syntactically correct.\n");
+	clearHeap();
 }

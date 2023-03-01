@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "treeDef.h"
 
@@ -9,15 +10,13 @@ int updateData(ParseTNode *node, Symbol d, char type);
 
 ParseTNode *createParseTree(Symbol d, char type)
 {
-	ParseTNode *node;
-
-	ParseTNode *p = (ParseTNode *)malloc(sizeof(struct ParseTNodeType));
+	ParseTNode *node = (ParseTNode *)malloc(sizeof(ParseTNode));
 	node->child = NULL;
 	node->parent = NULL;
 	node->sibling = NULL;
 	node->type = type;
 	node->data = d;
-	return p;
+	return node;
 }
 
 ParseTNode *addNode(ParseTNode *parent, Symbol d, char type)

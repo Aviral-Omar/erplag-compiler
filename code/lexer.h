@@ -12,3 +12,5 @@ void getNextToken();
 void removeComments(char *testcaseFile, char *cleanFile);
 
 char *BUFEND();
+
+void runOnlyLexer();

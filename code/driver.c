@@ -54,25 +54,20 @@ int main(int argc, char *argv[])
 				printf("File does not exist or unable to access file.\n");
 				exit(EXIT_FAILURE);
 			}
-
 			initLexer();
-			lexerPrint = 1;
-			printf("Line Number\tLexeme\t\t\tToken Name\n");
-			while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
-				getNextToken();
-				handleWhitespaces();
-				if (!currToken)
-					continue;
+			runOnlyLexer();
 
-				free(currToken);
-			}
-			if (syntaxCorrect)
-				printf("\nInput source code is syntactically correct.\n");
-			clearHeap();
 		} else if (option == 3) {
 			// TODO parser calls
-			lexerPrint = 0;
+			src = fopen(argv[1], "r");
+			if (!src) {
+				printf("File does not exist or unable to access file.\n");
+				exit(EXIT_FAILURE);
+			}
+			lexerPrint = 0; //because lexer output not needed
 			initParser();
+			runOnlyParser();
+
 		} else if (option == 4) {
 			// TODO confirm what to benchmark
 			clock_t start_time, end_time;

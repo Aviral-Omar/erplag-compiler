@@ -15,3 +15,5 @@ void printFollowSets();
 void computeFirstAndFollowSets();
 void populateSyn();
 void synRecovery();
+void runOnlyParser();
+void parseCurrToken();

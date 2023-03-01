@@ -162,6 +162,8 @@ void createParseTable();
 void printParseTable();
 void populateSyn();
 void synRecovery();
+void runOnlyParser();
+void parseCurrToken();
 
 void printParseTree(ParseTNode *node)
 {
@@ -186,21 +188,21 @@ void initParser()
 {
 	readGrammar();
 	computeFirstAndFollowSets();
-	// createParseTable();
+	createParseTable();
 
 	s = createStack();
 	Symbol temp0, temp1;
 	temp0.t = DOLLAR;
 	pushTok(s, temp0, 'T');	 // pushing dollar to the stack initially
 
-	temp1.nt = PROGRAM;
+	temp1.nt = N_program;
 	SNode *root = pushTok(s, temp1, 'N');  // pushing start symbol
+	// printf("     %d     %d    \n",s->top->data.nt,s->size);
 
-	createParseTable();
+	root->treenode = createParseTree(temp1, 'N');
+
+	populateSyn(); //TODO semicolon case
 	printParseTable();
-	// root->treenode = createParseTree(temp1, 'N');
-	// TODO create parse tree
-	// CreateParseTree();
 }
 
 
@@ -592,7 +594,7 @@ void createParseTable()
 				parseTable[LHS->data.nt][RHS->data.t] = rule;
 				wasEpsilon = 0;	 // to Break the while loop
 			} else {
-				perror("Invalid Type Entered\n");
+				printf("Invalid Type Entered\n");
 			}
 		}
 
@@ -620,27 +622,27 @@ void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
 	tempS->treenode = tempT;
 }
 
-void parser()
-{
-	// Assuming Stack and Tree are already initialized
+void parseCurrToken(){
 	Token inputSymbol = currToken->token;
 	SNode *stackTop = top(s);  // get this from top of stack;
 
 	if (stackTop->type == 'T') {
 		// pop and input++;
 		if (stackTop->data.t == inputSymbol) {
+			printf("Accepted: %s\n",terminalMap[s->top->data.t]);
 			pop(s);
 		} else {
 			// Error and recovery
 			pop(s);
-			perror("Syntax Error: Terminal present at inappropriate position\n");
+			printf("Syntax Error: Terminal present at inappropriate position\n\n");
 		}
 	} else {  // Assuming 'e' is not in stack
 		// Case of non-terminal
 		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
 		if (ruleNumber == -1) {
 			// Error and Recovery
-			perror("Syntax Error: input symbol can't be derived from top of stack Non Terminal\n");
+			printf("%s, %s, rule: %d\n",nonTerminalMap[stackTop->data.nt], terminalMap[inputSymbol], ruleNumber);
+			printf("Syntax Error: input symbol can't be derived from top of stack Non Terminal\n\n");
 			synRecovery();
 		} else {
 			LexicalSymbol *LHS = grammar[ruleNumber];
@@ -648,10 +650,32 @@ void parser()
 
 			// Now pop stack top and put RHS in reverse order
 			ParseTNode *parent = s->top->treenode;
+			printf("Accepted: %s\n\n",nonTerminalMap[s->top->data.nt]);
 			pop(s);
 			pushRuleTokens(s, RHS, parent);
 		}
 	}
+}
+
+void runOnlyParser()
+{
+	// Assuming Stack and Tree are already initialized
+	initLexer();
+	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
+		getNextToken();
+		handleWhitespaces();
+		if (!currToken)
+			continue;
+
+		parseCurrToken();
+
+		if(currToken){
+			free(currToken);
+			currToken = NULL;
+		}
+			
+	}
+	clearHeap();
 }
 
 // Populates Syn to the respective fields where the cell is blank after filling parse table
@@ -691,7 +715,10 @@ void synRecovery()
 		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
 		if (ruleNumber == -1) {
 			fflush(stdout);
-			free(currToken);
+			if(currToken){
+				free(currToken);
+				currToken = NULL;
+			}
 			continue;					// go to next token
 		} else if (ruleNumber == -2) {	// it means input symbol is in sync set of top of stack.
 			pop(s);
@@ -708,7 +735,10 @@ void synRecovery()
 		fflush(stdout);
 
 		/*TODO remove this*/
-		free(currToken);
+		if(currToken){
+			free(currToken);
+			currToken = NULL;
+		}
 		return;
 	}
 }
