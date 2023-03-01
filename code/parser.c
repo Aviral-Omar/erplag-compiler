@@ -183,7 +183,7 @@ void printParseTree(ParseTNode *node)
 		// printf("%s, parent:%s \t", terminalMap[node->data.t], nonTerminalMap[node->parent->data.nt]);
 		printf("%s \t", terminalMap[node->data.t]);
 
-	if(node->child){
+	if (node->child) {
 		ParseTNode *sibling = node->child->sibling;
 		while (sibling != NULL) {
 			printParseTree(sibling);
@@ -213,7 +213,6 @@ void initParser()
 	populateSyn();	// TODO semicolon case
 	printParseTable();
 }
-
 
 int findSymbol(char *symbol)
 {
@@ -620,7 +619,7 @@ void createParseTable()
 void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
 {
 	ParseTNode *tempT;
-	if(RHS)
+	if (RHS)
 		tempT = addNode(parent, RHS->data, RHS->type);
 	if (!RHS || RHS->type == 'e')
 		return;
@@ -650,7 +649,7 @@ void parseCurrToken()
 				// Error and recovery
 				pop(s);
 				printf("Syntax Error: Terminal %s present at inappropriate position\n\n", terminalMap[data]);
-				exit(EXIT_FAILURE);
+				// exit(EXIT_FAILURE);
 			}
 		} else {  // Assuming 'e' is not in stack
 			// Case of non-terminal
@@ -658,9 +657,15 @@ void parseCurrToken()
 			// printf("Rule %d applied for token %s.\n", ruleNumber, terminalMap[inputSymbol]);
 			if (ruleNumber == -1) {
 				// Error and Recovery
+				printf("%d\n", ruleNumber);
+				fflush(stdout);
 				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
-				exit(EXIT_FAILURE);
+				// exit(EXIT_FAILURE);
 				synRecovery();
+			} else if (ruleNumber == -2) {
+				pop(s);
+				printf("%d\n", ruleNumber);
+				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
 			} else {
 				LexicalSymbol *LHS = grammar[ruleNumber];
 				LexicalSymbol *RHS = LHS->next;
@@ -692,22 +697,22 @@ void runOnlyParser()
 			currToken = NULL;
 		}
 	}
-	while(s->size > 1){
-		if(s->top->type == 'N'){
-			if(parseTable[s->top->data.nt][DOLLAR] == -1){
+	while (s->size > 1) {
+		if (s->top->type == 'N') {
+			if (parseTable[s->top->data.nt][DOLLAR] == -1) {
 				break;
-			}
-			else{
+			} else {
 				pop(s);
 			}
-		}
-		else break;
+		} else
+			break;
 	}
 	clearHeap();
 	// printf("%s\n",nonTerminalMap[ParseTreeParent->child->data.nt]);
 	printParseTree(ParseTreeParent);
 	printf("\n");
-	if(s->size > 1)printf("Syntax Error: Incomplete input, Bottom of stack not Reached.\n");
+	if (s->size > 1)
+		printf("Syntax Error: Incomplete input, Bottom of stack not Reached.\n");
 }
 
 // Populates Syn to the respective fields where the cell is blank after filling parse table
@@ -729,12 +734,21 @@ void populateSyn()
 void synRecovery()
 {
 	// We are here because Non termi at stack top can't derive input symbol
-
+	printf("1\n");
+	fflush(stdout);
+	if (currToken) {
+		free(currToken);
+		currToken = NULL;
+	}
+	printf("2\n");
+	fflush(stdout);
+	printf("%d %d %p %p\n", charsRead, bufferSize, lexemeBegin, BUFEND());
 	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
 		// TODO free space used by token structs
 		getNextToken();
 		handleWhitespaces();  // TODO doubt about their order
-
+		printf("####%s\n", terminalMap[currToken->token]);
+		fflush(stdout);
 		if (!currToken)
 			continue;
 
@@ -754,6 +768,8 @@ void synRecovery()
 			continue;					// go to next token
 		} else if (ruleNumber == -2) {	// it means input symbol is in sync set of top of stack.
 			pop(s);
+			fflush(stdout);
+			break;
 		} else {  // This means we found input symbol in first(top of stack)
 			LexicalSymbol *LHS = grammar[ruleNumber];
 			LexicalSymbol *RHS = LHS->next;
@@ -762,15 +778,15 @@ void synRecovery()
 			ParseTNode *parent = s->top->treenode;
 			pop(s);
 			pushRuleTokens(s, RHS, parent);
+			fflush(stdout);
+			break;
 		}
 
 		fflush(stdout);
 
-		/*TODO remove this*/
-		if (currToken) {
-			free(currToken);
-			currToken = NULL;
-		}
-		return;
+		// if (currToken) {
+		// 	free(currToken);
+		// 	currToken = NULL;
+		// }
 	}
 }
