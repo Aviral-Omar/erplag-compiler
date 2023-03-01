@@ -6,6 +6,8 @@
 		"parser.h": "c",
 		"parserdef.h": "c",
 		"stackdef.h": "c",
-		"lexerdef.h": "c"
+		"lexerdef.h": "c",
+		"tree.h": "c",
+		"treedef.h": "c"
 	}
 }

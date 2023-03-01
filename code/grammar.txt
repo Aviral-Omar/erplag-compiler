@@ -54,10 +54,13 @@ N_sign T_PLUS
 N_sign T_MINUS
 N_sign epsilon
 N_moduleReuseStmt N_optional T_USE T_MODULE T_ID T_WITH T_PARAMETERS N_actualParaList T_SEMICOL
-N_actualParaList T_NUM
-N_actualParaList T_RNUM
-N_actualParaList N_boolConst
-N_actualParaList T_ID N_N11
+N_actualParaList N_sign N_K N_newParaList
+N_newParaList T_COMMA N_K N_newParaList
+N_newParaList epsilon
+N_K T_NUM
+N_K T_RNUM
+N_K N_boolConst
+N_K T_ID N_N11
 N_optional T_SQBO N_idList T_SQBC T_ASSIGNOP
 N_optional epsilon
 N_idList T_ID N_N3
