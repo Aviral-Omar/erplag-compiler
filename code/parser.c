@@ -526,14 +526,15 @@ void printParseTable()
 		exit(EXIT_FAILURE);
 	}
 
-	fprintf(outFile, "\t\t\t");
+	fprintf(outFile, "%-29s", "");
 	for (int i = 0; i < col; i++) {
-		fprintf(outFile, "%-12s\t", terminalMap[i]);
+		fprintf(outFile, "%-14s\t", terminalMap[i]);
 	}
+	fprintf(outFile, "\n");
 	for (int i = 0; i < row; i++) {
-		fprintf(outFile, "%-12s\t", nonTerminalMap[i]);
+		fprintf(outFile, "%-29s\t", nonTerminalMap[i]);
 		for (int j = 0; j < col; j++) {
-			fprintf(outFile, "%d\t", parseTable[i][j]);
+			fprintf(outFile, "%-14d\t", parseTable[i][j]);
 		}
 		fprintf(outFile, "\n");
 	}
@@ -569,6 +570,9 @@ void createParseTable()
 					if (currFirst->tr == EPSILON) {
 						wasEpsilon = 1;
 					} else {
+						if(parseTable[LHS->data.nt][currFirst->tr] != -1){
+							printf("GRAMMAR IS NOT LL(1). %s %s, Rule no. %d\n",nonTerminalMap[LHS->data.nt], terminalMap[currFirst->tr], rule);
+						}
 						parseTable[LHS->data.nt][currFirst->tr] = rule;
 					}
 					currFirst = currFirst->next;
@@ -577,6 +581,9 @@ void createParseTable()
 					RHS = RHS->next;
 				}
 			} else if (RHS->type == 'T') {
+				if(parseTable[LHS->data.nt][RHS->data.t] != -1){
+					printf("GRAMMAR IS NOT LL(1),  Rule no. %d\n", rule);
+				}
 				parseTable[LHS->data.nt][RHS->data.t] = rule;
 				wasEpsilon = 0;	 // to Break the while loop
 			} else {

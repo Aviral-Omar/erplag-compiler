@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
 
 			total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
 
-			printf("Total CPU Time: %Lf", total_CPU_time);
-			printf("Total CPU Time in seconds: %Lf", total_CPU_time_in_seconds);
+			printf("Total CPU Time: %f", total_CPU_time);
+			printf("Total CPU Time in seconds: %f", total_CPU_time_in_seconds);
 		}
 	} while (option);
 
