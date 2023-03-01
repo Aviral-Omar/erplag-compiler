@@ -165,7 +165,9 @@ void populateSyn();
 void synRecovery();
 
 void printParseTree(ParseTNode *node)
-{
+{	
+	if (node == NULL)
+        return;
 	printParseTree(node->child);
 
 	printf("%s\n", node->data);
