@@ -169,7 +169,11 @@ void printParseTree(ParseTNode *node)
 		return;
 	printParseTree(node->child);
 
-	printf("%s\n", node->data);
+	//printf("%s\n", node->data);
+	if (node->type == 'N')
+		printf("%s ", nonTerminalMap[node->data.nt]);
+	else
+		printf("%s ", terminalMap[node->data.t]);
 
 	ParseTNode *sibling = node->child->sibling;
 	while (sibling != NULL) {
