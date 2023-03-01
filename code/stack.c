@@ -24,12 +24,11 @@ Stack *createStack()
 SNode *pushTok(Stack *s, Symbol T, char type)
 {
 	SNode *temp = (SNode *)malloc(sizeof(SNode));
-	ParseTNode *treenode = NULL;
-	// ParseTNode *treenode = addNode(s,T);
 
+	temp->type = type;
 	temp->data = T;
 	temp->next = s->top;
-	temp->treenode = treenode;
+	temp->treenode = NULL;
 	s->top = temp;
 	s->size++;
 
