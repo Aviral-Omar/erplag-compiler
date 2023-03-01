@@ -27,7 +27,6 @@ void populateLookupTable()
 	for (int i = 0; i < 30; i++) {
 		int hashIndex = hash(keywords[i]);
 
-		/*TODO Discuss whether to keep linear probing*/
 		// Used linear probing
 		while (hashTable[hashIndex])
 			hashIndex++;
@@ -54,11 +53,12 @@ KeywordPair* searchKeyword(char* key)
 	return NULL;
 }
 
-/* TODO call at end of lexer */
 void deleteLookupTable()
 {
 	for (int i = 0; i < TABLE_SIZE; i++) {
-		if (hashTable[i])
+		if (hashTable[i]) {
 			free(hashTable[i]);
+			hashTable[i] = NULL;
+		}
 	}
 }

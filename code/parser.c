@@ -5,14 +5,9 @@
 #include "lexer.h"
 #include "parserDef.h"
 #include "stack.h"
+#include "stackDef.h"
 #include "tree.h"
 #include "treeDef.h"
-
-/* TODO clean up grammar later*/
-LexicalSymbol *grammar[RULE_COUNT];
-ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];	 // will be filled by CreateParseTable()
-FirstFollowEntry ffTable[NON_TERMINAL_COUNT] = {{NULL, NULL}};	 // will be populated by function calculating first and follow sets
-Stack *s;
 
 char *nonTerminalMap[NON_TERMINAL_COUNT] = {
 	"N_program",
@@ -148,7 +143,16 @@ char *terminalMap[TERMINAL_COUNT] = {
 	"dollar",
 	"epsilon"};
 
+/* TODO clean up data later*/
+LexicalSymbol *grammar[RULE_COUNT];
+FirstFollowEntry ffTable[NON_TERMINAL_COUNT] = {{NULL, NULL}};	 // will be populated by function calculating first and follow sets
+ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];	 // will be filled by CreateParseTable()
+Stack *s;
+int parserCorrect;
+int parserPrint;
+
 void initParser();
+void clearParserData();
 int findSymbol(char *symbol);
 void readGrammar();
 void printGrammar();
@@ -165,32 +169,71 @@ void createParseTable();
 void printParseTable();
 void populateSyn();
 void synRecovery();
-void runOnlyParser();
+void runParser(char *srcFilename, char *outFilename);
+void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent);
 void parseCurrToken();
-void printParseTree(ParseTNode *node);
+void printParseTree(ParseTNode *node, FILE *outFile);
 
-void printParseTree(ParseTNode *node)
+void runParser(char *srcFilename, char *outFilename)
 {
-	if (node == NULL)
-		return;
-	// printf("3: %d\n",node->data.nt);
-	printParseTree(node->child);
-	// printf("%c: ", node->type);
-	if (node->type == 'N')
-		// printf("%s, parent:%s \t ", nonTerminalMap[node->data.nt], node->parent?nonTerminalMap[node->parent->data.nt]:"none ");
-		printf("%s \t ", nonTerminalMap[node->data.nt]);
-	else
-		// printf("%s, parent:%s \t", terminalMap[node->data.t], nonTerminalMap[node->parent->data.nt]);
-		printf("%s \t", terminalMap[node->data.t]);
+	parserCorrect = 1;
+	// Assuming Stack and Tree are already initialized
+	src = fopen(srcFilename, "r");
+	if (!src) {
+		printf("File does not exist or unable to access file.\n");
+		exit(EXIT_FAILURE);
+	}
+	lexerPrint = 0;	 // because lexer output not needed
+	initLexer();
+	initParser();
+	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
+		getNextToken();
+		handleWhitespaces();
+		if (!currToken)
+			continue;
 
-	if (node->child) {
-		ParseTNode *sibling = node->child->sibling;
-		while (sibling != NULL) {
-			printParseTree(sibling);
-			sibling = sibling->sibling;
+		parseCurrToken();
+
+		if (currToken) {
+			free(currToken);
+			currToken = NULL;
 		}
 	}
-	return;
+	while (!isEmpty(s)) {
+		if (top(s)->type == 'N') {
+			int ruleNumber = parseTable[top(s)->data.nt][DOLLAR];
+			if (ruleNumber == -1) {
+				parserCorrect = 0;
+				printf("Syntax Error: Incomplete input, bottom of stack not reached.\n");
+				break;
+			} else {
+				ParseTNode *parent = top(s)->treenode;
+				pop(s);
+				pushRuleTokens(s, grammar[ruleNumber]->next, parent);
+			}
+		} else if (top(s)->data.t != DOLLAR) {
+			parserCorrect = 0;
+			printf("Syntax Error: Incomplete input, bottom of stack not reached.\n");
+			break;
+		} else {
+			pop(s);
+		}
+	}
+
+	FILE *outFile = fopen(outFilename, "w");
+	if (outFile == NULL) {
+		printf("Error opening output file.\n");
+		exit(EXIT_FAILURE);
+	}
+	printParseTree(parseTreeParent, outFile);
+	fclose(outFile);
+
+	clearLexerData();
+
+	if (parserCorrect)
+		printf("\nInput source code is syntactically correct.\n\n");
+
+	clearParserData();
 }
 
 void initParser()
@@ -205,13 +248,44 @@ void initParser()
 
 	temp1.nt = N_program;
 	SNode *root = pushTok(s, temp1, 'N');  // pushing start symbol
-	// printf("     %d     %d    \n",s->top->data.nt,s->size);
+	// printf("     %d     %d    \n",top(s)->data.nt,s->size);
 
 	root->treenode = createParseTree(temp1, 'N');
-	ParseTreeParent = root->treenode;
+	parseTreeParent = root->treenode;
 
-	populateSyn();	// TODO semicolon case
-	printParseTable();
+	populateSyn();
+	// printParseTable();
+}
+
+void clearParserData()
+{
+	// Clearing grammar
+	for (int i = 0; i < RULE_COUNT; i++) {
+		LexicalSymbol *cur = grammar[i], *next;
+		do {
+			next = cur->next;
+			free(cur);
+			cur = next;
+		} while (cur);
+	}
+
+	// Clearing First Follow Table
+	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
+		TerminalInfo *cur = ffTable[i].first, *next;
+		while (cur) {
+			next = cur->next;
+			free(cur);
+			cur = next;
+		}
+		cur = ffTable[i].follow;
+		while (cur) {
+			next = cur->next;
+			free(cur);
+			cur = next;
+		}
+	}
+
+	deleteStack(s);
 }
 
 int findSymbol(char *symbol)
@@ -232,7 +306,7 @@ void readGrammar()
 {
 	FILE *g = fopen(GRAMMAR_FILE, "r");
 	if (!g) {
-		printf("grammar.txt does not exist.\n");
+		printf("%s does not exist.\n", GRAMMAR_FILE);
 		exit(EXIT_FAILURE);
 	}
 	char grammarBuf[GRAMMAR_BUFFER_SIZE] = {'\0'};
@@ -530,9 +604,9 @@ void printFollowSets()
 void computeFirstAndFollowSets()
 {
 	computeFirstSets();
-	printFirstSets();
+	// printFirstSets();
 	computeFollowSets();
-	printFollowSets();
+	// printFollowSets();
 }
 
 void printParseTable()
@@ -565,8 +639,6 @@ void createParseTable()
 	for (int i = 0; i < NON_TERMINAL_COUNT; i++)
 		for (int j = 0; j < TERMINAL_COUNT; j++)
 			parseTable[i][j] = -1;
-
-	// TODO check LL1 grammar
 
 	for (int rule = 0; rule < RULE_COUNT; rule++) {
 		LexicalSymbol *LHS = grammar[rule];
@@ -622,13 +694,12 @@ void createParseTable()
 
 void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
 {
-	ParseTNode *tempT;
-	if (RHS)
-		tempT = addNode(parent, RHS->data, RHS->type);
-	if (!RHS || RHS->type == 'e')
+	if (!RHS)
 		return;
 
-	// TODO iterative conversion
+	ParseTNode *tempT;
+	tempT = addNode(parent, RHS->data, RHS->type);
+
 	pushRuleTokens(s, RHS->next, parent);
 	SNode *tempS = pushTok(s, RHS->data, RHS->type);
 	tempS->treenode = tempT;
@@ -647,13 +718,12 @@ void parseCurrToken()
 		if (stackTop->type == 'T') {
 			// pop and input++;
 			if (stackTop->data.t == inputSymbol) {
-				// printf("Accepted: %s\n", terminalMap[s->top->data.t]);
+				// printf("Accepted: %s\n", terminalMap[top(s)->data.t]);
 				pop(s);
 			} else {
 				// Error and recovery
 				pop(s);
 				printf("Syntax Error: Terminal %s present at inappropriate position\n\n", terminalMap[data]);
-				// exit(EXIT_FAILURE);
 			}
 		} else {  // Assuming 'e' is not in stack
 			// Case of non-terminal
@@ -664,7 +734,6 @@ void parseCurrToken()
 				printf("%d\n", ruleNumber);
 				fflush(stdout);
 				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
-				// exit(EXIT_FAILURE);
 				synRecovery();
 			} else if (ruleNumber == -2) {
 				pop(s);
@@ -675,48 +744,13 @@ void parseCurrToken()
 				LexicalSymbol *RHS = LHS->next;
 
 				// Now pop stack top and put RHS in reverse order
-				ParseTNode *parent = s->top->treenode;
-				// printf("Accepted: %s\n\n", nonTerminalMap[s->top->data.nt]);
+				ParseTNode *parent = top(s)->treenode;
+				// printf("Accepted: %s\n\n", nonTerminalMap[top(s)->data.nt]);
 				pop(s);
 				pushRuleTokens(s, RHS, parent);
 			}
 		}
 	} while (!(type == 'T' && data == inputSymbol));
-}
-
-void runOnlyParser()
-{
-	// Assuming Stack and Tree are already initialized
-	initLexer();
-	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
-		getNextToken();
-		handleWhitespaces();
-		if (!currToken)
-			continue;
-
-		parseCurrToken();
-
-		if (currToken) {
-			free(currToken);
-			currToken = NULL;
-		}
-	}
-	while (s->size > 1) {
-		if (s->top->type == 'N') {
-			if (parseTable[s->top->data.nt][DOLLAR] == -1) {
-				break;
-			} else {
-				pop(s);
-			}
-		} else
-			break;
-	}
-	clearHeap();
-	// printf("%s\n",nonTerminalMap[ParseTreeParent->child->data.nt]);
-	printParseTree(ParseTreeParent);
-	printf("\n");
-	if (s->size > 1)
-		printf("Syntax Error: Incomplete input, Bottom of stack not Reached.\n");
 }
 
 // Populates Syn to the respective fields where the cell is blank after filling parse table
@@ -779,7 +813,7 @@ void synRecovery()
 			LexicalSymbol *RHS = LHS->next;
 
 			// Now pop stack top and put RHS in reverse order
-			ParseTNode *parent = s->top->treenode;
+			ParseTNode *parent = top(s)->treenode;
 			pop(s);
 			pushRuleTokens(s, RHS, parent);
 			fflush(stdout);
@@ -793,4 +827,24 @@ void synRecovery()
 		// 	currToken = NULL;
 		// }
 	}
+}
+
+void printParseTree(ParseTNode *node, FILE *outFile)
+{
+	if (node == NULL)
+		return;
+	printParseTree(node->child, outFile);
+	if (node->type == 'N')
+		fprintf(outFile, "%s\t ", nonTerminalMap[node->data.nt]);
+	else
+		fprintf(outFile, "%s\t", terminalMap[node->data.t]);
+
+	if (node->child) {
+		ParseTNode *sibling = node->child->sibling;
+		while (sibling != NULL) {
+			printParseTree(sibling, outFile);
+			sibling = sibling->sibling;
+		}
+	}
+	return;
 }

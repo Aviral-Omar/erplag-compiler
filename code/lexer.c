@@ -8,32 +8,6 @@
 #define isDigit(x) (x >= '0' && x <= '9')
 #define isAlnum(x) (((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z')) || (x >= '0' && x <= '9'))
 
-void initLexer();
-void clearHeap();
-void getStream();
-int incrementForward();
-void retractForward();
-void handleWhitespaces();
-int skipComment();
-char *BUFEND();
-void handleLexicalError(char *errorMsg, int lineNumber);
-void handleNumberLengthWarning(char *errorMsg);
-void getNextToken();
-void removeComments(char *testcaseFile, char *cleanFile);
-void runOnlyLexer();
-
-FILE *src;
-int bufferSize;
-char *buf1;
-char *buf2;
-CurrentBuffer currBuffer = FIRST;
-char *lexemeBegin;
-char *forward;
-int currLine = 1;
-int charsRead = 0;
-int syntaxCorrect = 1;
-int lexerPrint = 0;
-TokenInfo *currToken;
 char *tokenMap[59] = {"INTEGER",
 					  "REAL",
 					  "BOOLEAN",
@@ -93,10 +67,63 @@ char *tokenMap[59] = {"INTEGER",
 					  "EPSILON",
 					  "DOLLAR",
 					  "COMMENTMARK"};
+FILE *src;
+int bufferSize;
+char *buf1;
+char *buf2;
+char *lexemeBegin;
+char *forward;
+CurrentBuffer currBuffer;
+int currLine;
+int charsRead;
+int lexerCorrect;
+int lexerPrint = 0;
+TokenInfo *currToken;
+
+void runOnlyLexer(char *filename);
+void initLexer();
+void clearLexerData();
+void getStream();
+int incrementForward();
+void retractForward();
+void handleWhitespaces();
+int skipComment();
+char *BUFEND();
+void handleLexicalError(char *errorMsg, int lineNumber);
+void handleNumberLengthWarning(char *errorMsg);
+void getNextToken();
+void removeComments(char *testcaseFile, char *cleanFile);
+
+void runOnlyLexer(char *filename)
+{
+	// Checks if file path is valid and opens file
+	src = fopen(filename, "r");
+	if (!src) {
+		printf("File does not exist or unable to access file.\n");
+		exit(EXIT_FAILURE);
+	}
+	initLexer();
+	lexerPrint = 1;
+	printf("Line Number\tLexeme\t\t\tToken Name\n");
+	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
+		getNextToken();
+		handleWhitespaces();
+		if (!currToken)
+			continue;
+
+		free(currToken);
+	}
+	if (lexerCorrect)
+		printf("\nInput source code is lexically correct.\n\n");
+	clearLexerData();
+}
 
 void initLexer()
 {
-	// TODO initialize all global variables here
+	currBuffer = FIRST;
+	currLine = 1;
+	charsRead = 0;
+	lexerCorrect = 1;
 	buf1 = (char *)malloc(bufferSize * sizeof(char));
 	buf2 = (char *)malloc(bufferSize * sizeof(char));
 	lexemeBegin = (currBuffer == FIRST ? buf1 : buf2);
@@ -114,7 +141,7 @@ char *BUFEND()
 	return (currBuffer == FIRST ? buf1 : buf2) + charsRead;
 }
 
-void clearHeap()
+void clearLexerData()
 {
 	free(buf1);
 	free(buf2);
@@ -125,14 +152,16 @@ void getStream()
 {
 	// Reads stream into buf1 or buf2
 	charsRead = fread(currBuffer == FIRST ? buf1 : buf2, sizeof(char), bufferSize, src);
+
 	if (ferror(src)) {
 		printf("Error reading from file.\n");
 		exit(EXIT_FAILURE);
 	}
 	if (feof(src))
-		// fclose returns EOF when there is error else returns 0
 		if (fclose(src) == EOF)
 			printf("Error closing file.\n");
+
+	// fclose returns EOF when there is error else returns 0
 }
 
 // Returns 1 if EOF is reached, else returns 0
@@ -191,7 +220,7 @@ int skipComment()
 
 void handleLexicalError(char *errorMsg, int lineNumber)
 {
-	syntaxCorrect = 0;
+	lexerCorrect = 0;
 	printf(errorMsg, lineNumber);
 	free(currToken);
 	currToken = NULL;
@@ -500,7 +529,7 @@ void removeComments(char *testcaseFile, char *cleanFile)
 	// Open output file for writing
 	outFile = fopen(cleanFile, "w");
 	if (outFile == NULL) {
-		printf("Error opening output file\n");
+		printf("Error opening output file.\n");
 		exit(EXIT_FAILURE);
 	}
 	while (!feof(inFile)) {
@@ -530,20 +559,4 @@ void removeComments(char *testcaseFile, char *cleanFile)
 	// Close input and output files
 	fclose(inFile);
 	fclose(outFile);
-}
-
-void runOnlyLexer(){
-	lexerPrint = 1;
-	printf("Line Number\tLexeme\t\t\tToken Name\n");
-	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
-		getNextToken();
-		handleWhitespaces();
-		if (!currToken)
-			continue;
-
-		free(currToken);
-	}
-	if (syntaxCorrect)
-		printf("\nInput source code is syntactically correct.\n");
-	clearHeap();
 }

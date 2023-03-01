@@ -39,10 +39,13 @@ typedef int ParseTableEntry;
 typedef struct StackType Stack;
 
 // TODO make sure all are cleaned
+// TODO declare only those used outside
 extern LexicalSymbol* grammar[RULE_COUNT];
 extern char* nonTerminalMap[NON_TERMINAL_COUNT];
 extern char* terminalMap[TERMINAL_COUNT];
 extern ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];
 extern FirstFollowEntry ffTable[NON_TERMINAL_COUNT];
 extern Stack* s;
+extern int parserCorrect;
+extern int parserPrint;
 #endif

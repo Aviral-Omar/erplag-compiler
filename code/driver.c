@@ -16,15 +16,15 @@ int main(int argc, char *argv[])
 	printf("Modules work for all given test cases.\n\n");
 
 	// Checks if program receives 2 arguments from command line
-	if (argc != 3) {
-		printf("Please enter the filename and buffer size as arguments respectively.\n");
+	if (argc != 4) {
+		printf("Please enter the source filename, parse tree output filename and buffer size as arguments respectively.\n");
 		exit(EXIT_FAILURE);
 	}
 
 
 	// Checking if buffer size input is valid
 	char *endPtr;
-	bufferSize = (int)strtol(argv[2], &endPtr, 10);
+	bufferSize = (int)strtol(argv[3], &endPtr, 10);
 	if (*argv[2] == '\0' || *endPtr != '\0') {
 		printf("Invalid buffer size.\n");
 		exit(EXIT_FAILURE);
@@ -48,37 +48,19 @@ int main(int argc, char *argv[])
 		if (option == 1) {
 			removeComments(argv[1], "cleaned");
 		} else if (option == 2) {
-			// Checks if file path is valid and opens file
-			src = fopen(argv[1], "r");
-			if (!src) {
-				printf("File does not exist or unable to access file.\n");
-				exit(EXIT_FAILURE);
-			}
-			initLexer();
-			runOnlyLexer();
-
+			runOnlyLexer(argv[1]);
 		} else if (option == 3) {
-			// TODO parser calls
-			src = fopen(argv[1], "r");
-			if (!src) {
-				printf("File does not exist or unable to access file.\n");
-				exit(EXIT_FAILURE);
-			}
-			lexerPrint = 0; //because lexer output not needed
-			initParser();
-			runOnlyParser();
-
+			parserPrint = 1;
+			runParser(argv[1], argv[2]);
 		} else if (option == 4) {
-			// TODO confirm what to benchmark
 			clock_t start_time, end_time;
 
 			double total_CPU_time, total_CPU_time_in_seconds;
 
 			start_time = clock();
 
-			lexerPrint = 0;
-			// TODO parser calls
-			initParser();
+			parserPrint = 0;
+			runParser(argv[1], argv[2]);
 
 			end_time = clock();
 

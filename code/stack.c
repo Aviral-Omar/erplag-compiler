@@ -6,7 +6,6 @@
 
 Stack *createStack();
 int isEmpty(Stack *s);
-int isFull(Stack *s);
 SNode *pushTok(Stack *s, Symbol T, char type);
 int pop(Stack *s);
 SNode *top(Stack *s);
@@ -66,16 +65,10 @@ int isEmpty(Stack *s)
 void deleteStack(Stack *s)
 {
 	SNode *cur = s->top, *next;
-	do {
+	while (cur) {
 		next = cur->next;
 		free(cur);
 		cur = next;
-	} while (cur);
+	}
 	free(s);
-}
-
-int isFull(Stack *q)
-{
-	// TODO waiting for Stack size limit
-	return FALSE;
 }

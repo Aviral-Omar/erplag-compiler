@@ -1,9 +1,9 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "treeDef.h"
 
-ParseTNode *ParseTreeParent;
+ParseTNode *parseTreeParent;
 
 ParseTNode *createParseTree(Symbol d, char type);
 ParseTNode *addNode(ParseTNode *node, Symbol d, char type);
@@ -27,7 +27,7 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type)
 	ParseTNode *temp, *trav;  // creating new node and one for traversal(to find the terminal node)
 
 	temp = (ParseTNode *)malloc(sizeof(struct ParseTNodeType));
-	temp->data.nt = d.nt;
+	temp->data = d;
 	temp->parent = parent;
 	temp->type = type;
 	temp->child = NULL;
@@ -52,4 +52,3 @@ int updateData(ParseTNode *node, Symbol d, char type)
 	node->data = d;
 	node->type = type;
 }
-

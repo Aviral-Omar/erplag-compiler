@@ -3,7 +3,7 @@
 
 void initLexer();
 
-void clearHeap();
+void clearLexerData();
 
 void handleWhitespaces();
 
@@ -13,4 +13,4 @@ void removeComments(char *testcaseFile, char *cleanFile);
 
 char *BUFEND();
 
-void runOnlyLexer();
+void runOnlyLexer(char *filename);
