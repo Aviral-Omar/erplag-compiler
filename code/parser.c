@@ -71,7 +71,6 @@ char *nonTerminalMap[NON_TERMINAL_COUNT] = {
 	"N_factor",
 	"N_N5",
 	"N_op2",
-	"N_N10",
 	"N_arrExpr",
 	"N_arrN4",
 	"N_arrTerm",
@@ -165,9 +164,9 @@ void populateSyn();
 void synRecovery();
 
 void printParseTree(ParseTNode *node)
-{	
+{
 	if (node == NULL)
-        return;
+		return;
 	printParseTree(node->child);
 
 	printf("%s\n", node->data);
@@ -570,8 +569,8 @@ void createParseTable()
 					if (currFirst->tr == EPSILON) {
 						wasEpsilon = 1;
 					} else {
-						if(parseTable[LHS->data.nt][currFirst->tr] != -1){
-							printf("GRAMMAR IS NOT LL(1). %s %s, Rule no. %d\n",nonTerminalMap[LHS->data.nt], terminalMap[currFirst->tr], rule);
+						if (parseTable[LHS->data.nt][currFirst->tr] != -1) {
+							printf("GRAMMAR IS NOT LL(1). %s %s, Rule no. %d\n", nonTerminalMap[LHS->data.nt], terminalMap[currFirst->tr], rule);
 						}
 						parseTable[LHS->data.nt][currFirst->tr] = rule;
 					}
@@ -581,7 +580,7 @@ void createParseTable()
 					RHS = RHS->next;
 				}
 			} else if (RHS->type == 'T') {
-				if(parseTable[LHS->data.nt][RHS->data.t] != -1){
+				if (parseTable[LHS->data.nt][RHS->data.t] != -1) {
 					printf("GRAMMAR IS NOT LL(1),  Rule no. %d\n", rule);
 				}
 				parseTable[LHS->data.nt][RHS->data.t] = rule;

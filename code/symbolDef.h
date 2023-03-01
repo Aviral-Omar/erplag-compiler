@@ -122,7 +122,6 @@ typedef enum {
 	N_factor,
 	N_N5,
 	N_op2,
-	N_N10,
 	N_arrExpr,
 	N_arrN4,
 	N_arrTerm,
