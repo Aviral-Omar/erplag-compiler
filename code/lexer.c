@@ -95,6 +95,7 @@ char *tokenMap[59] = {"INTEGER",
 
 void initLexer()
 {
+	// TODO initialize all global variables here
 	buf1 = (char *)malloc(bufferSize * sizeof(char));
 	buf2 = (char *)malloc(bufferSize * sizeof(char));
 	lexemeBegin = (currBuffer == FIRST ? buf1 : buf2);

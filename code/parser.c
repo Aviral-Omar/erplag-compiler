@@ -512,7 +512,9 @@ void printFollowSets()
 void computeFirstAndFollowSets()
 {
 	computeFirstSets();
+	// printFirstSets();
 	computeFollowSets();
+	// printFollowSets();
 }
 
 void printParseTable()
@@ -607,6 +609,7 @@ void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
 		return;
 	}
 
+	// TODO iterative conversion
 	pushRuleTokens(s, RHS->next, parent);
 	SNode *tempS = pushTok(s, RHS->data, RHS->type);
 	ParseTNode *tempT = addNode(parent, RHS->data, RHS->type);
