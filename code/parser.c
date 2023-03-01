@@ -173,19 +173,24 @@ void printParseTree(ParseTNode *node)
 {
 	if (node == NULL)
 		return;
+	// printf("3: %d\n",node->data.nt);
 	printParseTree(node->child);
-
-	// printf("%s\n", node->data);
+	// printf("%c: ", node->type);
 	if (node->type == 'N')
-		printf("%s \n", nonTerminalMap[node->data.nt]);
+		// printf("%s, parent:%s \t ", nonTerminalMap[node->data.nt], node->parent?nonTerminalMap[node->parent->data.nt]:"none ");
+		printf("%s \t ", nonTerminalMap[node->data.nt]);
 	else
-		printf("%s \n", terminalMap[node->data.t]);
+		// printf("%s, parent:%s \t", terminalMap[node->data.t], nonTerminalMap[node->parent->data.nt]);
+		printf("%s \t", terminalMap[node->data.t]);
 
-	ParseTNode *sibling = node->child->sibling;
-	while (sibling != NULL) {
-		printParseTree(sibling);
-		sibling = sibling->sibling;
+	if(node->child){
+		ParseTNode *sibling = node->child->sibling;
+		while (sibling != NULL) {
+			printParseTree(sibling);
+			sibling = sibling->sibling;
+		}
 	}
+	return;
 }
 
 void initParser()
@@ -193,7 +198,6 @@ void initParser()
 	readGrammar();
 	computeFirstAndFollowSets();
 	createParseTable();
-
 	s = createStack();
 	Symbol temp0, temp1;
 	temp0.t = DOLLAR;
@@ -615,13 +619,15 @@ void createParseTable()
 
 void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
 {
+	ParseTNode *tempT;
+	if(RHS)
+		tempT = addNode(parent, RHS->data, RHS->type);
 	if (!RHS || RHS->type == 'e')
 		return;
 
 	// TODO iterative conversion
 	pushRuleTokens(s, RHS->next, parent);
 	SNode *tempS = pushTok(s, RHS->data, RHS->type);
-	ParseTNode *tempT = addNode(parent, RHS->data, RHS->type);
 	tempS->treenode = tempT;
 }
 
@@ -638,7 +644,7 @@ void parseCurrToken()
 		if (stackTop->type == 'T') {
 			// pop and input++;
 			if (stackTop->data.t == inputSymbol) {
-				printf("Accepted: %s\n", terminalMap[s->top->data.t]);
+				// printf("Accepted: %s\n", terminalMap[s->top->data.t]);
 				pop(s);
 			} else {
 				// Error and recovery
@@ -649,7 +655,7 @@ void parseCurrToken()
 		} else {  // Assuming 'e' is not in stack
 			// Case of non-terminal
 			int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
-			printf("Rule %d applied for token %s.\n", ruleNumber, terminalMap[inputSymbol]);
+			// printf("Rule %d applied for token %s.\n", ruleNumber, terminalMap[inputSymbol]);
 			if (ruleNumber == -1) {
 				// Error and Recovery
 				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
@@ -661,7 +667,7 @@ void parseCurrToken()
 
 				// Now pop stack top and put RHS in reverse order
 				ParseTNode *parent = s->top->treenode;
-				printf("Accepted: %s\n\n", nonTerminalMap[s->top->data.nt]);
+				// printf("Accepted: %s\n\n", nonTerminalMap[s->top->data.nt]);
 				pop(s);
 				pushRuleTokens(s, RHS, parent);
 			}
@@ -687,7 +693,10 @@ void runOnlyParser()
 		}
 	}
 	clearHeap();
-	// printParseTree(ParseTreeParent);
+	// printf("%s\n",nonTerminalMap[ParseTreeParent->child->data.nt]);
+	printParseTree(ParseTreeParent);
+	printf("\n");
+	if(s->size > 1)printf("Syntax Error: Incomplete input, Bottom of stack not Reached.\n");
 }
 
 // Populates Syn to the respective fields where the cell is blank after filling parse table
