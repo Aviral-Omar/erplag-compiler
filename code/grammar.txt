@@ -80,6 +80,7 @@ N_arithmeticOrBooleanExpr N_anyTerm N_N7
 N_N7 N_logicalOp N_anyTerm N_N7
 N_N7 epsilon
 N_anyTerm N_arithmeticExpr N_N8
+N_anyTerm N_boolConst
 N_N8 N_relationalOp N_arithmeticExpr
 N_N8 epsilon
 N_arithmeticExpr N_term N_N4
@@ -96,7 +97,7 @@ N_factor T_ID N_N11
 N_N11 T_SQBO N_elementIndexWithExpressions T_SQBC
 N_N11 epsilon
 N_elementIndexWithExpressions N_sign N_arrExpr
-N_arrExpr N_anyTerm N_arrN4
+N_arrExpr N_arrTerm N_arrN4
 N_arrN4 N_op1 N_arrTerm N_arrN4
 N_arrN4 epsilon
 N_arrTerm N_arrFactor N_arrN5
