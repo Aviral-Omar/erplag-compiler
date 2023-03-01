@@ -692,6 +692,17 @@ void runOnlyParser()
 			currToken = NULL;
 		}
 	}
+	while(s->size > 1){
+		if(s->top->type == 'N'){
+			if(parseTable[s->top->data.nt][DOLLAR] == -1){
+				break;
+			}
+			else{
+				pop(s);
+			}
+		}
+		else break;
+	}
 	clearHeap();
 	// printf("%s\n",nonTerminalMap[ParseTreeParent->child->data.nt]);
 	printParseTree(ParseTreeParent);

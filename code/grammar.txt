@@ -80,7 +80,6 @@ N_arithmeticOrBooleanExpr N_anyTerm N_N7
 N_N7 N_logicalOp N_anyTerm N_N7
 N_N7 epsilon
 N_anyTerm N_arithmeticExpr N_N8
-N_anyTerm N_boolConst
 N_N8 N_relationalOp N_arithmeticExpr
 N_N8 epsilon
 N_arithmeticExpr N_term N_N4
