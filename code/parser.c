@@ -175,7 +175,7 @@ void printParseTree(ParseTNode *node)
 		return;
 	printParseTree(node->child);
 
-	//printf("%s\n", node->data);
+	// printf("%s\n", node->data);
 	if (node->type == 'N')
 		printf("%s \n", nonTerminalMap[node->data.nt]);
 	else
@@ -206,8 +206,8 @@ void initParser()
 	root->treenode = createParseTree(temp1, 'N');
 	ParseTreeParent = root->treenode;
 
-	populateSyn(); //TODO semicolon case
-	// printParseTable(ParseTreeParent);
+	populateSyn();	// TODO semicolon case
+	printParseTable();
 }
 
 
@@ -555,12 +555,11 @@ void printParseTable()
 
 void createParseTable()
 {  // Requires First and Follow sets of all non terminals
+	for (int i = 0; i < NON_TERMINAL_COUNT; i++)
+		for (int j = 0; j < TERMINAL_COUNT; j++)
+			parseTable[i][j] = -1;
+
 	// TODO check LL1 grammar
-	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
-		for (int j = 0; j < TERMINAL_COUNT; j++) {
-			parseTable[i][j] = -1;	// Initialize everything to error
-		}
-	}
 
 	for (int rule = 0; rule < RULE_COUNT; rule++) {
 		LexicalSymbol *LHS = grammar[rule];
@@ -616,9 +615,8 @@ void createParseTable()
 
 void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
 {
-	if (RHS == NULL) {
+	if (!RHS || RHS->type == 'e')
 		return;
-	}
 
 	// TODO iterative conversion
 	pushRuleTokens(s, RHS->next, parent);
@@ -627,39 +625,48 @@ void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
 	tempS->treenode = tempT;
 }
 
-void parseCurrToken(){
+void parseCurrToken()
+{
+	Token data;
+	char type;
 	Token inputSymbol = currToken->token;
-	SNode *stackTop = top(s);  // get this from top of stack;
+	SNode *stackTop;  // get this from top of stack;
+	do {
+		stackTop = top(s);
+		data = stackTop->data.t;
+		type = stackTop->type;
+		if (stackTop->type == 'T') {
+			// pop and input++;
+			if (stackTop->data.t == inputSymbol) {
+				printf("Accepted: %s\n", terminalMap[s->top->data.t]);
+				pop(s);
+			} else {
+				// Error and recovery
+				pop(s);
+				printf("Syntax Error: Terminal %s present at inappropriate position\n\n", terminalMap[data]);
+				exit(EXIT_FAILURE);
+			}
+		} else {  // Assuming 'e' is not in stack
+			// Case of non-terminal
+			int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
+			printf("Rule %d applied for token %s.\n", ruleNumber, terminalMap[inputSymbol]);
+			if (ruleNumber == -1) {
+				// Error and Recovery
+				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
+				exit(EXIT_FAILURE);
+				synRecovery();
+			} else {
+				LexicalSymbol *LHS = grammar[ruleNumber];
+				LexicalSymbol *RHS = LHS->next;
 
-	if (stackTop->type == 'T') {
-		// pop and input++;
-		if (stackTop->data.t == inputSymbol) {
-			printf("Accepted: %s\n",terminalMap[s->top->data.t]);
-			pop(s);
-		} else {
-			// Error and recovery
-			pop(s);
-			printf("Syntax Error: Terminal present at inappropriate position\n\n");
+				// Now pop stack top and put RHS in reverse order
+				ParseTNode *parent = s->top->treenode;
+				printf("Accepted: %s\n\n", nonTerminalMap[s->top->data.nt]);
+				pop(s);
+				pushRuleTokens(s, RHS, parent);
+			}
 		}
-	} else {  // Assuming 'e' is not in stack
-		// Case of non-terminal
-		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
-		if (ruleNumber == -1) {
-			// Error and Recovery
-			printf("%s, %s, rule: %d\n",nonTerminalMap[stackTop->data.nt], terminalMap[inputSymbol], ruleNumber);
-			printf("Syntax Error: input symbol can't be derived from top of stack Non Terminal\n\n");
-			synRecovery();
-		} else {
-			LexicalSymbol *LHS = grammar[ruleNumber];
-			LexicalSymbol *RHS = LHS->next;
-
-			// Now pop stack top and put RHS in reverse order
-			ParseTNode *parent = s->top->treenode;
-			printf("Accepted: %s\n\n",nonTerminalMap[s->top->data.nt]);
-			pop(s);
-			pushRuleTokens(s, RHS, parent);
-		}
-	}
+	} while (!(type == 'T' && data == inputSymbol));
 }
 
 void runOnlyParser()
@@ -674,11 +681,10 @@ void runOnlyParser()
 
 		parseCurrToken();
 
-		if(currToken){
+		if (currToken) {
 			free(currToken);
 			currToken = NULL;
 		}
-			
 	}
 	clearHeap();
 	// printParseTree(ParseTreeParent);
@@ -721,7 +727,7 @@ void synRecovery()
 		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
 		if (ruleNumber == -1) {
 			fflush(stdout);
-			if(currToken){
+			if (currToken) {
 				free(currToken);
 				currToken = NULL;
 			}
@@ -741,7 +747,7 @@ void synRecovery()
 		fflush(stdout);
 
 		/*TODO remove this*/
-		if(currToken){
+		if (currToken) {
 			free(currToken);
 			currToken = NULL;
 		}
