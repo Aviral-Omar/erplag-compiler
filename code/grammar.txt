@@ -55,7 +55,7 @@ N_sign T_MINUS
 N_sign epsilon
 N_moduleReuseStmt N_optional T_USE T_MODULE T_ID T_WITH T_PARAMETERS N_actualParaList T_SEMICOL
 N_actualParaList N_sign N_K N_newParaList
-N_newParaList T_COMMA N_K N_newParaList
+N_newParaList T_COMMA N_sign N_K N_newParaList
 N_newParaList epsilon
 N_K T_NUM
 N_K T_RNUM

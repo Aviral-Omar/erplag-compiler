@@ -34,7 +34,9 @@ N_elementIndexWithExpressions: T_PLUS T_MINUS T_BO T_NUM T_RNUM T_TRUE T_FALSE T
 N_sign: T_PLUS T_MINUS epsilon
 N_newIndex: T_NUM T_ID
 N_optional: T_SQBO epsilon
-N_actualParaList: T_NUM T_RNUM T_TRUE T_FALSE T_ID
+N_actualParaList: T_PLUS T_MINUS T_NUM T_RNUM T_TRUE T_FALSE T_ID
+N_K: T_NUM T_RNUM T_TRUE T_FALSE T_ID
+N_newParaList: T_COMMA epsilon
 N_N11: T_SQBO epsilon
 N_idList: T_ID
 N_N3: T_COMMA epsilon

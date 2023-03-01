@@ -6,8 +6,8 @@
 #include "symbolDef.h"
 
 #define GRAMMAR_FILE "grammar.txt"
-#define RULE_COUNT 135
-#define NON_TERMINAL_COUNT 70
+#define RULE_COUNT 138
+#define NON_TERMINAL_COUNT 72
 #define TERMINAL_COUNT 58
 #define GRAMMAR_BUFFER_SIZE 4500
 #define SYN -2
