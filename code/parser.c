@@ -237,6 +237,7 @@ runParser(char *srcFilename, char *outFilename)
 		exit(EXIT_FAILURE);
 	}
 
+	// TODO pretty printing
 	// Initialize columns of parse tree printing table
 	fprintf(outFile, "%-24s\t", "lexeme");
 	fprintf(outFile, "%-10s\t", "lineNo.");
@@ -643,7 +644,7 @@ void printParseTable()
 {
 	int row = NON_TERMINAL_COUNT;
 	int col = TERMINAL_COUNT;
-	FILE *outFile = fopen("parseTable", "w");
+	FILE *outFile = fopen("parseTable.txt", "w");
 	if (outFile == NULL) {
 		printf("Error opening output file\n");
 		exit(EXIT_FAILURE);
@@ -680,6 +681,9 @@ void createParseTable()
 			if (RHS == NULL || RHS->type == 'e') {
 				// NULL means we have reached end of RHS
 				// go to follow of LHS
+				// Tracking epsilon producing rule here
+				if (RHS->type == 'e')
+					parseTable[LHS->data.nt][EPSILON] = rule;
 				needFollow = 1;
 				break;
 			}
@@ -736,61 +740,86 @@ void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent, int ruleNu
 	}
 }
 
+
 void parseCurrToken()
 {
 	Token data;
 	char type;
-	Token inputSymbol = currToken->token;
 	SNode *stackTop;  // get this from top of stack;
 	do {
 		stackTop = top(s);
 		data = stackTop->data.t;
 		type = stackTop->type;
 		if (type == 'T') {
-			// pop and input++;
-			if (stackTop->data.t == inputSymbol) {
-				// printf("Accepted: %s\n", terminalMap[top(s)->data.t]);
+			if (data == currToken->token) {
 				top(s)->treenode->info.tokIn = currToken;
+				printf("Matched token %s\n", terminalMap[currToken->token]);
 				pop(s);
+				break;
+			} else if (data == SEMICOL) {
+				// If semicolon is on top of stack, skip input till semicolon is reached
+				break;
 			} else {
-				// Error and recovery
+				// Pop terminal if it does not match
 				pop(s);
-				printf("Syntax Error: Terminal %s present at inappropriate position\n\n", terminalMap[data]);
+				parserCorrect = 0;
+				printf("Line %d: Syntax Error: Terminal %s present at inappropriate position\n", currToken->lineNumber, terminalMap[currToken->token]);
 			}
 		} else {  // Assuming 'e' is not in stack
 			// Case of non-terminal
-			int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
-			// printf("Rule %d applied for token %s.\n", ruleNumber, terminalMap[inputSymbol]);
+			int ruleNumber = parseTable[stackTop->data.nt][currToken->token];
 			if (ruleNumber == -1) {
-				// Error and Recovery
-				// printf("%d\n", ruleNumber);
-				// fflush(stdout);
-				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
-				if (synRecovery() == 1)
+				parserCorrect = 0;
+				printf("Line %d: Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n", currToken->lineNumber, terminalMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
+
+				// If epsilon production is found, apply it
+				ruleNumber = parseTable[stackTop->data.nt][EPSILON];
+				if (ruleNumber != -1) {
+					pop(s);
+					pushRuleTokens(s, grammar[ruleNumber]->next, stackTop->treenode, ruleNumber);
+					printf("Applied rule %d\n", ruleNumber);
+				} else if (currToken->token == SEMICOL) {
+					// If semicolon is found, get next token and pop non terminals till a rule matches in synRecovery
+					synRecovery();
+					ruleNumber = parseTable[top(s)->data.nt][currToken->token];
+					LexicalSymbol *LHS = grammar[ruleNumber];
+					LexicalSymbol *RHS = LHS->next;
+					ParseTNode *parent = top(s)->treenode;
+
+					pop(s);
+					pushRuleTokens(s, RHS, parent, ruleNumber);
+					printf("Applied rule %d\n", ruleNumber);
+				}
+				// Skip tokens until an element in FOLLOW of stack top is seen
+				else
 					break;
+
+				// if (synRecovery() == 1)
+				// 	break;
 			} else if (ruleNumber == -2) {
 				pop(s);
-				// printf("%d\n", ruleNumber);
-				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
+				parserCorrect = 0;
+				printf("Line %d: Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n", currToken->lineNumber, terminalMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
 			} else {
 				LexicalSymbol *LHS = grammar[ruleNumber];
 				LexicalSymbol *RHS = LHS->next;
 
 				// Now pop stack top and put RHS in reverse order
 				ParseTNode *parent = top(s)->treenode;
-				// printf("Accepted: %s\n\n", nonTerminalMap[top(s)->data.nt]);
 				pop(s);
 				pushRuleTokens(s, RHS, parent, ruleNumber);
+				printf("Applied rule %d\n", ruleNumber);
 			}
 		}
-	} while (!(type == 'T' && data == inputSymbol));
+		// TODO make while(1)
+	} while (!(type == 'T' && data == currToken->token));
 }
 
 // Populates Syn to the respective fields where the cell is blank after filling parse table
 // -2 will indicate presence of Syn in a particular cell
-// TODO insert SEMICOLON in appropriate syn set
 void populateSyn()
 {
+	// Use rule 2 from book
 	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
 		TerminalInfo *currFollow = ffTable[i].follow;
 		while (currFollow) {
@@ -804,17 +833,25 @@ void populateSyn()
 
 int synRecovery()
 {
-	// We are here because Non termi at stack top can't derive input symbol
-	printf("1\n");
-	fflush(stdout);
+	// TODO make void and change name to error recovery
+	// Reads next token after seicolon
 	if (currToken) {
 		free(currToken);
 		currToken = NULL;
 	}
-	printf("2\n");
-	fflush(stdout);
-	printf("%d %d %p %p\n", charsRead, bufferSize, lexemeBegin, BUFEND());
 	handleWhitespaces();
+
+	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
+		getNextToken();
+		handleWhitespaces();
+		if (!currToken)
+			continue;
+		while (parseTable[top(s)->data.nt][currToken->token] < 0)
+			pop(s);
+		return 0;
+	}
+	/*
+	// We are here because Non termi at stack top can't derive input symbol
 	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
 		// TODO free space used by token structs
 		getNextToken();
@@ -865,6 +902,7 @@ int synRecovery()
 		return 1;  // EOF reached
 	else
 		return 0;
+		*/
 }
 
 void printParseTree(ParseTNode *node, FILE *outFile)

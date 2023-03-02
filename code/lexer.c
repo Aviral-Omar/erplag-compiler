@@ -322,7 +322,7 @@ void getNextToken()
 			int startLine = currLine;
 			if (lexerPrint) printf("%d\t**\t\tCOMMENT\n", currLine);
 			if (skipComment()) {
-				handleLexicalError("Lexical Error: Comment ending missing for comment starting: Line %d\n", startLine);
+				handleLexicalError("Line %d: Lexical Error: Comment ending missing for comment starting.\n", startLine);
 			} else {
 				free(currToken);
 				currToken = NULL;
@@ -380,7 +380,7 @@ void getNextToken()
 		if (lexerPrint) printf("%d\t%c", currLine, *forward);
 		if (incrementForward() || *forward != '=') {
 			if (lexerPrint) printf("\n");
-			handleLexicalError("Lexical Error: Single '=': Line %d\n", currLine);
+			handleLexicalError("Line %d: Lexical Error: Single '='.\n", currLine);
 		} else {
 			currToken->token = EQ;
 			if (lexerPrint) printf("%c\t\t%-12s\n", *forward, tokenMap[currToken->token]);
@@ -391,7 +391,7 @@ void getNextToken()
 		if (lexerPrint) printf("%d\t%c", currLine, *forward);
 		if (incrementForward() || *forward != '=') {
 			if (lexerPrint) printf("\n");
-			handleLexicalError("Lexical Error: Single '!': Line %d\n", currLine);
+			handleLexicalError("Line %d: Lexical Error: Single '!'.\n", currLine);
 		} else {
 			currToken->token = NE;
 			if (lexerPrint) printf("%c\t\t%-12s\n", *forward, tokenMap[currToken->token]);
@@ -413,7 +413,7 @@ void getNextToken()
 		if (lexerPrint) printf("%d\t%c", currLine, *forward);
 		if (incrementForward() || *forward != '.') {
 			if (lexerPrint) printf("\n");
-			handleLexicalError("Lexical Error: Single '.': Line %d\n", currLine);
+			handleLexicalError("Line %d: Lexical Error: Single '.'.\n", currLine);
 		} else {
 			currToken->token = RANGEOP;
 			if (lexerPrint) printf("%c\t\t%-12s\n", *forward, tokenMap[currToken->token]);
@@ -465,7 +465,7 @@ void getNextToken()
 					while (!incrementForward() && (*forward == '_' || isAlnum(*forward)))
 						if (lexerPrint) printf("%c", *forward);
 					if (lexerPrint) printf("\n");
-					handleLexicalError("Lexical Error: Identifier or keyword longer than 20 chars: Line %d\n", currLine);
+					handleLexicalError("Line %d: Lexical Error: Identifier or keyword longer than 20 chars.\n", currLine);
 					return;
 				}
 			}
@@ -480,17 +480,18 @@ void getNextToken()
 			int lexLen = 0;
 			if (lexerPrint) printf("%d\t", currLine);
 			do {
-				currToken->data.lexeme[lexLen] = *forward;
+				if (lexLen < 20)
+					currToken->data.lexeme[lexLen] = *forward;
 				lexLen++;
 				if (lexerPrint) printf("%c", *forward);
 				if (incrementForward() || (!isDigit(*forward) && *forward != '.')) {
 					currToken->token = NUM;
-					currToken->data.lexeme[lexLen] = '\0';
+					currToken->data.lexeme[lexLen >= 20 ? 20 : lexLen] = '\0';
 					// currToken->data.intValue = atoi(currToken->data.lexeme);
 
 					if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 					if (lexLen > 9) {
-						handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented: Line %d\n");
+						handleNumberLengthWarning("Line %d: Warning: Integer is too big, there is a possibility that it may be misrepresented.\n");
 					}
 					return;
 				}
@@ -500,7 +501,7 @@ void getNextToken()
 
 			if (incrementForward() || (!isDigit(*forward) && *forward != '.')) {
 				if (lexerPrint) printf(".\n");
-				handleLexicalError("Lexical Error: Incomplete number: Line %d\n", currLine);
+				handleLexicalError("Line %d: Lexical Error: Incomplete number.\n", currLine);
 			} else if (*forward == '.') {
 				retractForward();
 				currToken->token = NUM;
@@ -508,7 +509,7 @@ void getNextToken()
 				// currToken->data.intValue = atoi(currToken->data.lexeme);
 				if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 				if (lexLen > 9) {
-					handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented: Line %d\n");
+					handleNumberLengthWarning("Line %d: Warning: Integer is too big, there is a possibility that it may be misrepresented.\n");
 				}
 			} else if (isDigit(*forward)) {
 				if (lexerPrint) printf(".");
@@ -517,17 +518,18 @@ void getNextToken()
 				int decimalpartLen = 0;
 				int exponentpartLen = 0;
 				do {
-					currToken->data.lexeme[lexLen] = *forward;
+					if (lexLen < 20)
+						currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
 					decimalpartLen++;
 					if (lexerPrint) printf("%c", *forward);
 					if (incrementForward() || (!isDigit(*forward) && *forward != 'e' && *forward != 'E')) {
 						currToken->token = RNUM;
-						currToken->data.lexeme[lexLen] = '\0';
+						currToken->data.lexeme[lexLen >= 20 ? 20 : lexLen] = '\0';
 						// currToken->data.floatValue = atof(currToken->data.lexeme);
 						if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
-						if (decimalpartLen > 11 && lexLen > 21) {
-							handleNumberLengthWarning("Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented: Line %d\n");
+						if (decimalpartLen > 11 && lexLen > 20) {
+							handleNumberLengthWarning("Line %d: Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented.\n");
 						}
 						return;
 					}
@@ -537,32 +539,37 @@ void getNextToken()
 				if (lexerPrint) printf("%c", *forward);
 				if (incrementForward() || (!isDigit(*forward) && *forward != '+' && *forward != '-')) {
 					if (lexerPrint) printf("\n");
-					handleLexicalError("Lexical Error: Incomplete floating point number: Line %d\n", currLine);
+					handleLexicalError("Line %d: Lexical Error: Incomplete floating point number.\n", currLine);
 					return;
 				}
 				if (*forward == '+' || *forward == '-') {
-					currToken->data.lexeme[lexLen] = *forward;
+					if (lexLen < 20)
+						currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
 					if (lexerPrint) printf("%c", *forward);
 					if (incrementForward() || !isDigit(*forward)) {
 						if (lexerPrint) printf("\n");
-						handleLexicalError("Lexical Error: Incomplete floating point number: Line %d\n", currLine);
+						handleLexicalError("Line %d: Lexical Error: Incomplete floating point number.\n", currLine);
 						return;
 					}
 				}
 
 				do {
-					currToken->data.lexeme[lexLen] = *forward;
+					if (lexLen < 20)
+						currToken->data.lexeme[lexLen] = *forward;
 					lexLen++;
 					exponentpartLen++;
 					if (lexerPrint) printf("%c", *forward);
 					if (incrementForward() || !isDigit(*forward)) {
 						currToken->token = RNUM;
-						currToken->data.lexeme[lexLen] = '\0';
+						currToken->data.lexeme[lexLen >= 20 ? 20 : lexLen] = '\0';
 						currToken->data.floatValue = atof(currToken->data.lexeme);
 						if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
-						if (exponentpartLen > 11 && lexLen > 21) {
-							handleNumberLengthWarning("Warning: Exponent is too big, there is a possibility that it may be misrepresented: Line %d\n");
+						if (decimalpartLen > 11 && lexLen > 20) {
+							handleNumberLengthWarning("Line %d: Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented.\n");
+						}
+						if (exponentpartLen > 11 && lexLen > 20) {
+							handleNumberLengthWarning("Line %d: Warning: Exponent is too big, there is a possibility that it may be misrepresented.\n");
 						}
 						return;
 					}
@@ -570,7 +577,7 @@ void getNextToken()
 			}
 		} else {
 			if (lexerPrint) printf("%d\t%c\n", currLine, *forward);
-			handleLexicalError("Lexical Error: Invalid character at line %d\n", currLine);
+			handleLexicalError("Line %d: Lexical Error: Invalid character at line %d\n", currLine);
 			incrementForward();
 		}
 	}
