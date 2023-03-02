@@ -47,5 +47,4 @@ extern ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];
 extern FirstFollowEntry ffTable[NON_TERMINAL_COUNT];
 extern Stack* s;
 extern int parserCorrect;
-extern int parserPrint;
 #endif

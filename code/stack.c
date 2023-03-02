@@ -40,15 +40,14 @@ int pop(Stack *s)
 	SNode *temp;
 
 	if (isEmpty(s))
-		return FALSE;
+		return 1;
 	else {
 		temp = s->top;
-		temp->treenode->data = temp->data;
-		s->top = s->top->next;
+		s->top = temp->next;
 		free(temp);
 	}
 	s->size--;
-	return TRUE;
+	return 0;
 }
 
 SNode *top(Stack *s)
@@ -59,7 +58,7 @@ SNode *top(Stack *s)
 
 int isEmpty(Stack *s)
 {
-	return (s->size == 0);
+	return !s->size;
 }
 
 void deleteStack(Stack *s)

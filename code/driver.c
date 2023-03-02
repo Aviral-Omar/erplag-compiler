@@ -7,6 +7,7 @@
 
 #define MAX_BUFFER_SIZE 10000
 
+// TODO prettier printing
 // Take the input file name and buffer size at command line
 int main(int argc, char *argv[])
 {
@@ -50,7 +51,6 @@ int main(int argc, char *argv[])
 		} else if (option == 2) {
 			runOnlyLexer(argv[1]);
 		} else if (option == 3) {
-			parserPrint = 1;
 			runParser(argv[1], argv[2]);
 		} else if (option == 4) {
 			clock_t start_time, end_time;
@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
 
 			start_time = clock();
 
-			parserPrint = 0;
 			runParser(argv[1], argv[2]);
 
 			end_time = clock();
@@ -68,8 +67,8 @@ int main(int argc, char *argv[])
 
 			total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
 
-			printf("Total CPU Time: %f", total_CPU_time);
-			printf("Total CPU Time in seconds: %f", total_CPU_time_in_seconds);
+			printf("Total CPU Time: %f\n", total_CPU_time);
+			printf("Total CPU Time in seconds: %f\n\n", total_CPU_time_in_seconds);
 		}
 	} while (option);
 

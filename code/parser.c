@@ -149,7 +149,6 @@ FirstFollowEntry ffTable[NON_TERMINAL_COUNT] = {{NULL, NULL}};	 // will be popul
 ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];	 // will be filled by CreateParseTable()
 Stack *s;
 int parserCorrect;
-int parserPrint;
 
 void initParser();
 void clearParserData();
@@ -201,12 +200,15 @@ void runParser(char *srcFilename, char *outFilename)
 	}
 	while (!isEmpty(s)) {
 		if (top(s)->type == 'N') {
+			// printf("%s\n", nonTerminalMap[top(s)->data.nt]);
 			int ruleNumber = parseTable[top(s)->data.nt][DOLLAR];
+			// printf("Rule %d applied.\n", ruleNumber);
 			if (ruleNumber == -1) {
 				parserCorrect = 0;
 				printf("Syntax Error: Incomplete input, bottom of stack not reached.\n");
 				break;
 			} else {
+				// printf("Accepted: %s\n\n", nonTerminalMap[top(s)->data.nt]);
 				ParseTNode *parent = top(s)->treenode;
 				pop(s);
 				pushRuleTokens(s, grammar[ruleNumber]->next, parent);
@@ -232,7 +234,7 @@ void runParser(char *srcFilename, char *outFilename)
 
 	if (parserCorrect)
 		printf("\nInput source code is syntactically correct.\n\n");
-
+	fflush(stdout);
 	clearParserData();
 }
 
@@ -267,6 +269,7 @@ void clearParserData()
 			free(cur);
 			cur = next;
 		} while (cur);
+		grammar[i] = NULL;
 	}
 
 	// Clearing First Follow Table
@@ -277,12 +280,14 @@ void clearParserData()
 			free(cur);
 			cur = next;
 		}
+		ffTable[i].first = NULL;
 		cur = ffTable[i].follow;
 		while (cur) {
 			next = cur->next;
 			free(cur);
 			cur = next;
 		}
+		ffTable[i].follow = NULL;
 	}
 
 	deleteStack(s);
@@ -701,8 +706,10 @@ void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
 	tempT = addNode(parent, RHS->data, RHS->type);
 
 	pushRuleTokens(s, RHS->next, parent);
-	SNode *tempS = pushTok(s, RHS->data, RHS->type);
-	tempS->treenode = tempT;
+	if (RHS->type != 'e') {
+		SNode *tempS = pushTok(s, RHS->data, RHS->type);
+		tempS->treenode = tempT;
+	}
 }
 
 void parseCurrToken()
@@ -715,7 +722,7 @@ void parseCurrToken()
 		stackTop = top(s);
 		data = stackTop->data.t;
 		type = stackTop->type;
-		if (stackTop->type == 'T') {
+		if (type == 'T') {
 			// pop and input++;
 			if (stackTop->data.t == inputSymbol) {
 				// printf("Accepted: %s\n", terminalMap[top(s)->data.t]);
@@ -731,13 +738,13 @@ void parseCurrToken()
 			// printf("Rule %d applied for token %s.\n", ruleNumber, terminalMap[inputSymbol]);
 			if (ruleNumber == -1) {
 				// Error and Recovery
-				printf("%d\n", ruleNumber);
-				fflush(stdout);
+				// printf("%d\n", ruleNumber);
+				// fflush(stdout);
 				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
 				synRecovery();
 			} else if (ruleNumber == -2) {
 				pop(s);
-				printf("%d\n", ruleNumber);
+				// printf("%d\n", ruleNumber);
 				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
 			} else {
 				LexicalSymbol *LHS = grammar[ruleNumber];
