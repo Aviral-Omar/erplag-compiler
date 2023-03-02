@@ -143,7 +143,6 @@ char *terminalMap[TERMINAL_COUNT] = {
 	"dollar",
 	"epsilon"};
 
-/* TODO clean up data later*/
 LexicalSymbol *grammar[RULE_COUNT];
 FirstFollowEntry ffTable[NON_TERMINAL_COUNT] = {{NULL, NULL}};	 // will be populated by function calculating first and follow sets
 ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];	 // will be filled by CreateParseTable()
@@ -231,11 +230,13 @@ void runParser(char *srcFilename, char *outFilename)
 	printParseTree(parseTreeParent, outFile);
 	fclose(outFile);
 
-	clearLexerData();
 
+	if (lexerCorrect)
+		printf("\nInput source code is lexically correct.\n");
 	if (parserCorrect)
-		printf("\nInput source code is syntactically correct.\n\n");
+		printf("\nInput source code is syntactically correct.\n");
 	fflush(stdout);
+	clearLexerData();
 	clearParserData();
 }
 

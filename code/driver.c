@@ -7,14 +7,15 @@
 
 #define MAX_BUFFER_SIZE 10000
 
-// TODO prettier printing
 // Take the input file name and buffer size at command line
 int main(int argc, char *argv[])
 {
-	printf("FIRST and FOLLOW set computation automated.\n");
-	printf("Both lexical and syntax analysis modules implemented and working.\n");
-	printf("Parse Tree constructed.\n");
-	printf("Modules work for all given test cases.\n\n");
+	// TODO update if needed
+	printf("============Implementation Status============\n");
+	printf("a) FIRST and FOLLOW set computation automated.\n");
+	printf("b) Both lexical and syntax analysis modules implemented and working.\n");
+	printf("c) Parse Tree constructed.\n");
+	printf("d) Modules work for all given test cases.\n");
 
 	// Checks if program receives 2 arguments from command line
 	if (argc != 4) {
@@ -37,6 +38,7 @@ int main(int argc, char *argv[])
 
 	int option;
 	do {
+		printf("\n============Select Option============\n");
 		printf("0: For exit\n");
 		printf("1: For removal of comments\n");
 		printf("2: For printing the token list\n");

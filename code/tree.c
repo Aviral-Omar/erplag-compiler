@@ -7,7 +7,6 @@ ParseTNode *createParseTree(Symbol d, char type);
 ParseTNode *addNode(ParseTNode *node, Symbol d, char type);
 // int updateData(ParseTNode *node, Symbol d, char type);
 void deleteParseTree(ParseTNode *node);
-// TODO delete tree
 
 ParseTNode *createParseTree(Symbol d, char type)
 {
