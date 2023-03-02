@@ -41,18 +41,16 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type, int ruleNum)
 		temp->info.ruleNum = ruleNum;
 	else if (type == 'T')
 		temp->info.tokIn = currToken;
-	// printf("1: %d\n", d.nt);
 
-	if (parent->child == NULL) {
+	if (!parent->child) {
 		parent->child = temp;
 	} else {
 		trav = parent->child;
-		while (trav->sibling != NULL) {
+		while (trav->sibling) {
 			trav = trav->sibling;
 		}
 		trav->sibling = temp;
 	}
-	// printf("2\n");
 	return temp;
 }
 

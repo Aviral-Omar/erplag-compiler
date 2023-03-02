@@ -727,8 +727,7 @@ void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent, int ruleNu
 	if (!RHS)
 		return;
 
-	ParseTNode *tempT;
-	tempT = addNode(parent, RHS->data, RHS->type, ruleNum);
+	ParseTNode *tempT = addNode(parent, RHS->data, RHS->type, ruleNum);
 
 	pushRuleTokens(s, RHS->next, parent, ruleNum);
 	if (RHS->type != 'e') {
@@ -751,6 +750,7 @@ void parseCurrToken()
 			// pop and input++;
 			if (stackTop->data.t == inputSymbol) {
 				// printf("Accepted: %s\n", terminalMap[top(s)->data.t]);
+				top(s)->treenode->info.tokIn = currToken;
 				pop(s);
 			} else {
 				// Error and recovery
