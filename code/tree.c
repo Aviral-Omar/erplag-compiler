@@ -7,13 +7,13 @@ Vatsal Pattani:			2019B5A70697P
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lexerDef.h"
 #include "treeDef.h"
 
 ParseTNode *createParseTree(Symbol d, char type);
-ParseTNode *addNode(ParseTNode *node, Symbol d, char type);
+ParseTNode *addNode(ParseTNode *node, Symbol d, char type, int ruleNum);
 // int updateData(ParseTNode *node, Symbol d, char type);
 void deleteParseTree(ParseTNode *node);
-
 ParseTNode *createParseTree(Symbol d, char type)
 {
 	ParseTNode *node = (ParseTNode *)malloc(sizeof(ParseTNode));
@@ -22,11 +22,12 @@ ParseTNode *createParseTree(Symbol d, char type)
 	node->sibling = NULL;
 	node->type = type;
 	node->data = d;
+	node->info.ruleNum = -1;
 	// printf("Parse tree created, root: %d\n",d);
 	return node;
 }
 
-ParseTNode *addNode(ParseTNode *parent, Symbol d, char type)
+ParseTNode *addNode(ParseTNode *parent, Symbol d, char type, int ruleNum)
 {
 	ParseTNode *temp, *trav;  // creating new node and one for traversal(to find the terminal node)
 
@@ -36,6 +37,10 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type)
 	temp->type = type;
 	temp->child = NULL;
 	temp->sibling = NULL;
+	if (type == 'N' || type == 'e')
+		temp->info.ruleNum = ruleNum;
+	else if (type == 'T')
+		temp->info.tokIn = currToken;
 	// printf("1: %d\n", d.nt);
 
 	if (parent->child == NULL) {
@@ -59,9 +64,11 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type)
 
 void deleteParseTree(ParseTNode *node)
 {
+	// TODO free tokeninfo here
 	if (node->sibling)
 		deleteParseTree(node->sibling);
 	if (node->child)
 		deleteParseTree(node->child);
+
 	free(node);
 }

@@ -47,7 +47,7 @@ void populateLookupTable()
 KeywordPair* searchKeyword(char* key)
 {
 	int hashIndex = hash(key);
-	if (hashIndex < 0 || !hashTable[hashIndex])
+	if (hashIndex < 0 || hashIndex >= TABLE_SIZE || !hashTable[hashIndex])
 		return NULL;
 
 	// Linear Probing

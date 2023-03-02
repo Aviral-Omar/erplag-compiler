@@ -73,6 +73,65 @@ char *tokenMap[59] = {"INTEGER",
 					  "EPSILON",
 					  "DOLLAR",
 					  "COMMENTMARK"};
+char *lexemeMap[59] = {"integer",
+					   "real",
+					   "boolean",
+					   "of",
+					   "array",
+					   "start",
+					   "end",
+					   "declare",
+					   "module",
+					   "driver",
+					   "program",
+					   "get_value",
+					   "print",
+					   "use",
+					   "with",
+					   "parameters",
+					   "takes",
+					   "input",
+					   "returns",
+					   "for",
+					   "in",
+					   "switch",
+					   "case",
+					   "break",
+					   "default",
+					   "while",
+					   "",
+					   "",
+					   "",
+					   "AND",
+					   "OR",
+					   "true",
+					   "false",
+					   "+",
+					   "-",
+					   "*",
+					   "/",
+					   "<",
+					   "<=",
+					   ">=",
+					   ">",
+					   "==",
+					   "!=",
+					   "<<",
+					   ">>",
+					   "<<<",
+					   ">>>",
+					   ":",
+					   "..",
+					   ";",
+					   ",",
+					   ":=",
+					   "[",
+					   "]",
+					   "(",
+					   ")",
+					   "epsilon",
+					   "$",
+					   "**"};
 FILE *src;
 int bufferSize;
 char *buf1;
@@ -427,7 +486,7 @@ void getNextToken()
 				if (incrementForward() || (!isDigit(*forward) && *forward != '.')) {
 					currToken->token = NUM;
 					currToken->data.lexeme[lexLen] = '\0';
-					currToken->data.intValue = atoi(currToken->data.lexeme);
+					// currToken->data.intValue = atoi(currToken->data.lexeme);
 
 					if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 					if (lexLen > 9) {
@@ -446,7 +505,7 @@ void getNextToken()
 				retractForward();
 				currToken->token = NUM;
 				currToken->data.lexeme[lexLen] = '\0';
-				currToken->data.intValue = atoi(currToken->data.lexeme);
+				// currToken->data.intValue = atoi(currToken->data.lexeme);
 				if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 				if (lexLen > 9) {
 					handleNumberLengthWarning("Warning: Integer is too big, there is a possibility that it may be misrepresented: Line %d\n");
@@ -465,7 +524,7 @@ void getNextToken()
 					if (incrementForward() || (!isDigit(*forward) && *forward != 'e' && *forward != 'E')) {
 						currToken->token = RNUM;
 						currToken->data.lexeme[lexLen] = '\0';
-						currToken->data.floatValue = atof(currToken->data.lexeme);
+						// currToken->data.floatValue = atof(currToken->data.lexeme);
 						if (lexerPrint) printf("\t\t%-12s\n", tokenMap[currToken->token]);
 						if (decimalpartLen > 11 && lexLen > 21) {
 							handleNumberLengthWarning("Warning: Decimal part of float is too big, there is a possibility that it may be misrepresented: Line %d\n");

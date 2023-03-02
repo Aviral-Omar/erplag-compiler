@@ -173,13 +173,16 @@ void computeFirstAndFollowSets();
 void createParseTable();
 void printParseTable();
 void populateSyn();
-void synRecovery();
+int synRecovery();
 void runParser(char *srcFilename, char *outFilename);
-void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent);
+void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent, int ruleNum);
 void parseCurrToken();
 void printParseTree(ParseTNode *node, FILE *outFile);
 
-void runParser(char *srcFilename, char *outFilename)
+void
+
+
+runParser(char *srcFilename, char *outFilename)
 {
 	parserCorrect = 1;
 	// Assuming Stack and Tree are already initialized
@@ -199,10 +202,10 @@ void runParser(char *srcFilename, char *outFilename)
 
 		parseCurrToken();
 
-		if (currToken) {
-			free(currToken);
-			currToken = NULL;
-		}
+		// if (currToken) {
+		// 	free(currToken);
+		// 	currToken = NULL;
+		// }
 	}
 	while (!isEmpty(s)) {
 		if (top(s)->type == 'N') {
@@ -217,7 +220,7 @@ void runParser(char *srcFilename, char *outFilename)
 				// printf("Accepted: %s\n\n", nonTerminalMap[top(s)->data.nt]);
 				ParseTNode *parent = top(s)->treenode;
 				pop(s);
-				pushRuleTokens(s, grammar[ruleNumber]->next, parent);
+				pushRuleTokens(s, grammar[ruleNumber]->next, parent, ruleNumber);
 			}
 		} else if (top(s)->data.t != DOLLAR) {
 			parserCorrect = 0;
@@ -233,7 +236,20 @@ void runParser(char *srcFilename, char *outFilename)
 		printf("Error opening output file.\n");
 		exit(EXIT_FAILURE);
 	}
-	printParseTree(parseTreeParent, outFile);
+
+	// Initialize columns of parse tree printing table
+	fprintf(outFile, "%-24s\t", "lexeme");
+	fprintf(outFile, "%-10s\t", "lineNo.");
+	fprintf(outFile, "%-13s\t", "TokenName");
+	fprintf(outFile, "%-16s\t", "value");
+	fprintf(outFile, "%-30s\t", "ParentNodeSymbol");
+	fprintf(outFile, "%-6s\t", "isLeaf");
+	fprintf(outFile, "%-30s\t", "NodeSymbol");
+	fprintf(outFile, "\n");
+
+	fflush(outFile);
+
+	printParseTree(parseTreeParent, outFile);  // prints inorder parse tree
 	fclose(outFile);
 
 
@@ -706,15 +722,15 @@ void createParseTable()
 	}
 }
 
-void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent)
+void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent, int ruleNum)
 {
 	if (!RHS)
 		return;
 
 	ParseTNode *tempT;
-	tempT = addNode(parent, RHS->data, RHS->type);
+	tempT = addNode(parent, RHS->data, RHS->type, ruleNum);
 
-	pushRuleTokens(s, RHS->next, parent);
+	pushRuleTokens(s, RHS->next, parent, ruleNum);
 	if (RHS->type != 'e') {
 		SNode *tempS = pushTok(s, RHS->data, RHS->type);
 		tempS->treenode = tempT;
@@ -750,7 +766,8 @@ void parseCurrToken()
 				// printf("%d\n", ruleNumber);
 				// fflush(stdout);
 				printf("Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n\n", terminalMap[inputSymbol], nonTerminalMap[stackTop->data.nt]);
-				synRecovery();
+				if (synRecovery() == 1)
+					break;
 			} else if (ruleNumber == -2) {
 				pop(s);
 				// printf("%d\n", ruleNumber);
@@ -763,7 +780,7 @@ void parseCurrToken()
 				ParseTNode *parent = top(s)->treenode;
 				// printf("Accepted: %s\n\n", nonTerminalMap[top(s)->data.nt]);
 				pop(s);
-				pushRuleTokens(s, RHS, parent);
+				pushRuleTokens(s, RHS, parent, ruleNumber);
 			}
 		}
 	} while (!(type == 'T' && data == inputSymbol));
@@ -785,7 +802,7 @@ void populateSyn()
 	}
 }
 
-void synRecovery()
+int synRecovery()
 {
 	// We are here because Non termi at stack top can't derive input symbol
 	printf("1\n");
@@ -797,6 +814,7 @@ void synRecovery()
 	printf("2\n");
 	fflush(stdout);
 	printf("%d %d %p %p\n", charsRead, bufferSize, lexemeBegin, BUFEND());
+	handleWhitespaces();
 	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
 		// TODO free space used by token structs
 		getNextToken();
@@ -831,7 +849,7 @@ void synRecovery()
 			// Now pop stack top and put RHS in reverse order
 			ParseTNode *parent = top(s)->treenode;
 			pop(s);
-			pushRuleTokens(s, RHS, parent);
+			pushRuleTokens(s, RHS, parent, ruleNumber);
 			fflush(stdout);
 			break;
 		}
@@ -843,6 +861,10 @@ void synRecovery()
 		// 	currToken = NULL;
 		// }
 	}
+	if (lexemeBegin >= BUFEND())
+		return 1;  // EOF reached
+	else
+		return 0;
 }
 
 void printParseTree(ParseTNode *node, FILE *outFile)
@@ -850,10 +872,45 @@ void printParseTree(ParseTNode *node, FILE *outFile)
 	if (node == NULL)
 		return;
 	printParseTree(node->child, outFile);
-	if (node->type == 'N')
-		fprintf(outFile, "%s\t ", nonTerminalMap[node->data.nt]);
-	else
-		fprintf(outFile, "%s\t", terminalMap[node->data.t]);
+	if (node->type == 'N') {
+		fprintf(outFile, "%-24s\t", "---");
+		fprintf(outFile, "%-10s\t", "---");	 // TODO rule number
+		fprintf(outFile, "%-13s\t", "---");
+		fprintf(outFile, "%-16s\t", "---");
+		if (!node->parent)
+			fprintf(outFile, "%-30s\t", "ROOT");  // Parent node symbol
+		else
+			fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
+		fprintf(outFile, "%-6s\t", "no");
+		fprintf(outFile, "%-30s\t", nonTerminalMap[node->data.nt]);
+	} else if (node->type == 'T') {
+		Token t = node->data.t;
+		if (t == NUM || t == RNUM || t == ID)
+			fprintf(outFile, "%-24s\t", node->info.tokIn->data.lexeme);	 // lexeme
+		else
+			fprintf(outFile, "%-24s\t", lexemeMap[t]);				// lexeme
+		fprintf(outFile, "%-10d\t", node->info.tokIn->lineNumber);	// TODO rule number
+		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
+		if (t == NUM)
+			fprintf(outFile, "%-16d\t", atoi(node->info.tokIn->data.lexeme));
+		else if (t == RNUM)
+			fprintf(outFile, "%-16f\t", atof(node->info.tokIn->data.lexeme));
+		else
+			fprintf(outFile, "%-16s\t", "---");
+		fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
+		fprintf(outFile, "%-6s\t", "yes");
+		fprintf(outFile, "%-30s\t", "---");
+	} else {
+		fprintf(outFile, "%-24s\t", "---");
+		fprintf(outFile, "%-10s\t", "---");	 // TODO rule number
+		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
+		fprintf(outFile, "%-16s\t", "---");
+		fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
+		fprintf(outFile, "%-6s\t", "yes");
+		fprintf(outFile, "%-30s\t", nonTerminalMap[node->data.nt]);
+	}
+	fprintf(outFile, "\n");
+	fflush(outFile);
 
 	if (node->child) {
 		ParseTNode *sibling = node->child->sibling;

@@ -7,12 +7,17 @@ Vatsal Pattani:			2019B5A70697P
 #ifndef TREE_DEF
 #define TREE_DEF
 
+#include "lexerDef.h"
 #include "symbolDef.h"
 
 typedef struct ParseTNodeType ParseTNode;
 struct ParseTNodeType {
 	Symbol data;
 	char type;	// 'T', 'N' or 'e'
+	union TNodeInfo {
+		TokenInfo* tokIn;
+		int ruleNum;
+	} info;
 	ParseTNode* child;
 	ParseTNode* parent;
 	ParseTNode* sibling;

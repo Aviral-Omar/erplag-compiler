@@ -27,6 +27,7 @@ typedef enum {
 } CurrentBuffer;
 
 extern char* tokenMap[];
+extern char* lexemeMap[];
 extern FILE* src;
 extern int bufferSize;
 extern char* buf1;
