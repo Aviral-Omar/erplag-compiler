@@ -12,6 +12,4 @@ struct ParseTNodeType {
 	ParseTNode* sibling;
 };
 
-extern ParseTNode* parseTreeParent;
-
 #endif

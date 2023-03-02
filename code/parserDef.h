@@ -46,5 +46,6 @@ extern char* terminalMap[TERMINAL_COUNT];
 extern ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];
 extern FirstFollowEntry ffTable[NON_TERMINAL_COUNT];
 extern Stack* s;
+extern ParseTNode* parseTreeParent;
 extern int parserCorrect;
 #endif

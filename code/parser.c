@@ -148,6 +148,7 @@ LexicalSymbol *grammar[RULE_COUNT];
 FirstFollowEntry ffTable[NON_TERMINAL_COUNT] = {{NULL, NULL}};	 // will be populated by function calculating first and follow sets
 ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];	 // will be filled by CreateParseTable()
 Stack *s;
+ParseTNode *parseTreeParent;
 int parserCorrect;
 
 void initParser();
@@ -291,6 +292,7 @@ void clearParserData()
 	}
 
 	deleteStack(s);
+	deleteParseTree(parseTreeParent);
 }
 
 int findSymbol(char *symbol)

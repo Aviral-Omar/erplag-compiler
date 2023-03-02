@@ -63,11 +63,7 @@ int isEmpty(Stack *s)
 
 void deleteStack(Stack *s)
 {
-	SNode *cur = s->top, *next;
-	while (cur) {
-		next = cur->next;
-		free(cur);
-		cur = next;
-	}
+	while (!isEmpty(s))
+		pop(s);
 	free(s);
 }

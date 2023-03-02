@@ -3,12 +3,11 @@
 
 #include "treeDef.h"
 
-ParseTNode *parseTreeParent;
-
 ParseTNode *createParseTree(Symbol d, char type);
 ParseTNode *addNode(ParseTNode *node, Symbol d, char type);
-int updateData(ParseTNode *node, Symbol d, char type);
-
+// int updateData(ParseTNode *node, Symbol d, char type);
+void deleteParseTree(ParseTNode *node);
+// TODO delete tree
 
 ParseTNode *createParseTree(Symbol d, char type)
 {
@@ -47,8 +46,17 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type)
 	return temp;
 }
 
-int updateData(ParseTNode *node, Symbol d, char type)
+// int updateData(ParseTNode *node, Symbol d, char type)
+// {
+// 	node->data = d;
+// 	node->type = type;
+// }
+
+void deleteParseTree(ParseTNode *node)
 {
-	node->data = d;
-	node->type = type;
+	if (node->sibling)
+		deleteParseTree(node->sibling);
+	if (node->child)
+		deleteParseTree(node->child);
+	free(node);
 }
