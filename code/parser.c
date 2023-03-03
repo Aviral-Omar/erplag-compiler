@@ -743,6 +743,7 @@ void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent, int ruleNu
 
 void parseCurrToken()
 {
+	// TODO add error printfs and parsercorrect appropriately
 	Token data;
 	char type;
 	SNode *stackTop;  // get this from top of stack;
@@ -756,17 +757,22 @@ void parseCurrToken()
 				printf("Matched token %s\n", terminalMap[currToken->token]);
 				pop(s);
 				break;
-			} else if (data == SEMICOL) {
-				// If semicolon is on top of stack, skip input till semicolon is reached
-				break;
-			} else {
+			}
+			// else if (data == SEMICOL) {
+			// 	// If semicolon is on top of stack, skip input till semicolon is reached
+			// 	parserCorrect = 0;
+			// 	printf("Skipping Token %s\n", terminalMap[currToken->token]);
+			// 	break;
+			// }
+			else {
 				// Pop terminal if it does not match
 				pop(s);
 				parserCorrect = 0;
-				printf("Line %d: Syntax Error: Terminal %s present at inappropriate position\n", currToken->lineNumber, terminalMap[currToken->token]);
+				printf("Line %d: Syntax Error: Terminal %s present at inappropriate position cannot be matched with %s\n", currToken->lineNumber, terminalMap[currToken->token], terminalMap[data]);
 			}
 		} else {  // Assuming 'e' is not in stack
 			// Case of non-terminal
+			printf("Processing %s and %s\n", nonTerminalMap[stackTop->data.nt], terminalMap[currToken->token]);
 			int ruleNumber = parseTable[stackTop->data.nt][currToken->token];
 			if (ruleNumber == -1) {
 				parserCorrect = 0;
@@ -791,15 +797,18 @@ void parseCurrToken()
 					printf("Applied rule %d\n", ruleNumber);
 				}
 				// Skip tokens until an element in FOLLOW of stack top is seen
-				else
+				else {
+					parserCorrect = 0;
+					printf("Skipping Token %s\n", terminalMap[currToken->token]);
 					break;
+				}
 
 				// if (synRecovery() == 1)
 				// 	break;
 			} else if (ruleNumber == -2) {
-				pop(s);
 				parserCorrect = 0;
 				printf("Line %d: Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n", currToken->lineNumber, terminalMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
+				pop(s);
 			} else {
 				LexicalSymbol *LHS = grammar[ruleNumber];
 				LexicalSymbol *RHS = LHS->next;
