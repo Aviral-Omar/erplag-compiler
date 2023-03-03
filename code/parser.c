@@ -117,7 +117,7 @@ char *terminalMap[TERMINAL_COUNT] = {
 	"T_DEFAULT",
 	"T_WHILE",
 	"T_ID",
-	"T_LRUM",
+	"T_NUM",
 	"T_RNUM",
 	"T_AND",
 	"T_OR",
@@ -132,7 +132,7 @@ char *terminalMap[TERMINAL_COUNT] = {
 	"T_GE",
 	"T_GT",
 	"T_EQ",
-	"T_LRE",
+	"T_NE",
 	"T_DEF",
 	"T_ENDDEF",
 	"T_DRIVERDEF",
@@ -173,7 +173,7 @@ void computeFirstAndFollowSets();
 void createParseTable();
 void printParseTable();
 void populateSyn();
-void synRecovery();
+void errorRecovery();
 void runParser(char *srcFilename, char *outFilename);
 void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent, int ruleNum);
 void parseCurrToken();
@@ -191,6 +191,19 @@ void runParser(char *srcFilename, char *outFilename)
 	lexerPrint = 0;	 // because lexer output not needed
 	initLexer();
 	initParser();
+
+	s = createStack();
+	Symbol temp0, temp1;
+	temp0.t = DOLLAR;
+	pushTok(s, temp0, 'T');	 // pushing dollar to the stack initially
+
+	temp1.nt = N_program;
+	SNode *root = pushTok(s, temp1, 'N');  // pushing start symbol
+	// printf("     %d     %d    \n",top(s)->data.nt,s->size);
+
+	root->treenode = createParseTree(temp1, 'N');
+	parseTreeParent = root->treenode;
+
 	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
 		getNextToken();
 		handleWhitespaces();
@@ -198,11 +211,6 @@ void runParser(char *srcFilename, char *outFilename)
 			continue;
 
 		parseCurrToken();
-
-		// if (currToken) {
-		// 	free(currToken);
-		// 	currToken = NULL;
-		// }
 	}
 	while (!isEmpty(s)) {
 		if (top(s)->type == 'N') {
@@ -234,19 +242,17 @@ void runParser(char *srcFilename, char *outFilename)
 		exit(EXIT_FAILURE);
 	}
 
-	// TODO pretty printing
 	// Initialize columns of parse tree printing table
-	fprintf(outFile, "%-24s\t", "lexeme");
-	fprintf(outFile, "%-10s\t", "lineNo.");
-	fprintf(outFile, "%-13s\t", "TokenName");
-	fprintf(outFile, "%-16s\t", "value");
-	fprintf(outFile, "%-30s\t", "ParentNodeSymbol");
-	fprintf(outFile, "%-6s\t", "isLeaf");
-	fprintf(outFile, "%-30s\t", "NodeSymbol");
-	fprintf(outFile, "\n");
-	fprintf(outFile, "%s","-----------------------------------------------------");
-	fprintf(outFile, "%s","-----------------------------------------------------");
-	fprintf(outFile, "%s","-----------------------------------------------------\n");
+	fprintf(outFile, "%-24s\t", "Lexeme");
+	fprintf(outFile, "%-10s\t", "Line No.");
+	fprintf(outFile, "%-13s\t", "Token Name");
+	fprintf(outFile, "%-16s\t", "Value");
+	fprintf(outFile, "%-30s\t", "Parent Node Symbol");
+	fprintf(outFile, "%-6s\t", "IsLeaf");
+	fprintf(outFile, "%-30s\t\n", "Node Symbol");
+	fprintf(outFile, "-----------------------------------------------------");
+	fprintf(outFile, "-----------------------------------------------------");
+	fprintf(outFile, "-----------------------------------------------------\n");
 
 	fflush(outFile);
 
@@ -259,6 +265,7 @@ void runParser(char *srcFilename, char *outFilename)
 	if (parserCorrect)
 		printf("\nInput source code is syntactically correct.\n");
 	fflush(stdout);
+
 	clearLexerData();
 	clearParserData();
 }
@@ -268,20 +275,9 @@ void initParser()
 	readGrammar();
 	computeFirstAndFollowSets();
 	createParseTable();
-	s = createStack();
-	Symbol temp0, temp1;
-	temp0.t = DOLLAR;
-	pushTok(s, temp0, 'T');	 // pushing dollar to the stack initially
-
-	temp1.nt = N_program;
-	SNode *root = pushTok(s, temp1, 'N');  // pushing start symbol
-	// printf("     %d     %d    \n",top(s)->data.nt,s->size);
-
-	root->treenode = createParseTree(temp1, 'N');
-	parseTreeParent = root->treenode;
-
 	populateSyn();
-	// printParseTable();
+	s = NULL;
+	parseTreeParent = NULL;
 }
 
 void clearParserData()
@@ -315,8 +311,12 @@ void clearParserData()
 		ffTable[i].follow = NULL;
 	}
 
-	deleteStack(s);
-	deleteParseTree(parseTreeParent);
+	if (s)
+		deleteStack(s);
+	if (parseTreeParent)
+		deleteParseTree(parseTreeParent);
+	s = NULL;
+	parseTreeParent = NULL;
 }
 
 int findSymbol(char *symbol)
@@ -749,7 +749,6 @@ void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent, int ruleNu
 
 void parseCurrToken()
 {
-	// TODO add error printfs and parsercorrect appropriately
 	Token data;
 	char type;
 	SNode *stackTop;  // get this from top of stack;
@@ -764,7 +763,6 @@ void parseCurrToken()
 				pop(s);
 				break;
 			} else if (data == SEMICOL) {
-				// TODO proper error printing
 				// If semicolon is on top of stack, skip input till semicolon is reached
 				if (currToken->token != END) {
 					parserCorrect = 0;
@@ -796,8 +794,8 @@ void parseCurrToken()
 					pushRuleTokens(s, grammar[ruleNumber]->next, stackTop->treenode, ruleNumber);
 					// printf("Applied rule %d\n", ruleNumber);
 				} else if (currToken->token == SEMICOL) {
-					// If semicolon is found, get next token and pop non terminals till a rule matches in synRecovery
-					synRecovery();
+					// If semicolon is found, get next token and pop non terminals till a rule matches in errorRecovery
+					errorRecovery();
 					ruleNumber = parseTable[top(s)->data.nt][currToken->token];
 					LexicalSymbol *LHS = grammar[ruleNumber];
 					LexicalSymbol *RHS = LHS->next;
@@ -814,7 +812,7 @@ void parseCurrToken()
 					break;
 				}
 
-				// if (synRecovery() == 1)
+				// if (errorRecovery() == 1)
 				// 	break;
 			} else if (ruleNumber == -2) {
 				// Uses follow set to sync by popping non terminal from stack
@@ -851,10 +849,9 @@ void populateSyn()
 	}
 }
 
-void synRecovery()
+void errorRecovery()
 {
-	// TODO make void and change name to error recovery
-	// Reads next token after seicolon
+	// Reads next token after semicolon
 	if (currToken) {
 		free(currToken);
 		currToken = NULL;
@@ -879,7 +876,7 @@ void printParseTree(ParseTNode *node, FILE *outFile)
 	printParseTree(node->child, outFile);
 	if (node->type == 'N') {
 		fprintf(outFile, "%-24s\t", "---");
-		fprintf(outFile, "%-10s\t", "---");	 // TODO rule number
+		fprintf(outFile, "%-10s\t", "---");
 		fprintf(outFile, "%-13s\t", "---");
 		fprintf(outFile, "%-16s\t", "---");
 		if (!node->parent)
@@ -893,8 +890,8 @@ void printParseTree(ParseTNode *node, FILE *outFile)
 		if (t == NUM || t == RNUM || t == ID)
 			fprintf(outFile, "%-24s\t", node->info.tokIn->data.lexeme);	 // lexeme
 		else
-			fprintf(outFile, "%-24s\t", lexemeMap[t]);				// lexeme
-		fprintf(outFile, "%-10d\t", node->info.tokIn->lineNumber);	// TODO rule number
+			fprintf(outFile, "%-24s\t", lexemeMap[t]);	// lexeme
+		fprintf(outFile, "%-10d\t", node->info.tokIn->lineNumber);
 		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
 		if (t == NUM)
 			fprintf(outFile, "%-16d\t", atoi(node->info.tokIn->data.lexeme));
@@ -907,7 +904,7 @@ void printParseTree(ParseTNode *node, FILE *outFile)
 		fprintf(outFile, "%-30s\t", "---");
 	} else {
 		fprintf(outFile, "%-24s\t", "---");
-		fprintf(outFile, "%-10s\t", "---");	 // TODO rule number
+		fprintf(outFile, "%-10s\t", "---");
 		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
 		fprintf(outFile, "%-16s\t", "---");
 		fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol

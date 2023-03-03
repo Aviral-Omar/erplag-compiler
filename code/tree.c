@@ -14,6 +14,7 @@ ParseTNode *createParseTree(Symbol d, char type);
 ParseTNode *addNode(ParseTNode *node, Symbol d, char type, int ruleNum);
 // int updateData(ParseTNode *node, Symbol d, char type);
 void deleteParseTree(ParseTNode *node);
+
 ParseTNode *createParseTree(Symbol d, char type)
 {
 	ParseTNode *node = (ParseTNode *)malloc(sizeof(ParseTNode));
@@ -22,7 +23,7 @@ ParseTNode *createParseTree(Symbol d, char type)
 	node->sibling = NULL;
 	node->type = type;
 	node->data = d;
-	node->info.ruleNum = -1;
+	node->info.tokIn = NULL;
 	// printf("Parse tree created, root: %d\n",d);
 	return node;
 }
@@ -37,6 +38,7 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type, int ruleNum)
 	temp->type = type;
 	temp->child = NULL;
 	temp->sibling = NULL;
+	temp->info.tokIn = NULL;
 	if (type == 'N' || type == 'e')
 		temp->info.ruleNum = ruleNum;
 	else if (type == 'T')
@@ -54,19 +56,16 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type, int ruleNum)
 	return temp;
 }
 
-// int updateData(ParseTNode *node, Symbol d, char type)
-// {
-// 	node->data = d;
-// 	node->type = type;
-// }
-
 void deleteParseTree(ParseTNode *node)
 {
-	// TODO free tokeninfo here
-	if (node->sibling)
-		deleteParseTree(node->sibling);
 	if (node->child)
 		deleteParseTree(node->child);
-
+	node->child = NULL;
+	if (node->sibling)
+		deleteParseTree(node->sibling);
+	node->sibling = NULL;
+	// TODO free tokeninfo here
+	// if (node->type == 'T' && node->info.tokIn)
+	// 	free(node->info.tokIn);
 	free(node);
 }

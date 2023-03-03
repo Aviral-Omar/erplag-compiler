@@ -11,3 +11,4 @@ void initParser();
 void printParseTable();
 void printFollowSets();
 void printFirstSets();
+void clearParserData();

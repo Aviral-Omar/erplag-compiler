@@ -15,6 +15,4 @@ typedef struct {
 	Token token;
 } KeywordPair;
 
-extern KeywordPair* hashTable[TABLE_SIZE];
-
 #endif

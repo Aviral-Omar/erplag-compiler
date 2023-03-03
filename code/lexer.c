@@ -169,7 +169,7 @@ void runOnlyLexer(char *filename)
 	}
 	initLexer();
 	lexerPrint = 1;
-	printf("Line Number\tLexeme\t\t\tToken Name\n");
+	printf("Line No\tLexeme\t\tToken Name\n");
 	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
 		getNextToken();
 		handleWhitespaces();
@@ -177,6 +177,7 @@ void runOnlyLexer(char *filename)
 			continue;
 
 		free(currToken);
+		currToken = NULL;
 	}
 	if (lexerCorrect)
 		printf("\nInput source code is lexically correct.\n\n");

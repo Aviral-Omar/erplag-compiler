@@ -16,7 +16,6 @@ Vatsal Pattani:			2019B5A70697P
 // Take the input file name and buffer size at command line
 int main(int argc, char *argv[])
 {
-	// TODO update if needed
 	printf("============Implementation Status============\n");
 	printf("1) FIRST and FOLLOW set computation automated.\n");
 	printf("2) Both lexical and syntax analysis modules implemented and working.\n");
@@ -80,11 +79,12 @@ int main(int argc, char *argv[])
 
 			printf("Total CPU Time: %f\n", total_CPU_time);
 			printf("Total CPU Time in seconds: %f\n\n", total_CPU_time_in_seconds);
-		}else if (option == 5){
+		} else if (option == 5) {
 			initParser();
 			printFirstSets();
 			printFollowSets();
 			printParseTable();
+			clearParserData();
 		}
 	} while (option);
 

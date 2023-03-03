@@ -26,17 +26,11 @@ typedef enum {
 	SECOND
 } CurrentBuffer;
 
-extern char* tokenMap[];
 extern char* lexemeMap[];
 extern FILE* src;
 extern int bufferSize;
-extern char* buf1;
-extern char* buf2;
 extern char* lexemeBegin;
-extern char* forward;
-extern int currLine;
 extern int charsRead;
-extern CurrentBuffer currBuffer;
 extern TokenInfo* currToken;
 extern int lexerCorrect;
 extern int lexerPrint;

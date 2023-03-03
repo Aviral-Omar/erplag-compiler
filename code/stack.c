@@ -72,4 +72,5 @@ void deleteStack(Stack *s)
 	while (!isEmpty(s))
 		pop(s);
 	free(s);
+	s = NULL;
 }
