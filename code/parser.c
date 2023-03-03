@@ -173,16 +173,13 @@ void computeFirstAndFollowSets();
 void createParseTable();
 void printParseTable();
 void populateSyn();
-int synRecovery();
+void synRecovery();
 void runParser(char *srcFilename, char *outFilename);
 void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent, int ruleNum);
 void parseCurrToken();
 void printParseTree(ParseTNode *node, FILE *outFile);
 
-void
-
-
-runParser(char *srcFilename, char *outFilename)
+void runParser(char *srcFilename, char *outFilename)
 {
 	parserCorrect = 1;
 	// Assuming Stack and Tree are already initialized
@@ -754,17 +751,22 @@ void parseCurrToken()
 		if (type == 'T') {
 			if (data == currToken->token) {
 				top(s)->treenode->info.tokIn = currToken;
-				printf("Matched token %s\n", terminalMap[currToken->token]);
+				// printf("Matched token %s\n", terminalMap[currToken->token]);
 				pop(s);
 				break;
-			}
-			// else if (data == SEMICOL) {
-			// 	// If semicolon is on top of stack, skip input till semicolon is reached
-			// 	parserCorrect = 0;
-			// 	printf("Skipping Token %s\n", terminalMap[currToken->token]);
-			// 	break;
-			// }
-			else {
+			} else if (data == SEMICOL) {
+				// TODO proper error printing
+				// If semicolon is on top of stack, skip input till semicolon is reached
+				if (currToken->token != END) {
+					parserCorrect = 0;
+					// printf("Skipping Token %s\n", terminalMap[currToken->token]);
+					break;
+				} else {
+					pop(s);
+					parserCorrect = 0;
+					printf("Line %d: Syntax Error: Missing semicolon\n");
+				}
+			} else {
 				// Pop terminal if it does not match
 				pop(s);
 				parserCorrect = 0;
@@ -772,18 +774,18 @@ void parseCurrToken()
 			}
 		} else {  // Assuming 'e' is not in stack
 			// Case of non-terminal
-			printf("Processing %s and %s\n", nonTerminalMap[stackTop->data.nt], terminalMap[currToken->token]);
+			// printf("Processing %s and %s\n", nonTerminalMap[stackTop->data.nt], terminalMap[currToken->token]);
 			int ruleNumber = parseTable[stackTop->data.nt][currToken->token];
 			if (ruleNumber == -1) {
 				parserCorrect = 0;
-				printf("Line %d: Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n", currToken->lineNumber, terminalMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
+				printf("Line %d: Syntax Error: Input symbol %s cannot be derived from top of stack Non Terminal %s\n", currToken->lineNumber, terminalMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
 
 				// If epsilon production is found, apply it
 				ruleNumber = parseTable[stackTop->data.nt][EPSILON];
 				if (ruleNumber != -1) {
 					pop(s);
 					pushRuleTokens(s, grammar[ruleNumber]->next, stackTop->treenode, ruleNumber);
-					printf("Applied rule %d\n", ruleNumber);
+					// printf("Applied rule %d\n", ruleNumber);
 				} else if (currToken->token == SEMICOL) {
 					// If semicolon is found, get next token and pop non terminals till a rule matches in synRecovery
 					synRecovery();
@@ -794,18 +796,19 @@ void parseCurrToken()
 
 					pop(s);
 					pushRuleTokens(s, RHS, parent, ruleNumber);
-					printf("Applied rule %d\n", ruleNumber);
+					// printf("Applied rule %d\n", ruleNumber);
 				}
 				// Skip tokens until an element in FOLLOW of stack top is seen
 				else {
 					parserCorrect = 0;
-					printf("Skipping Token %s\n", terminalMap[currToken->token]);
+					// printf("Skipping Token %s\n", terminalMap[currToken->token]);
 					break;
 				}
 
 				// if (synRecovery() == 1)
 				// 	break;
 			} else if (ruleNumber == -2) {
+				// Uses follow set to sync by popping non terminal from stack
 				parserCorrect = 0;
 				printf("Line %d: Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n", currToken->lineNumber, terminalMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
 				pop(s);
@@ -817,11 +820,10 @@ void parseCurrToken()
 				ParseTNode *parent = top(s)->treenode;
 				pop(s);
 				pushRuleTokens(s, RHS, parent, ruleNumber);
-				printf("Applied rule %d\n", ruleNumber);
+				// printf("Applied rule %d\n", ruleNumber);
 			}
 		}
-		// TODO make while(1)
-	} while (!(type == 'T' && data == currToken->token));
+	} while (1);
 }
 
 // Populates Syn to the respective fields where the cell is blank after filling parse table
@@ -840,7 +842,7 @@ void populateSyn()
 	}
 }
 
-int synRecovery()
+void synRecovery()
 {
 	// TODO make void and change name to error recovery
 	// Reads next token after seicolon
@@ -857,61 +859,8 @@ int synRecovery()
 			continue;
 		while (parseTable[top(s)->data.nt][currToken->token] < 0)
 			pop(s);
-		return 0;
+		return;
 	}
-	/*
-	// We are here because Non termi at stack top can't derive input symbol
-	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
-		// TODO free space used by token structs
-		getNextToken();
-		handleWhitespaces();  // TODO doubt about their order
-		printf("####%s\n", terminalMap[currToken->token]);
-		fflush(stdout);
-		if (!currToken)
-			continue;
-
-		// printf("\t%-12s\n", tokenMap[currToken->token]);
-
-		Token inputSymbol = currToken->token;
-		SNode *stackTop = top(s);
-
-		// Case of non-terminal
-		int ruleNumber = parseTable[stackTop->data.nt][inputSymbol];
-		if (ruleNumber == -1) {
-			fflush(stdout);
-			if (currToken) {
-				free(currToken);
-				currToken = NULL;
-			}
-			continue;					// go to next token
-		} else if (ruleNumber == -2) {	// it means input symbol is in sync set of top of stack.
-			pop(s);
-			fflush(stdout);
-			break;
-		} else {  // This means we found input symbol in first(top of stack)
-			LexicalSymbol *LHS = grammar[ruleNumber];
-			LexicalSymbol *RHS = LHS->next;
-
-			// Now pop stack top and put RHS in reverse order
-			ParseTNode *parent = top(s)->treenode;
-			pop(s);
-			pushRuleTokens(s, RHS, parent, ruleNumber);
-			fflush(stdout);
-			break;
-		}
-
-		fflush(stdout);
-
-		// if (currToken) {
-		// 	free(currToken);
-		// 	currToken = NULL;
-		// }
-	}
-	if (lexemeBegin >= BUFEND())
-		return 1;  // EOF reached
-	else
-		return 0;
-		*/
 }
 
 void printParseTree(ParseTNode *node, FILE *outFile)
