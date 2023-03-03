@@ -8,12 +8,12 @@ N_driverModule T_DRIVERDEF T_DRIVER T_PROGRAM T_DRIVERENDDEF N_moduleDef
 N_module T_DEF T_MODULE T_ID T_ENDDEF T_TAKES T_INPUT T_SQBO N_inputPlist T_SQBC T_SEMICOL N_ret N_moduleDef
 N_ret T_RETURNS T_SQBO N_outputPlist T_SQBC T_SEMICOL
 N_ret epsilon
-N_inputPlist T_ID T_COLON N_dataType N_N1
-N_N1 T_COMMA T_ID T_COLON N_dataType N_N1
-N_N1 epsilon
-N_outputPlist T_ID T_COLON N_type N_N2
-N_N2 T_COMMA T_ID T_COLON N_type N_N2
-N_N2 epsilon
+N_inputPlist T_ID T_COLON N_dataType N_LR1
+N_LR1 T_COMMA T_ID T_COLON N_dataType N_LR1
+N_LR1 epsilon
+N_outputPlist T_ID T_COLON N_type N_LR2
+N_LR2 T_COMMA T_ID T_COLON N_type N_LR2
+N_LR2 epsilon
 N_dataType T_INTEGER
 N_dataType T_REAL
 N_dataType T_BOOLEAN
@@ -32,14 +32,14 @@ N_statement N_conditionalStmt
 N_statement N_iterativeStmt
 N_ioStmt T_GET_VALUE T_BO T_ID T_BC T_SEMICOL
 N_ioStmt T_PRINT T_BO N_varPrint T_BC T_SEMICOL
-N_varPrint T_ID N_P1
-N_varPrint T_NUM
+N_varPrint T_ID N_PR1
+N_varPrint T_LRUM
 N_varPrint T_RNUM
 N_varPrint N_boolConst
 N_boolConst T_TRUE
 N_boolConst T_FALSE
-N_P1 T_SQBO N_indexArr T_SQBC
-N_P1 epsilon
+N_PR1 T_SQBO N_indexArr T_SQBC
+N_PR1 epsilon
 N_simpleStmt N_moduleReuseStmt
 N_simpleStmt N_assignmentStmt
 N_assignmentStmt T_ID N_whichStmt
@@ -48,24 +48,24 @@ N_whichStmt N_lvalueARRStmt
 N_lvalueIDStmt T_ASSIGNOP N_expression T_SEMICOL
 N_lvalueARRStmt T_SQBO N_elementIndexWithExpressions T_SQBC T_ASSIGNOP N_expression T_SEMICOL
 N_indexArr N_sign N_newIndex
-N_newIndex T_NUM
+N_newIndex T_LRUM
 N_newIndex T_ID
 N_sign T_PLUS
 N_sign T_MINUS
 N_sign epsilon
 N_moduleReuseStmt N_optional T_USE T_MODULE T_ID T_WITH T_PARAMETERS N_actualParaList T_SEMICOL
-N_actualParaList N_sign N_K N_newParaList
-N_newParaList T_COMMA N_sign N_K N_newParaList
+N_actualParaList N_sign N_param N_newParaList
+N_newParaList T_COMMA N_sign N_param N_newParaList
 N_newParaList epsilon
-N_K T_NUM
-N_K T_RNUM
-N_K N_boolConst
-N_K T_ID N_N11
+N_param T_LRUM
+N_param T_RNUM
+N_param N_boolConst
+N_param T_ID N_LR11
 N_optional T_SQBO N_idList T_SQBC T_ASSIGNOP
 N_optional epsilon
-N_idList T_ID N_N3
-N_N3 T_COMMA T_ID N_N3
-N_N3 epsilon
+N_idList T_ID N_LR3
+N_LR3 T_COMMA T_ID N_LR3
+N_LR3 epsilon
 N_expression N_arithmeticOrBooleanExpr
 N_expression N_U
 N_U N_unaryOp N_newNT
@@ -74,42 +74,42 @@ N_newNT N_varIDNum
 N_unaryOp T_PLUS
 N_unaryOp T_MINUS
 N_varIDNum T_ID
-N_varIDNum T_NUM
+N_varIDNum T_LRUM
 N_varIDNum T_RNUM
-N_arithmeticOrBooleanExpr N_anyTerm N_N7
-N_N7 N_logicalOp N_anyTerm N_N7
-N_N7 epsilon
-N_anyTerm N_arithmeticExpr N_N8
-N_N8 N_relationalOp N_arithmeticExpr
-N_N8 epsilon
-N_arithmeticExpr N_term N_N4
-N_N4 N_op1 N_term N_N4
-N_N4 epsilon
-N_term N_factor N_N5
-N_N5 N_op2 N_factor N_N5
-N_N5 epsilon
+N_arithmeticOrBooleanExpr N_anyTerm N_LR7
+N_LR7 N_logicalOp N_anyTerm N_LR7
+N_LR7 epsilon
+N_anyTerm N_arithmeticExpr N_LR8
+N_LR8 N_relationalOp N_arithmeticExpr
+N_LR8 epsilon
+N_arithmeticExpr N_term N_LR4
+N_LR4 N_operator1 N_term N_LR4
+N_LR4 epsilon
+N_term N_factor N_LR5
+N_LR5 N_operator2 N_factor N_LR5
+N_LR5 epsilon
 N_factor T_BO N_arithmeticOrBooleanExpr T_BC
-N_factor T_NUM
+N_factor T_LRUM
 N_factor T_RNUM
 N_factor N_boolConst
-N_factor T_ID N_N11
-N_N11 T_SQBO N_elementIndexWithExpressions T_SQBC
-N_N11 epsilon
+N_factor T_ID N_LR11
+N_LR11 T_SQBO N_elementIndexWithExpressions T_SQBC
+N_LR11 epsilon
 N_elementIndexWithExpressions N_sign N_arrExpr
 N_arrExpr N_arrTerm N_arrN4
-N_arrN4 N_op1 N_arrTerm N_arrN4
+N_arrN4 N_operator1 N_arrTerm N_arrN4
 N_arrN4 epsilon
 N_arrTerm N_arrFactor N_arrN5
-N_arrN5 N_op2 N_arrFactor N_arrN5
+N_arrN5 N_operator2 N_arrFactor N_arrN5
 N_arrN5 epsilon
 N_arrFactor T_ID
-N_arrFactor T_NUM
+N_arrFactor T_LRUM
 N_arrFactor N_boolConst
 N_arrFactor T_BO N_arrExpr T_BC
-N_op1 T_PLUS
-N_op1 T_MINUS
-N_op2 T_MUL
-N_op2 T_DIV
+N_operator1 T_PLUS
+N_operator1 T_MINUS
+N_operator2 T_MUL
+N_operator2 T_DIV
 N_logicalOp T_AND
 N_logicalOp T_OR
 N_relationalOp T_LT
@@ -117,13 +117,13 @@ N_relationalOp T_LE
 N_relationalOp T_GT
 N_relationalOp T_GE
 N_relationalOp T_EQ
-N_relationalOp T_NE
+N_relationalOp T_LRE
 N_declareStmt T_DECLARE N_idList T_COLON N_dataType T_SEMICOL
 N_conditionalStmt T_SWITCH T_BO T_ID T_BC T_START N_caseStmts N_default T_END
-N_caseStmts T_CASE N_value T_COLON N_statements T_BREAK T_SEMICOL N_N9
-N_N9 T_CASE N_value T_COLON N_statements T_BREAK T_SEMICOL N_N9
-N_N9 epsilon
-N_value T_NUM
+N_caseStmts T_CASE N_value T_COLON N_statements T_BREAK T_SEMICOL N_LR9
+N_LR9 T_CASE N_value T_COLON N_statements T_BREAK T_SEMICOL N_LR9
+N_LR9 epsilon
+N_value T_LRUM
 N_value T_TRUE
 N_value T_FALSE
 N_default T_DEFAULT T_COLON N_statements T_BREAK T_SEMICOL
@@ -132,7 +132,7 @@ N_iterativeStmt T_FOR T_BO T_ID T_IN N_rangeForLoop T_BC T_START N_statements T_
 N_iterativeStmt T_WHILE T_BO N_arithmeticOrBooleanExpr T_BC T_START N_statements T_END
 N_rangeForLoop N_indexForLoop T_RANGEOP N_indexForLoop
 N_indexForLoop N_signForLoop N_newIndexForLoop
-N_newIndexForLoop T_NUM
+N_newIndexForLoop T_LRUM
 N_signForLoop T_PLUS
 N_signForLoop T_MINUS
 N_signForLoop epsilon
