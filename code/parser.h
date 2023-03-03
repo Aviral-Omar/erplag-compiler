@@ -7,3 +7,7 @@ Vatsal Pattani:			2019B5A70697P
 #include "parserDef.h"
 
 void runParser(char* srcFilename, char* outFilename);
+void initParser();
+void printParseTable();
+void printFollowSets();
+void printFirstSets();

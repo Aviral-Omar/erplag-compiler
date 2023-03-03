@@ -5,3 +5,6 @@ code/parser_tester.c
 code/parseTable
 code/parsetreeOutFile.txt
 code/stage1exe
+code/first.txt
+code/follow.txt
+code/parseTable.txt

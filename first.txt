@@ -1,0 +1,72 @@
+N_program: T_DECLARE T_DEF T_DRIVERDEF 
+N_moduleDeclarations: epsilon T_DECLARE 
+N_otherModules: epsilon T_DEF 
+N_driverModule: T_DRIVERDEF 
+N_moduleDeclaration: T_DECLARE 
+N_module: T_DEF 
+N_moduleDef: T_START 
+N_inputPlist: T_ID 
+N_ret: T_RETURNS epsilon 
+N_outputPlist: T_ID 
+N_dataType: T_INTEGER T_REAL T_BOOLEAN T_ARRAY 
+N_LR1: T_COMMA epsilon 
+N_type: T_INTEGER T_REAL T_BOOLEAN 
+N_LR2: T_COMMA epsilon 
+N_rangeArrays: T_PLUS T_MINUS T_LRUM T_ID 
+N_indexArr: T_PLUS T_MINUS T_LRUM T_ID 
+N_statements: epsilon T_GET_VALUE T_PRINT T_DECLARE T_SWITCH T_FOR T_WHILE T_ID T_SQBO T_USE 
+N_statement: T_GET_VALUE T_PRINT T_DECLARE T_SWITCH T_FOR T_WHILE T_ID T_SQBO T_USE 
+N_ioStmt: T_GET_VALUE T_PRINT 
+N_simpleStmt: T_ID T_SQBO T_USE 
+N_declareStmt: T_DECLARE 
+N_conditionalStmt: T_SWITCH 
+N_iterativeStmt: T_FOR T_WHILE 
+N_varPrint: T_ID T_LRUM T_RNUM T_TRUE T_FALSE 
+N_PR1: T_SQBO epsilon 
+N_boolConst: T_TRUE T_FALSE 
+N_moduleReuseStmt: T_SQBO T_USE 
+N_assignmentStmt: T_ID 
+N_whichStmt: T_ASSIGNOP T_SQBO 
+N_lvalueIDStmt: T_ASSIGNOP 
+N_lvalueARRStmt: T_SQBO 
+N_expression: T_PLUS T_MINUS T_BO T_LRUM T_RNUM T_TRUE T_FALSE T_ID 
+N_elementIndexWithExpressions: T_PLUS T_MINUS T_ID T_LRUM T_TRUE T_FALSE T_BO 
+N_sign: T_PLUS T_MINUS epsilon 
+N_newIndex: T_LRUM T_ID 
+N_optional: T_SQBO epsilon 
+N_actualParaList: T_PLUS T_MINUS T_LRUM T_RNUM T_TRUE T_FALSE T_ID 
+N_param: T_LRUM T_RNUM T_TRUE T_FALSE T_ID 
+N_newParaList: T_COMMA epsilon 
+N_LR11: T_SQBO epsilon 
+N_idList: T_ID 
+N_LR3: T_COMMA epsilon 
+N_arithmeticOrBooleanExpr: T_BO T_LRUM T_RNUM T_TRUE T_FALSE T_ID 
+N_U: T_PLUS T_MINUS 
+N_unaryOp: T_PLUS T_MINUS 
+N_newNT: T_BO T_ID T_LRUM T_RNUM 
+N_arithmeticExpr: T_BO T_LRUM T_RNUM T_TRUE T_FALSE T_ID 
+N_varIDNum: T_ID T_LRUM T_RNUM 
+N_anyTerm: T_BO T_LRUM T_RNUM T_TRUE T_FALSE T_ID 
+N_LR7: epsilon T_AND T_OR 
+N_logicalOp: T_AND T_OR 
+N_LR8: epsilon T_LT T_LE T_GT T_GE T_EQ T_LRE 
+N_relationalOp: T_LT T_LE T_GT T_GE T_EQ T_LRE 
+N_term: T_BO T_LRUM T_RNUM T_TRUE T_FALSE T_ID 
+N_LR4: epsilon T_PLUS T_MINUS 
+N_operator1: T_PLUS T_MINUS 
+N_factor: T_BO T_LRUM T_RNUM T_TRUE T_FALSE T_ID 
+N_LR5: epsilon T_MUL T_DIV 
+N_operator2: T_MUL T_DIV 
+N_arrExpr: T_ID T_LRUM T_TRUE T_FALSE T_BO 
+N_arrN4: epsilon T_PLUS T_MINUS 
+N_arrTerm: T_ID T_LRUM T_TRUE T_FALSE T_BO 
+N_arrFactor: T_ID T_LRUM T_TRUE T_FALSE T_BO 
+N_arrN5: epsilon T_MUL T_DIV 
+N_caseStmts: T_CASE 
+N_default: T_DEFAULT epsilon 
+N_value: T_LRUM T_TRUE T_FALSE 
+N_LR9: T_CASE epsilon 
+N_rangeForLoop: T_PLUS T_MINUS T_LRUM 
+N_indexForLoop: T_PLUS T_MINUS T_LRUM 
+N_signForLoop: T_PLUS T_MINUS epsilon 
+N_newIndexForLoop: T_LRUM 

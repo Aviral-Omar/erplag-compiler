@@ -244,6 +244,9 @@ void runParser(char *srcFilename, char *outFilename)
 	fprintf(outFile, "%-6s\t", "isLeaf");
 	fprintf(outFile, "%-30s\t", "NodeSymbol");
 	fprintf(outFile, "\n");
+	fprintf(outFile, "%s","-----------------------------------------------------");
+	fprintf(outFile, "%s","-----------------------------------------------------");
+	fprintf(outFile, "%s","-----------------------------------------------------\n");
 
 	fflush(outFile);
 

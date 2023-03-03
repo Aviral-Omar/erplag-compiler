@@ -18,10 +18,12 @@ int main(int argc, char *argv[])
 {
 	// TODO update if needed
 	printf("============Implementation Status============\n");
-	printf("a) FIRST and FOLLOW set computation automated.\n");
-	printf("b) Both lexical and syntax analysis modules implemented and working.\n");
-	printf("c) Parse Tree constructed.\n");
-	printf("d) Modules work for all given test cases.\n");
+	printf("1) FIRST and FOLLOW set computation automated.\n");
+	printf("2) Both lexical and syntax analysis modules implemented and working.\n");
+	printf("3) Parse Tree constructed.\n");
+	printf("4) Modules work for all given test cases.\n");
+	printf("5) First & Follow sets, Parse Table, Parse Tree can be printed in separate files by calling already implemented functions.\n");
+	printf("6) All Lexical and Syntactic errors are being detected for given test cases.\n");
 
 	// Checks if program receives 2 arguments from command line
 	if (argc != 4) {
@@ -44,12 +46,13 @@ int main(int argc, char *argv[])
 
 	int option;
 	do {
-		printf("\n============Select Option============\n");
+		printf("\n============ Select Option ============\n");
 		printf("0: For exit\n");
 		printf("1: For removal of comments\n");
 		printf("2: For printing the token list\n");
 		printf("3: For parsing\n");
-		printf("4: For printing the total time taken\n\n");
+		printf("4: For printing the total time taken\n");
+		printf("5: For printing First & Follow sets, Parse Table in respective txt files\n\n");
 		printf("Enter option choice: ");
 		scanf(" %d", &option);
 		printf("\n");
@@ -77,6 +80,11 @@ int main(int argc, char *argv[])
 
 			printf("Total CPU Time: %f\n", total_CPU_time);
 			printf("Total CPU Time in seconds: %f\n\n", total_CPU_time_in_seconds);
+		}else if (option == 5){
+			initParser();
+			printFirstSets();
+			printFollowSets();
+			printParseTable();
 		}
 	} while (option);
 
