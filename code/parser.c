@@ -493,17 +493,21 @@ void computeFirstSets()
 
 void printFirstSets()
 {
-	printf("\nFIRST Sets:\n");
+	FILE *outFile = fopen("first.txt", "w");
+	if (outFile == NULL) {
+		printf("Error opening output file\n");
+		exit(EXIT_FAILURE);
+	}
 	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
-		printf("%s: ", nonTerminalMap[i]);
+		fprintf(outFile, "%s: ", nonTerminalMap[i]);
 		TerminalInfo *tiPtr = ffTable[i].first;
 		while (tiPtr) {
-			printf("%s ", terminalMap[tiPtr->tr]);
+			fprintf(outFile, "%s ", terminalMap[tiPtr->tr]);
 			tiPtr = tiPtr->next;
 		}
-		printf("\n");
+		fprintf(outFile, "\n");
 	}
-	printf("\n");
+	fclose(outFile);
 }
 
 void insertIntoFollow(NonTerminal nt, Terminal t)
@@ -616,25 +620,27 @@ void computeFollowSets()
 
 void printFollowSets()
 {
-	printf("\nFOLLOW Sets:\n");
+	FILE *outFile = fopen("follow.txt", "w");
+	if (outFile == NULL) {
+		printf("Error opening output file\n");
+		exit(EXIT_FAILURE);
+	}
 	for (int i = 0; i < NON_TERMINAL_COUNT; i++) {
-		printf("%s: ", nonTerminalMap[i]);
+		fprintf(outFile, "%s: ", nonTerminalMap[i]);
 		TerminalInfo *tiPtr = ffTable[i].follow;
 		while (tiPtr) {
-			printf("%s ", terminalMap[tiPtr->tr]);
+			fprintf(outFile, "%s ", terminalMap[tiPtr->tr]);
 			tiPtr = tiPtr->next;
 		}
-		printf("\n");
+		fprintf(outFile, "\n");
 	}
-	printf("\n");
+	fclose(outFile);
 }
 
 void computeFirstAndFollowSets()
 {
 	computeFirstSets();
-	// printFirstSets();
 	computeFollowSets();
-	// printFollowSets();
 }
 
 void printParseTable()
