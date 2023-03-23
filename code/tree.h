@@ -8,5 +8,7 @@ Vatsal Pattani:			2019B5A70697P
 
 ParseTNode *createParseTree(Symbol d, char type);
 ParseTNode *addNode(ParseTNode *node, Symbol d, char type, int ruleNum);
+void removeNode(ParseTNode *node);
 // int updateData(ParseTNode *node, Symbol d, char type);
+void printParseTree(ParseTNode *node, FILE *outFile);
 void deleteParseTree(ParseTNode *node);

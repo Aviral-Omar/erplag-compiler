@@ -20,7 +20,9 @@ struct ParseTNodeType {
 	} info;
 	ParseTNode* child;
 	ParseTNode* parent;
-	ParseTNode* sibling;
+	ParseTNode* prevSibling;
+	ParseTNode* nextSibling;
 };
 
+extern ParseTNode* parseTreeParent;
 #endif

@@ -9,6 +9,7 @@ Vatsal Pattani:			2019B5A70697P
 #include "stackDef.h"
 #include "treeDef.h"
 
+Stack *s;
 
 Stack *createStack();
 int isEmpty(Stack *s);

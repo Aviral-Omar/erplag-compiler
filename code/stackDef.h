@@ -24,4 +24,6 @@ typedef struct StackType {
 	int size;
 } Stack;
 
+extern Stack* s;
+
 #endif

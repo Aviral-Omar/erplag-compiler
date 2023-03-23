@@ -8,10 +8,14 @@ Vatsal Pattani:			2019B5A70697P
 #include <stdlib.h>
 
 #include "lexerDef.h"
+#include "parserDef.h"
 #include "treeDef.h"
+
+ParseTNode *parseTreeParent;
 
 ParseTNode *createParseTree(Symbol d, char type);
 ParseTNode *addNode(ParseTNode *node, Symbol d, char type, int ruleNum);
+void removeNode(ParseTNode *node);
 // int updateData(ParseTNode *node, Symbol d, char type);
 void deleteParseTree(ParseTNode *node);
 
@@ -20,7 +24,7 @@ ParseTNode *createParseTree(Symbol d, char type)
 	ParseTNode *node = (ParseTNode *)malloc(sizeof(ParseTNode));
 	node->child = NULL;
 	node->parent = NULL;
-	node->sibling = NULL;
+	node->nextSibling = NULL;
 	node->type = type;
 	node->data = d;
 	node->info.tokIn = NULL;
@@ -37,23 +41,36 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type, int ruleNum)
 	temp->parent = parent;
 	temp->type = type;
 	temp->child = NULL;
-	temp->sibling = NULL;
+	temp->prevSibling = NULL;
+	temp->nextSibling = NULL;
 	temp->info.tokIn = NULL;
 	if (type == 'N' || type == 'e')
 		temp->info.ruleNum = ruleNum;
-	else if (type == 'T')
-		temp->info.tokIn = currToken;
 
 	if (!parent->child) {
 		parent->child = temp;
 	} else {
 		trav = parent->child;
-		while (trav->sibling) {
-			trav = trav->sibling;
+		while (trav->nextSibling) {
+			trav = trav->nextSibling;
 		}
-		trav->sibling = temp;
+		trav->nextSibling = temp;
+		temp->prevSibling = trav;
 	}
 	return temp;
+}
+
+void removeNode(ParseTNode *node)
+{
+	if (!node->prevSibling)
+		node->parent->child = node->nextSibling;
+	else
+		node->prevSibling->nextSibling = node->nextSibling;
+	if (node->nextSibling)
+		node->nextSibling->prevSibling = node->prevSibling;
+	if (node->type == 'T' && node->info.tokIn)
+		free(node->info.tokIn);
+	free(node);
 }
 
 void deleteParseTree(ParseTNode *node)
@@ -61,11 +78,67 @@ void deleteParseTree(ParseTNode *node)
 	if (node->child)
 		deleteParseTree(node->child);
 	node->child = NULL;
-	if (node->sibling)
-		deleteParseTree(node->sibling);
-	node->sibling = NULL;
-	// TODO free tokeninfo here
-	// if (node->type == 'T' && node->info.tokIn)
-	// 	free(node->info.tokIn);
+	if (node->nextSibling)
+		deleteParseTree(node->nextSibling);
+	node->nextSibling = NULL;
+
+	if (node->type == 'T' && node->info.tokIn)
+		free(node->info.tokIn);
+
 	free(node);
+}
+
+void printParseTree(ParseTNode *node, FILE *outFile)
+{
+	if (node == NULL)
+		return;
+	printParseTree(node->child, outFile);
+	if (node->type == 'N') {
+		fprintf(outFile, "%-24s\t", "---");
+		fprintf(outFile, "%-10s\t", "---");
+		fprintf(outFile, "%-13s\t", "---");
+		fprintf(outFile, "%-16s\t", "---");
+		if (!node->parent)
+			fprintf(outFile, "%-30s\t", "ROOT");  // Parent node symbol
+		else
+			fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
+		fprintf(outFile, "%-6s\t", "no");
+		fprintf(outFile, "%-30s\t", nonTerminalMap[node->data.nt]);
+	} else if (node->type == 'T') {
+		Token t = node->data.t;
+		if (t == NUM || t == RNUM || t == ID)
+			fprintf(outFile, "%-24s\t", node->info.tokIn->data.lexeme);	 // lexeme
+		else
+			fprintf(outFile, "%-24s\t", lexemeMap[t]);	// lexeme
+		fprintf(outFile, "%-10d\t", node->info.tokIn->lineNumber);
+		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
+		if (t == NUM)
+			fprintf(outFile, "%-16d\t", atoi(node->info.tokIn->data.lexeme));
+		else if (t == RNUM)
+			fprintf(outFile, "%-16f\t", atof(node->info.tokIn->data.lexeme));
+		else
+			fprintf(outFile, "%-16s\t", "---");
+		fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
+		fprintf(outFile, "%-6s\t", "yes");
+		fprintf(outFile, "%-30s\t", "---");
+	} else {
+		fprintf(outFile, "%-24s\t", "---");
+		fprintf(outFile, "%-10s\t", "---");
+		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
+		fprintf(outFile, "%-16s\t", "---");
+		fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
+		fprintf(outFile, "%-6s\t", "yes");
+		fprintf(outFile, "%-30s\t", "---");
+	}
+	fprintf(outFile, "\n");
+	fflush(outFile);
+
+	if (node->child) {
+		ParseTNode *nextSibling = node->child->nextSibling;
+		while (nextSibling != NULL) {
+			printParseTree(nextSibling, outFile);
+			nextSibling = nextSibling->nextSibling;
+		}
+	}
+	return;
 }

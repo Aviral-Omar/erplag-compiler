@@ -44,4 +44,6 @@ typedef int ParseTableEntry;
 
 typedef struct StackType Stack;
 
+extern char* terminalMap[TERMINAL_COUNT];
+extern char* nonTerminalMap[NON_TERMINAL_COUNT];
 #endif

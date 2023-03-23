@@ -152,8 +152,6 @@ char *terminalMap[TERMINAL_COUNT] = {
 LexicalSymbol *grammar[RULE_COUNT];
 FirstFollowEntry ffTable[NON_TERMINAL_COUNT] = {{NULL, NULL}};	 // will be populated by function calculating first and follow sets
 ParseTableEntry parseTable[NON_TERMINAL_COUNT][TERMINAL_COUNT];	 // will be filled by CreateParseTable()
-Stack *s;
-ParseTNode *parseTreeParent;
 int parserCorrect;
 
 void initParser();
@@ -177,7 +175,6 @@ void errorRecovery();
 void runParser(char *srcFilename, char *outFilename);
 void pushRuleTokens(Stack *s, LexicalSymbol *RHS, ParseTNode *parent, int ruleNum);
 void parseCurrToken();
-void printParseTree(ParseTNode *node, FILE *outFile);
 
 void runParser(char *srcFilename, char *outFilename)
 {
@@ -769,12 +766,14 @@ void parseCurrToken()
 					// printf("Skipping Token %s\n", terminalMap[currToken->token]);
 					break;
 				} else {
+					removeNode(top(s)->treenode);
 					pop(s);
 					parserCorrect = 0;
 					printf("Line %d: Syntax Error: Missing semicolon\n", currToken->lineNumber);
 				}
 			} else {
 				// Pop terminal if it does not match
+				removeNode(top(s)->treenode);
 				pop(s);
 				parserCorrect = 0;
 				printf("Line %d: Syntax Error: Terminal %s present at inappropriate position cannot be matched with %s\n", currToken->lineNumber, terminalMap[currToken->token], terminalMap[data]);
@@ -867,59 +866,4 @@ void errorRecovery()
 			pop(s);
 		return;
 	}
-}
-
-void printParseTree(ParseTNode *node, FILE *outFile)
-{
-	if (node == NULL)
-		return;
-	printParseTree(node->child, outFile);
-	if (node->type == 'N') {
-		fprintf(outFile, "%-24s\t", "---");
-		fprintf(outFile, "%-10s\t", "---");
-		fprintf(outFile, "%-13s\t", "---");
-		fprintf(outFile, "%-16s\t", "---");
-		if (!node->parent)
-			fprintf(outFile, "%-30s\t", "ROOT");  // Parent node symbol
-		else
-			fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
-		fprintf(outFile, "%-6s\t", "no");
-		fprintf(outFile, "%-30s\t", nonTerminalMap[node->data.nt]);
-	} else if (node->type == 'T') {
-		Token t = node->data.t;
-		if (t == NUM || t == RNUM || t == ID)
-			fprintf(outFile, "%-24s\t", node->info.tokIn->data.lexeme);	 // lexeme
-		else
-			fprintf(outFile, "%-24s\t", lexemeMap[t]);	// lexeme
-		fprintf(outFile, "%-10d\t", node->info.tokIn->lineNumber);
-		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
-		if (t == NUM)
-			fprintf(outFile, "%-16d\t", atoi(node->info.tokIn->data.lexeme));
-		else if (t == RNUM)
-			fprintf(outFile, "%-16f\t", atof(node->info.tokIn->data.lexeme));
-		else
-			fprintf(outFile, "%-16s\t", "---");
-		fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
-		fprintf(outFile, "%-6s\t", "yes");
-		fprintf(outFile, "%-30s\t", "---");
-	} else {
-		fprintf(outFile, "%-24s\t", "---");
-		fprintf(outFile, "%-10s\t", "---");
-		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
-		fprintf(outFile, "%-16s\t", "---");
-		fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
-		fprintf(outFile, "%-6s\t", "yes");
-		fprintf(outFile, "%-30s\t", nonTerminalMap[node->data.nt]);
-	}
-	fprintf(outFile, "\n");
-	fflush(outFile);
-
-	if (node->child) {
-		ParseTNode *sibling = node->child->sibling;
-		while (sibling != NULL) {
-			printParseTree(sibling, outFile);
-			sibling = sibling->sibling;
-		}
-	}
-	return;
 }
