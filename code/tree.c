@@ -111,7 +111,7 @@ void printParseTree(ParseTNode *node, FILE *outFile)
 		else
 			fprintf(outFile, "%-24s\t", lexemeMap[t]);	// lexeme
 		fprintf(outFile, "%-10d\t", node->info.tokIn->lineNumber);
-		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
+		fprintf(outFile, "%-13s\t", tokenMap[node->data.t]);
 		if (t == NUM)
 			fprintf(outFile, "%-16d\t", atoi(node->info.tokIn->data.lexeme));
 		else if (t == RNUM)
@@ -124,7 +124,7 @@ void printParseTree(ParseTNode *node, FILE *outFile)
 	} else {
 		fprintf(outFile, "%-24s\t", "---");
 		fprintf(outFile, "%-10s\t", "---");
-		fprintf(outFile, "%-13s\t", terminalMap[node->data.t]);
+		fprintf(outFile, "%-13s\t", tokenMap[node->data.t]);
 		fprintf(outFile, "%-16s\t", "---");
 		fprintf(outFile, "%-30s\t", nonTerminalMap[node->parent->data.nt]);	 // Parent node symbol
 		fprintf(outFile, "%-6s\t", "yes");

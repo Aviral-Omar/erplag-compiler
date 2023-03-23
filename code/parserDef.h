@@ -12,10 +12,10 @@ Vatsal Pattani:			2019B5A70697P
 #include "symbolDef.h"
 
 #define GRAMMAR_FILE "grammar.txt"
-#define RULE_COUNT 138
-#define NON_TERMINAL_COUNT 72
+#define RULE_COUNT 133
+#define NON_TERMINAL_COUNT 70
 #define TERMINAL_COUNT 58
-#define GRAMMAR_BUFFER_SIZE 4500
+#define GRAMMAR_BUFFER_SIZE 4800
 #define SYN -2
 
 typedef struct LexicalSymbol LexicalSymbol;
@@ -44,6 +44,5 @@ typedef int ParseTableEntry;
 
 typedef struct StackType Stack;
 
-extern char* terminalMap[TERMINAL_COUNT];
 extern char* nonTerminalMap[NON_TERMINAL_COUNT];
 #endif

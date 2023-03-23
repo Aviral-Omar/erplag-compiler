@@ -16,6 +16,78 @@ Vatsal Pattani:			2019B5A70697P
 #include "treeDef.h"
 
 char *nonTerminalMap[NON_TERMINAL_COUNT] = {
+	"program",
+	"moduleDeclarations",
+	"otherModules",
+	"driverModule",
+	"moduleDeclaration",
+	"module",
+	"moduleDef",
+	"inputPlist",
+	"ret",
+	"outputPlist",
+	"dataType",
+	"iPList2",
+	"type",
+	"oPList2",
+	"arrRange",
+	"signedIndex",
+	"statements",
+	"statement",
+	"ioStmt",
+	"simpleStmt",
+	"declareStmt",
+	"conditionalStmt",
+	"iterativeStmt",
+	"varPrint",
+	"arrIndex",
+	"boolConst",
+	"moduleReuseStmt",
+	"assignmentStmt",
+	"whichStmt",
+	"lvalueIDStmt",
+	"lvalueARRStmt",
+	"expression",
+	"indexWithExpressions",
+	"sign",
+	"index",
+	"optional",
+	"actualPList",
+	"param",
+	"actualPList2",
+	"arrIndexWithExpressions",
+	"idList",
+	"idList2",
+	"arithmeticOrLogicalExpr",
+	"unaryOpExpr",
+	"unaryOp",
+	"unsignedArithExpr",
+	"arithmeticExpr",
+	"varIDNum",
+	"anyTerm",
+	"logicalOpExpr",
+	"logicalOp",
+	"relationOpExpr",
+	"relationalOp",
+	"term",
+	"plusMinusExpr",
+	"operator1",
+	"factor",
+	"mulDivExpr",
+	"operator2",
+	"arrExpr",
+	"arrTerm",
+	"arrPlusMinusExpr",
+	"arrFactor",
+	"arrMulDivExpr",
+	"caseStmts",
+	"defaultCase",
+	"caseValue",
+	"caseStmts2",
+	"forLoopRange",
+	"forLoopIndex"};
+
+char *nonTerminalStrings[NON_TERMINAL_COUNT] = {
 	"N_program",
 	"N_moduleDeclarations",
 	"N_otherModules",
@@ -27,11 +99,11 @@ char *nonTerminalMap[NON_TERMINAL_COUNT] = {
 	"N_ret",
 	"N_outputPlist",
 	"N_dataType",
-	"N_LR1",
+	"N_iPList2",
 	"N_type",
-	"N_LR2",
-	"N_rangeArrays",
-	"N_indexArr",
+	"N_oPList2",
+	"N_arrRange",
+	"N_signedIndex",
 	"N_statements",
 	"N_statement",
 	"N_ioStmt",
@@ -40,7 +112,7 @@ char *nonTerminalMap[NON_TERMINAL_COUNT] = {
 	"N_conditionalStmt",
 	"N_iterativeStmt",
 	"N_varPrint",
-	"N_PR1",
+	"N_arrIndex",
 	"N_boolConst",
 	"N_moduleReuseStmt",
 	"N_assignmentStmt",
@@ -48,104 +120,102 @@ char *nonTerminalMap[NON_TERMINAL_COUNT] = {
 	"N_lvalueIDStmt",
 	"N_lvalueARRStmt",
 	"N_expression",
-	"N_elementIndexWithExpressions",
+	"N_indexWithExpressions",
 	"N_sign",
-	"N_newIndex",
+	"N_index",
 	"N_optional",
-	"N_actualParaList",
+	"N_actualPList",
 	"N_param",
-	"N_newParaList",
-	"N_LR11",
+	"N_actualPList2",
+	"N_arrIndexWithExpressions",
 	"N_idList",
-	"N_LR3",
-	"N_arithmeticOrBooleanExpr",
-	"N_U",
+	"N_idList2",
+	"N_arithmeticOrLogicalExpr",
+	"N_unaryOpExpr",
 	"N_unaryOp",
-	"N_newNT",
+	"N_unsignedArithExpr",
 	"N_arithmeticExpr",
 	"N_varIDNum",
 	"N_anyTerm",
-	"N_LR7",
+	"N_logicalOpExpr",
 	"N_logicalOp",
-	"N_LR8",
+	"N_relationOpExpr",
 	"N_relationalOp",
 	"N_term",
-	"N_LR4",
+	"N_plusMinusExpr",
 	"N_operator1",
 	"N_factor",
-	"N_LR5",
+	"N_mulDivExpr",
 	"N_operator2",
 	"N_arrExpr",
-	"N_arrN4",
 	"N_arrTerm",
+	"N_arrPlusMinusExpr",
 	"N_arrFactor",
-	"N_arrN5",
+	"N_arrMulDivExpr",
 	"N_caseStmts",
-	"N_default",
-	"N_value",
-	"N_LR9",
-	"N_rangeForLoop",
-	"N_indexForLoop",
-	"N_signForLoop",
-	"N_newIndexForLoop"};
+	"N_defaultCase",
+	"N_caseValue",
+	"N_caseStmts2",
+	"N_forLoopRange",
+	"N_forLoopIndex"};
 
-char *terminalMap[TERMINAL_COUNT] = {
+char *terminalStrings[TERMINAL_COUNT] = {
+	"T_DECLARE",
+	"T_MODULE",
+	"T_ID",
+	"T_SEMICOL",
+	"T_DRIVERDEF",
+	"T_DRIVER",
+	"T_PROGRAM",
+	"T_DRIVERENDDEF",
+	"T_DEF",
+	"T_ENDDEF",
+	"T_TAKES",
+	"T_INPUT",
+	"T_SQBO",
+	"T_SQBC",
+	"T_RETURNS",
+	"T_COLON",
+	"T_COMMA",
 	"T_INTEGER",
 	"T_REAL",
 	"T_BOOLEAN",
-	"T_OF",
 	"T_ARRAY",
+	"T_OF",
+	"T_RANGEOP",
 	"T_START",
 	"T_END",
-	"T_DECLARE",
-	"T_MODULE",
-	"T_DRIVER",
-	"T_PROGRAM",
 	"T_GET_VALUE",
+	"T_BO",
+	"T_BC",
 	"T_PRINT",
+	"T_NUM",
+	"T_RNUM",
+	"T_TRUE",
+	"T_FALSE",
+	"T_ASSIGNOP",
+	"T_PLUS",
+	"T_MINUS",
 	"T_USE",
 	"T_WITH",
 	"T_PARAMETERS",
-	"T_TAKES",
-	"T_INPUT",
-	"T_RETURNS",
-	"T_FOR",
-	"T_IN",
+	"T_MUL",
+	"T_DIV",
+	"T_AND",
+	"T_OR",
+	"T_LT",
+	"T_LE",
+	"T_GT",
+	"T_GE",
+	"T_EQ",
+	"T_NE",
 	"T_SWITCH",
 	"T_CASE",
 	"T_BREAK",
 	"T_DEFAULT",
+	"T_FOR",
+	"T_IN",
 	"T_WHILE",
-	"T_ID",
-	"T_NUM",
-	"T_RNUM",
-	"T_AND",
-	"T_OR",
-	"T_TRUE",
-	"T_FALSE",
-	"T_PLUS",
-	"T_MINUS",
-	"T_MUL",
-	"T_DIV",
-	"T_LT",
-	"T_LE",
-	"T_GE",
-	"T_GT",
-	"T_EQ",
-	"T_NE",
-	"T_DEF",
-	"T_ENDDEF",
-	"T_DRIVERDEF",
-	"T_DRIVERENDDEF",
-	"T_COLON",
-	"T_RANGEOP",
-	"T_SEMICOL",
-	"T_COMMA",
-	"T_ASSIGNOP",
-	"T_SQBO",
-	"T_SQBC",
-	"T_BO",
-	"T_BC",
 	"dollar",
 	"epsilon"};
 
@@ -194,7 +264,7 @@ void runParser(char *srcFilename, char *outFilename)
 	temp0.t = DOLLAR;
 	pushTok(s, temp0, 'T');	 // pushing dollar to the stack initially
 
-	temp1.nt = N_program;
+	temp1.nt = 0;
 	SNode *root = pushTok(s, temp1, 'N');  // pushing start symbol
 	// printf("     %d     %d    \n",top(s)->data.nt,s->size);
 
@@ -211,7 +281,7 @@ void runParser(char *srcFilename, char *outFilename)
 	}
 	while (!isEmpty(s)) {
 		if (top(s)->type == 'N') {
-			// printf("%s\n", nonTerminalMap[top(s)->data.nt]);
+			// printf("%s\n", nonTerminalStrings[top(s)->data.nt]);
 			int ruleNumber = parseTable[top(s)->data.nt][DOLLAR];
 			// printf("Rule %d applied.\n", ruleNumber);
 			if (ruleNumber == -1) {
@@ -219,7 +289,7 @@ void runParser(char *srcFilename, char *outFilename)
 				printf("Syntax Error: Incomplete input, bottom of stack not reached.\n");
 				break;
 			} else {
-				// printf("Accepted: %s\n\n", nonTerminalMap[top(s)->data.nt]);
+				// printf("Accepted: %s\n\n", nonTerminalStrings[top(s)->data.nt]);
 				ParseTNode *parent = top(s)->treenode;
 				pop(s);
 				pushRuleTokens(s, grammar[ruleNumber]->next, parent, ruleNumber);
@@ -318,14 +388,15 @@ void clearParserData()
 
 int findSymbol(char *symbol)
 {
-	fflush(stdout);
+	// printf("%s\n", symbol);
+	// fflush(stdout);
 	int i = 0;
 	if (*symbol == 'N') {
-		while (strcmp(symbol, nonTerminalMap[i]))
+		while (strcmp(symbol, nonTerminalStrings[i]))
 			i++;
 		return i;
 	}
-	while (strcmp(symbol, terminalMap[i]))
+	while (strcmp(symbol, terminalStrings[i]))
 		i++;
 	return i;
 }
@@ -388,9 +459,9 @@ void printGrammar()
 		LexicalSymbol *ptr = grammar[i];
 		while (ptr) {
 			if (ptr->type == 'N')
-				printf("%s ", nonTerminalMap[ptr->data.nt]);
+				printf("%s ", nonTerminalStrings[ptr->data.nt]);
 			else
-				printf("%s ", terminalMap[ptr->data.t]);
+				printf("%s ", terminalStrings[ptr->data.t]);
 			ptr = ptr->next;
 		}
 		printf("\n");
@@ -502,7 +573,7 @@ void printFirstSets()
 		fprintf(outFile, "%s: ", nonTerminalMap[i]);
 		TerminalInfo *tiPtr = ffTable[i].first;
 		while (tiPtr) {
-			fprintf(outFile, "%s ", terminalMap[tiPtr->tr]);
+			fprintf(outFile, "%s ", tokenMap[tiPtr->tr]);
 			tiPtr = tiPtr->next;
 		}
 		fprintf(outFile, "\n");
@@ -551,7 +622,7 @@ void insertFollowIntoFollow(NonTerminal nt1, NonTerminal nt2)
 {
 	TerminalInfo *followPtr = ffTable[nt1].follow;
 	while (followPtr != NULL) {
-		// printf("Inserting %s into %s\n", terminalMap[followPtr->tr], nonTerminalMap[nt2]);
+		// printf("Inserting %s into %s\n", terminalStrings[followPtr->tr], nonTerminalStrings[nt2]);
 		insertIntoFollow(nt2, followPtr->tr);
 		followPtr = followPtr->next;
 	}
@@ -629,7 +700,7 @@ void printFollowSets()
 		fprintf(outFile, "%s: ", nonTerminalMap[i]);
 		TerminalInfo *tiPtr = ffTable[i].follow;
 		while (tiPtr) {
-			fprintf(outFile, "%s ", terminalMap[tiPtr->tr]);
+			fprintf(outFile, "%s ", tokenMap[tiPtr->tr]);
 			tiPtr = tiPtr->next;
 		}
 		fprintf(outFile, "\n");
@@ -655,7 +726,7 @@ void printParseTable()
 
 	fprintf(outFile, "%-29s", "");
 	for (int i = 0; i < col; i++) {
-		fprintf(outFile, "%-14s\t", terminalMap[i]);
+		fprintf(outFile, "%-14s\t", tokenMap[i]);
 	}
 	fprintf(outFile, "\n");
 	for (int i = 0; i < row; i++) {
@@ -698,7 +769,7 @@ void createParseTable()
 						wasEpsilon = 1;
 					} else {
 						if (parseTable[LHS->data.nt][currFirst->tr] != -1) {
-							printf("GRAMMAR IS NOT LL(1). %s %s, Rule no. %d\n", nonTerminalMap[LHS->data.nt], terminalMap[currFirst->tr], rule);
+							printf("GRAMMAR IS NOT LL(1). %s %s, Rule no. %d\n", nonTerminalMap[LHS->data.nt], tokenMap[currFirst->tr], rule);
 						}
 						parseTable[LHS->data.nt][currFirst->tr] = rule;
 					}
@@ -756,14 +827,14 @@ void parseCurrToken()
 		if (type == 'T') {
 			if (data == currToken->token) {
 				top(s)->treenode->info.tokIn = currToken;
-				// printf("Matched token %s\n", terminalMap[currToken->token]);
+				// printf("Matched token %s\n", terminalStrings[currToken->token]);
 				pop(s);
 				break;
 			} else if (data == SEMICOL) {
 				// If semicolon is on top of stack, skip input till semicolon is reached
 				if (currToken->token != END) {
 					parserCorrect = 0;
-					// printf("Skipping Token %s\n", terminalMap[currToken->token]);
+					// printf("Skipping Token %s\n", terminalStrings[currToken->token]);
 					break;
 				} else {
 					removeNode(top(s)->treenode);
@@ -776,15 +847,15 @@ void parseCurrToken()
 				removeNode(top(s)->treenode);
 				pop(s);
 				parserCorrect = 0;
-				printf("Line %d: Syntax Error: Terminal %s present at inappropriate position cannot be matched with %s\n", currToken->lineNumber, terminalMap[currToken->token], terminalMap[data]);
+				printf("Line %d: Syntax Error: Terminal %s present at inappropriate position cannot be matched with %s\n", currToken->lineNumber, tokenMap[currToken->token], tokenMap[data]);
 			}
 		} else {  // Assuming 'e' is not in stack
 			// Case of non-terminal
-			// printf("Processing %s and %s\n", nonTerminalMap[stackTop->data.nt], terminalMap[currToken->token]);
+			// printf("Processing %s and %s\n", nonTerminalStrings[stackTop->data.nt], terminalStrings[currToken->token]);
 			int ruleNumber = parseTable[stackTop->data.nt][currToken->token];
 			if (ruleNumber == -1) {
 				parserCorrect = 0;
-				printf("Line %d: Syntax Error: Input symbol %s cannot be derived from top of stack Non Terminal %s\n", currToken->lineNumber, terminalMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
+				printf("Line %d: Syntax Error: Input symbol %s cannot be derived from top of stack Non Terminal %s\n", currToken->lineNumber, tokenMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
 
 				// If epsilon production is found, apply it
 				ruleNumber = parseTable[stackTop->data.nt][EPSILON];
@@ -807,7 +878,7 @@ void parseCurrToken()
 				// Skip tokens until an element in FOLLOW of stack top is seen
 				else {
 					parserCorrect = 0;
-					// printf("Skipping Token %s\n", terminalMap[currToken->token]);
+					// printf("Skipping Token %s\n", tokenMap[currToken->token]);
 					break;
 				}
 
@@ -816,7 +887,7 @@ void parseCurrToken()
 			} else if (ruleNumber == -2) {
 				// Uses follow set to sync by popping non terminal from stack
 				parserCorrect = 0;
-				printf("Line %d: Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n", currToken->lineNumber, terminalMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
+				printf("Line %d: Syntax Error: Input symbol %s can't be derived from top of stack Non Terminal %s\n", currToken->lineNumber, tokenMap[currToken->token], nonTerminalMap[stackTop->data.nt]);
 				pop(s);
 			} else {
 				LexicalSymbol *LHS = grammar[ruleNumber];
