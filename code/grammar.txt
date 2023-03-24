@@ -5,13 +5,13 @@ N_moduleDeclaration T_DECLARE T_MODULE T_ID T_SEMICOL
 N_otherModules N_module N_otherModules
 N_otherModules epsilon
 N_driverModule T_DRIVERDEF T_DRIVER T_PROGRAM T_DRIVERENDDEF N_moduleDef
-N_module T_DEF T_MODULE T_ID T_ENDDEF T_TAKES T_INPUT T_SQBO N_inputPlist T_SQBC T_SEMICOL N_ret N_moduleDef
-N_ret T_RETURNS T_SQBO N_outputPlist T_SQBC T_SEMICOL
+N_module T_DEF T_MODULE T_ID T_ENDDEF T_TAKES T_INPUT T_SQBO N_inputPList T_SQBC T_SEMICOL N_ret N_moduleDef
+N_ret T_RETURNS T_SQBO N_outputPList T_SQBC T_SEMICOL
 N_ret epsilon
-N_inputPlist T_ID T_COLON N_dataType N_iPList2
+N_inputPList T_ID T_COLON N_dataType N_iPList2
 N_iPList2 T_COMMA T_ID T_COLON N_dataType N_iPList2
 N_iPList2 epsilon
-N_outputPlist T_ID T_COLON N_type N_oPList2
+N_outputPList T_ID T_COLON N_type N_oPList2
 N_oPList2 T_COMMA T_ID T_COLON N_type N_oPList2
 N_oPList2 epsilon
 N_dataType T_INTEGER
@@ -43,10 +43,10 @@ N_arrIndex epsilon
 N_simpleStmt N_moduleReuseStmt
 N_simpleStmt N_assignmentStmt
 N_assignmentStmt T_ID N_whichStmt
-N_whichStmt N_lvalueIDStmt
-N_whichStmt N_lvalueARRStmt
-N_lvalueIDStmt T_ASSIGNOP N_expression T_SEMICOL
-N_lvalueARRStmt T_SQBO N_indexWithExpressions T_SQBC T_ASSIGNOP N_expression T_SEMICOL
+N_whichStmt N_lValueIDStmt
+N_whichStmt N_lValueArrStmt
+N_lValueIDStmt T_ASSIGNOP N_expression T_SEMICOL
+N_lValueArrStmt T_SQBO N_indexWithExpressions T_SQBC T_ASSIGNOP N_expression T_SEMICOL
 N_signedIndex N_sign N_index
 N_index T_NUM
 N_index T_ID
@@ -82,11 +82,11 @@ N_logicalOpExpr epsilon
 N_anyTerm N_arithmeticExpr N_relationOpExpr
 N_relationOpExpr N_relationalOp N_arithmeticExpr
 N_relationOpExpr epsilon
-N_arithmeticExpr N_term N_plusMinusExpr
-N_plusMinusExpr N_operator1 N_term N_plusMinusExpr
-N_plusMinusExpr epsilon
+N_arithmeticExpr N_term N_addSubExpr
+N_addSubExpr N_addSubOp N_term N_addSubExpr
+N_addSubExpr epsilon
 N_term N_factor N_mulDivExpr
-N_mulDivExpr N_operator2 N_factor N_mulDivExpr
+N_mulDivExpr N_mulDivOp N_factor N_mulDivExpr
 N_mulDivExpr epsilon
 N_factor T_BO N_arithmeticOrLogicalExpr T_BC
 N_factor T_NUM
@@ -96,20 +96,20 @@ N_factor T_ID N_arrIndexWithExpressions
 N_arrIndexWithExpressions T_SQBO N_indexWithExpressions T_SQBC
 N_arrIndexWithExpressions epsilon
 N_indexWithExpressions N_sign N_arrExpr
-N_arrExpr N_arrTerm N_arrPlusMinusExpr
-N_arrPlusMinusExpr N_operator1 N_arrTerm N_arrPlusMinusExpr
-N_arrPlusMinusExpr epsilon
+N_arrExpr N_arrTerm N_arrAddSubExpr
+N_arrAddSubExpr N_addSubOp N_arrTerm N_arrAddSubExpr
+N_arrAddSubExpr epsilon
 N_arrTerm N_arrFactor N_arrMulDivExpr
-N_arrMulDivExpr N_operator2 N_arrFactor N_arrMulDivExpr
+N_arrMulDivExpr N_mulDivOp N_arrFactor N_arrMulDivExpr
 N_arrMulDivExpr epsilon
 N_arrFactor T_ID
 N_arrFactor T_NUM
 N_arrFactor N_boolConst
 N_arrFactor T_BO N_arrExpr T_BC
-N_operator1 T_PLUS
-N_operator1 T_MINUS
-N_operator2 T_MUL
-N_operator2 T_DIV
+N_addSubOp T_PLUS
+N_addSubOp T_MINUS
+N_mulDivOp T_MUL
+N_mulDivOp T_DIV
 N_logicalOp T_AND
 N_logicalOp T_OR
 N_relationalOp T_LT
