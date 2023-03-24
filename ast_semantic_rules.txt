@@ -505,22 +505,26 @@
 }
 69	expression => arithmeticOrLogicalExpr
 {
+	Bottom-Up:
 	expression.node_syn = arithmeticOrLogicalExpr.node_syn
 	free(arithmeticOrLogicalExpr)
 }
 70	expression => unaryOpExpr
 {
+	Bottom-Up:
 	expression.node_syn = unaryOpExpr.node_syn
 	free(unaryOpExpr)
 }
 71	unaryOpExpr => unaryOp unsignedArithExpr
 {
+	Bottom-Up:
 	unaryOpExpr.node_syn = make_node("UnaryOpExpr", unaryOp.node_syn, unsignedArithExpr.node_syn)
 	free(unaryOp)
 	free(unsignedArithExpr)
 }
 72	unsignedArithExpr => BO arithmeticExpr BC
 {
+	Bottom-Up:
 	unsignedArithExpr.node_syn = arithmeticExpr.node_syn
 	free(arithmeticExpr)
 	free(BO)
@@ -528,221 +532,304 @@
 }
 73	unsignedArithExpr => varIDNum
 {
+	Bottom-Up:
 	unsignedArithExpr.node_syn = varIDNum.node_syn
 	free(varIDNum)
 }
 74	unaryOp => PLUS
 {
+	Bottom-Up:
 	unaryOp.node_syn = PLUS
 }
 75	unaryOp => MINUS
 {
+	Bottom-Up:
 	unaryOp.node_syn = MINUS
 }
 76	varIDNum => ID
 {
+	Bottom-Up:
 	varIDNum.node_syn = ID
 }
 77	varIDNum => NUM
 {
+	Bottom-Up:
 	varIDNum.node_syn = NUM
 }
 78	varIDNum => RNUM
 {
+	Bottom-Up:
 	varIDNum.node_syn = RNUM
 }
 79	arithmeticOrLogicalExpr => anyTerm logicalOpExpr
 {
+	Top-Down:
+	logicalOpExpr.node_inh = anyTerm.node_syn
 
+	Bottom-Up:
+	arithmeticOrLogicalExpr.node_syn = logicalOpExpr.node_syn
+	free(anyTerm)
+	free(logicalOpExpr)
 }
-80	logicalOpExpr => logicalOp anyTerm logicalOpExpr
+80	logicalOpExpr => logicalOp anyTerm logicalOpExpr1
 {
+	Top-Down:
+	logicalOpExpr1.node_inh = anyTerm.node_syn
 
+	Bottom-Up:
+	logicalOpExpr.node_syn = make_node(logicalOp.node_syn, logicalOpExpr.node_inh, logicalOpExpr1.node_syn)
+	free(anyTerm)
+	free(logicalOp)
+	free(logicalOpExpr1)
 }
 81	logicalOpExpr => epsilon
 {
+	Bottom-Up:
+	logicalOpExpr.node_syn = logicalOpExpr.node_inh
 	free(epsilon)
 }
 82	anyTerm => arithmeticExpr relationOpExpr
 {
+	Top-Down:
+	relationOpExpr.node_inh = arithmeticExpr.node_syn
 
+	Bottom-Up:
+	anyTerm.node_syn = relationOpExpr.node_syn
+	free(arithmeticExpr)
+	free(relationOpExpr)
 }
 83	relationOpExpr => relationalOp arithmeticExpr
 {
-
+	Bottom-Up:
+	relationOpExpr.node_syn = make_node(relationalOp.node_syn, relationOpExpr.node_inh, arithmeticExpr.node_syn)
+	free(arithmeticExpr)
+	free(relationalOp)
 }
 84	relationOpExpr => epsilon
 {
-	relationalOpExpr.node_syn = relationalOpExpr.node_inh
+	Bottom-Up:
+	relationOpExpr.node_syn = relationOpExpr.node_inh
 	free(epsilon)
 }
 85	arithmeticExpr => term addSubExpr
 {
-	arithmeticExpr.node_syn = make_node("ArithmeticExpr", term.node_syn, addSubExpr.node_syn)
+	Top-Down:
+	addSubExpr.node_inh = term.node_syn
+
+	Bottom-Up:
+	arithmeticExpr.node_syn = addSubExpr.node_syn
 	free(term)
 	free(addSubExpr)
 }
 86	addSubExpr => addSubOp term addSubExpr1
 {
-	addSubExpr1.node_inh = make_node("AddSubExpr", addSubExpr.node_inh, addSubOp.node_syn, term.node_syn)
-	addSubExpr.node_syn = addSubExpr1.node_syn
+	Top-Down:
+	addSubExpr1.node_inh = term.node_syn
+
+	Bottom-Up:
+	addSubExpr.node_syn = make_node(addSubOp.node_syn, addSubExpr.node_inh, addSubExpr1.node_syn)
 	free(addSubOp)
 	free(term)
 	free(addSubExpr1)
 }
 87	addSubExpr => epsilon
 {
+	Bottom-Up:
 	addSubExpr.node_syn = addSubExpr.node_inh
 	free(epsilon)
 }
 88	term => factor mulDivExpr
 {
-	term.node_syn = make_node("Term", factor.node_syn, mulDivExpr.node_syn)
+	Top-Down:
+	mulDivExpr.node_inh = factor.node_syn
+
+	Bottom-Up:
+	term.node_syn = mulDivExpr.node_syn
 	free(factor)
 	free(mulDivExpr)
 }
 89	mulDivExpr => mulDivOp factor mulDivExpr1
 {
-	mulDivExpr1.node_inh = make_node("MulDivExpr", mulDivExpr.node_inh, mulDivOp.node_syn, factor.node_syn)
-	mulDivExpr.node_syn = mulDivExpr1.node_syn
+	Top-Down:
+	mulDivExpr1.node_inh = factor.node_syn
+
+	Bottom-Up:
+	mulDivExpr.node_syn = make_node(mulDivOp.node_syn, mulDivExpr.node_inh, mulDivExpr1.node_syn)
 	free(mulDivOp)
 	free(factor)
 	free(mulDivExpr1)
 }
 90	mulDivExpr => epsilon
 {
+	Bottom-Up:
 	mulDivExpr.node_syn = mulDivExpr.node_inh
 	free(epsilon)
 }
 91	factor => BO arithmeticOrLogicalExpr BC
 {
+	Bottom-Up:
 	factor.node_syn = arithmeticOrLogicalExpr.node_syn
-	free(arithmeticOrLogicalExpr)
 	free(BO)
+	free(arithmeticOrLogicalExpr)
 	free(BC)
 }
 92	factor => NUM
 {
+	Bottom-Up:
 	factor.node_syn = NUM
 }
 93	factor => RNUM
 {
+	Bottom-Up:
 	factor.node_syn = RNUM
 }
 94	factor => boolConst
 {
+	Bottom-Up:
 	factor.node_syn = boolConst.node_syn
 	free(boolConst)
 }
 95	factor => ID arrIndexWithExpressions
 {
-	factor.node_syn = make_node("ArrayAccess", ID, arrIndexWithExpressions.node_syn)
+	Bottom-Up:
+	factor.node_syn = make_node("IDOrArrayAccess", ID, arrIndexWithExpressions.node_syn)
 	free(arrIndexWithExpressions)
 }
 96	arrIndexWithExpressions => SQBO indexWithExpressions SQBC
 {
+	Bottom-Up:
 	arrIndexWithExpressions.node_syn = indexWithExpressions.node_syn
 	free(indexWithExpressions)
 }
 97	arrIndexWithExpressions => epsilon
 {
+	Bottom-Up:
 	arrIndexWithExpressions.node_syn = NULL
 	free(epsilon)
 }
 98	indexWithExpressions => sign arrExpr
 {
+	Bottom-Up:
 	indexWithExpressions.node_syn = make_node("IndexWithExpressions", sign.node_syn, arrExpr.node_syn)
 	free(sign)
 	free(arrExpr)
 }
 99	arrExpr => arrTerm arrAddSubExpr
 {
-	arrExpr.node_syn = make_node("ArrExpr", arrTerm.node_syn, arrAddSubExpr.node_syn)
+	Top-Down:
+	arrAddSubExpr.node_inh = arrTerm.node_syn
+
+	Bottom-Up:
+	arrExpr.node_syn = arrAddSubExpr.node_syn
 	free(arrTerm)
 	free(arrAddSubExpr)
 }
 100	arrAddSubExpr => addSubOp arrTerm arrAddSubExpr1
 {
-	arrAddSubExpr1.node_inh = make_node("ArrAddSubExpr", arrAddSubExpr.node_inh, addSubOp.node_syn, arrTerm.node_syn)
-	arrAddSubExpr.node_syn = arrAddSubExpr1.node_syn
+	Top-Down:
+	arrAddSubExpr1.node_inh = arrTerm.node_syn
+
+	Bottom-Up:
+	arrAddSubExpr.node_syn = make_node(addSubOp.node_syn, arrAddSubExpr.node_inh, arrAddSubExpr1.node_syn)
 	free(addSubOp)
 	free(arrTerm)
 	free(arrAddSubExpr1)
 }
 101	arrAddSubExpr => epsilon
 {
+	Bottom-Up:
 	arrAddSubExpr.node_syn = arrAddSubExpr.node_inh
 	free(epsilon)
 }
 102	arrTerm => arrFactor arrMulDivExpr
 {
-	arrTerm.node_syn = make_node("ArrTerm", arrFactor.node_syn, arrMulDivExpr.node_syn)
+	Top-Down:
+	arrMulDivExpr.node_inh = arrFactor.node_syn
+
+	Bottom-Up:
+	arrTerm.node_syn = arrMulDivExpr.node_syn
 	free(arrFactor)
 	free(arrMulDivExpr)
 }
 103	arrMulDivExpr => mulDivOp arrFactor arrMulDivExpr1
 {
-	arrMulDivExpr1.node_inh = make_node("ArrMulDivExpr", arrMulDivExpr.node_inh, mulDivOp.node_syn, arrFactor.node_syn)
-	arrMulDivExpr.node_syn = arrMulDivExpr1.node_syn
+	Top-Down:
+	arrMulDivExpr1.node_inh = arrFactor.node_syn
+
+	Bottom-Up:
+	arrMulDivExpr.node_syn = make_node(mulDivOp.node_syn, arrMulDivExpr.node_inh, arrMulDivExpr1.node_syn)
 	free(mulDivOp)
 	free(arrFactor)
 	free(arrMulDivExpr1)
 }
 104	arrMulDivExpr => epsilon
 {
+	Bottom-Up:
 	arrMulDivExpr.node_syn = arrMulDivExpr.node_inh
 	free(epsilon)
 }
 105	arrFactor => ID
 {
+	Bottom-Up:
 	arrFactor.node_syn = ID
 }
 106	arrFactor => NUM
 {
+	Bottom-Up:
 	arrFactor.node_syn = NUM
 }
 107	arrFactor => boolConst
 {
+	Bottom-Up:
 	arrFactor.node_syn = boolConst.node_syn
 	free(boolConst)
 }
 108	arrFactor => BO arrExpr BC
 {
+	Bottom-Up:
 	arrFactor.node_syn = arrExpr.node_syn
-	free(arrExpr)
 	free(BO)
+	free(arrExpr)
 	free(BC)
 }
 109	addSubOp => PLUS
 {
+	Bottom-Up:
 	addSubOp.node_syn = PLUS
 }
 110	addSubOp => MINUS
 {
+	Bottom-Up:
 	addSubOp.node_syn = MINUS
 }
 111	mulDivOp => MUL
 {
+	Bottom-Up:
 	mulDivOp.node_syn = MUL
 }
 112	mulDivOp => DIV
 {
+	Bottom-Up:
 	mulDivOp.node_syn = DIV
 }
 113	logicalOp => AND
 {
+	Bottom-Up:
 	logicalOp.node_syn = AND
 }
 114	logicalOp => OR
 {
+	Bottom-Up:
 	logicalOp.node_syn = OR
 }
 115	relationalOp => LT
 {
+	Bottom-Up:
 	relationalOp.node_syn = LT
 }
 116	relationalOp => LE
 {
+	Bottom-Up:
 	relationalOp.node_syn = LE
 }
 117	relationalOp => GT
@@ -751,14 +838,17 @@
 }
 118	relationalOp => GE
 {
+	Bottom-Up:
 	relationalOp.node_syn = GE
 }
 119	relationalOp => EQ
 {
+	Bottom-Up:
 	relationalOp.node_syn = EQ
 }
 120	relationalOp => NE
 {
+	Bottom-Up:
 	relationalOp.node_syn = NE
 }
 121	declareStmt => DECLARE idList COLON dataType SEMICOL
