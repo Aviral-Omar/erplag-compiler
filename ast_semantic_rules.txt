@@ -691,20 +691,23 @@
 }
 95	factor => ID arrIndexWithExpressions
 {
+	Top-Down:
+	arrIndexWithExpressions.node_inh = ID
+
 	Bottom-Up:
-	factor.node_syn = make_node("IDOrArrayAccess", ID, arrIndexWithExpressions.node_syn)
+	factor.node_syn = arrIndexWithExpressions.node_syn
 	free(arrIndexWithExpressions)
 }
 96	arrIndexWithExpressions => SQBO indexWithExpressions SQBC
 {
 	Bottom-Up:
-	arrIndexWithExpressions.node_syn = indexWithExpressions.node_syn
+	arrIndexWithExpressions.node_syn = make_node("ArrayAccess", arrIndexWithExpressions.node_inh, indexWithExpressions.node_syn)
 	free(indexWithExpressions)
 }
 97	arrIndexWithExpressions => epsilon
 {
 	Bottom-Up:
-	arrIndexWithExpressions.node_syn = NULL
+	arrIndexWithExpressions.node_syn = arrIndexWithExpressions.node_inh
 	free(epsilon)
 }
 98	indexWithExpressions => sign arrExpr
