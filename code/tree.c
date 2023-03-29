@@ -11,7 +11,7 @@ Vatsal Pattani:			2019B5A70697P
 #include "parserDef.h"
 #include "treeDef.h"
 
-ParseTNode *parseTreeParent;
+ParseTNode *parseTreeRoot;
 
 ParseTNode *createParseTree(Symbol d, char type);
 ParseTNode *addNode(ParseTNode *node, Symbol d, char type, int ruleNum);
@@ -70,6 +70,7 @@ void removeNode(ParseTNode *node)
 		node->nextSibling->prevSibling = node->prevSibling;
 	if (node->type == 'T' && node->info.tokIn)
 		free(node->info.tokIn);
+	node = node->nextSibling;
 	free(node);
 }
 

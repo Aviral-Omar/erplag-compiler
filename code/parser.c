@@ -269,7 +269,7 @@ void runParser(char *srcFilename, char *outFilename)
 	// printf("     %d     %d    \n",top(s)->data.nt,s->size);
 
 	root->treenode = createParseTree(temp1, 'N');
-	parseTreeParent = root->treenode;
+	parseTreeRoot = root->treenode;
 
 	while (charsRead == bufferSize || lexemeBegin < BUFEND()) {
 		getNextToken();
@@ -323,7 +323,7 @@ void runParser(char *srcFilename, char *outFilename)
 
 	fflush(outFile);
 
-	printParseTree(parseTreeParent, outFile);  // prints inorder parse tree
+	printParseTree(parseTreeRoot, outFile);	 // prints inorder parse tree
 	fclose(outFile);
 
 
@@ -344,7 +344,7 @@ void initParser()
 	createParseTable();
 	populateSyn();
 	s = NULL;
-	parseTreeParent = NULL;
+	parseTreeRoot = NULL;
 }
 
 void clearParserData()
@@ -380,10 +380,10 @@ void clearParserData()
 
 	if (s)
 		deleteStack(s);
-	if (parseTreeParent)
-		deleteParseTree(parseTreeParent);
+	if (parseTreeRoot)
+		deleteParseTree(parseTreeRoot);
 	s = NULL;
-	parseTreeParent = NULL;
+	parseTreeRoot = NULL;
 }
 
 int findSymbol(char *symbol)
