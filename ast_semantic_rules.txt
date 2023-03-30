@@ -586,8 +586,8 @@
 
 	Bottom-Up:
 	logicalOpExpr.node_syn = make_node(logicalOp.node_syn, logicalOpExpr.node_inh, logicalOpExpr1.node_syn)
-	free(anyTerm)
 	free(logicalOp)
+	free(anyTerm)
 	free(logicalOpExpr1)
 }
 81	logicalOpExpr => epsilon
@@ -702,7 +702,7 @@
 95	factor => ID arrIndexWithExpressions
 {
 	Top-Down:
-	arrIndexWithExpressions.node_inh = make_node(ID)
+	arrIndexWithExpressions.node_inh = ID
 
 	Bottom-Up:
 	factor.node_syn = arrIndexWithExpressions.node_syn
@@ -712,7 +712,9 @@
 {
 	Bottom-Up:
 	arrIndexWithExpressions.node_syn = make_node("ArrayAccess", arrIndexWithExpressions.node_inh, indexWithExpressions.node_syn)
+	free(SQBO)
 	free(indexWithExpressions)
+	free(SQBC)
 }
 97	arrIndexWithExpressions => epsilon
 {

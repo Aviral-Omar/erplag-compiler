@@ -315,7 +315,7 @@ ASTNode* buildAST(ParseTNode* currNode)
 	case 76:
 	case 77:
 	case 78:
-	case 92:
+	case 4:
 	case 93:
 	case 105:
 	case 106:
@@ -470,6 +470,7 @@ ASTNode* buildAST(ParseTNode* currNode)
 		removeNode(currChild);
 		break;
 	case 72:
+	case 91:
 		removeNode(currChild);
 
 		currASTNode = buildAST(currChild);
@@ -477,6 +478,9 @@ ASTNode* buildAST(ParseTNode* currNode)
 		removeNode(currChild);
 		break;
 	case 79:
+	case 82:
+	case 85:
+	case 88:
 		currChild->nextSibling->inh = buildAST(currChild);
 		removeNode(currChild);
 
@@ -484,6 +488,62 @@ ASTNode* buildAST(ParseTNode* currNode)
 		removeNode(currChild);
 		break;
 	case 80:
+	case 86:
+	case 89:
+		currChild->nextSibling->nextSibling->inh = currChild->nextSibling;
+
+		currASTNode = buildAST(currChild);
+		removeNode(currChild);
+
+		insertChild(currASTNode, buildAST(currNode->inh));
+		removeNode(currChild);
+
+		insertChild(currASTNode, buildAST(currChild));
+		removeNode(currChild);
+		removeNode(currNode->inh);
+
+		break;
+	case 81:
+	case 84:
+	case 87:
+	case 90:
+	case 97:
+		currASTNode = buildAST(currNode->inh);
+		removeNode(currChild);
+		break;
+	case 83:
+		currASTNode = buildAST(currChild);
+		removeNode(currChild);
+
+		insertChild(currASTNode, buildAST(currNode->inh));
+		removeNode(currChild);
+
+		insertChild(currASTNode, buildAST(currChild));
+		removeNode(currChild);
+		removeNode(currNode->inh);
+		break;
+	case 95:
+		currChild = currChild->nextSibling;
+		currChild->inh = currChild->prevSibling;
+
+		currASTNode = buildAST(currChild);
+		removeNode(currChild);
+
+		break;
+	case 96:
+		currASTNode = createASTNode(AST_ArrayAccess, 2);
+		handleIDNumRNum(currNode->inh, &currASTNode->children[currASTNode->childCount++]);
+		removeNode(currChild);
+
+		insertChild(currASTNode, buildAST(currChild));
+		removeNode(currChild);
+		removeNode(currChild);
+		break;
+	case 98:
+		break;
+	case 99:
+		break;
+	case 100:
 		break;
 	}
 
