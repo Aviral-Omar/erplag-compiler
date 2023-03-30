@@ -48,16 +48,17 @@
 	driverModule.node_syn = make_node("Driver", moduleDef.node_syn)
 	free(DRIVERDEF)
 	free(DRIVER)
-	free(program)
+	free(PROGRAM)
 	free(DRIVERENDDEF)
 	free(moduleDef)
 }
 8	module => DEF MODULE ID ENDDEF TAKES INPUT SQBO inputPList SQBC SEMICOL ret moduleDef
 {
 	Bottom-Up:
-	module.node_syn = make_node("Module", make_node(ID), make_node("InputParametersList", inputPList.list_head_syn), ret.node_syn, moduleDef.node_syn)
+	module.node_syn = make_node("Module", make_node(ID), make_node("ParametersList", inputPList.list_head_syn), ret.node_syn, moduleDef.node_syn)
 	free(DEF)
 	free(MODULE)
+	free(ID)
 	free(ENDDEF)
 	free(TAKES)
 	free(INPUT)
@@ -71,8 +72,8 @@
 9	ret => RETURNS SQBO outputPList SQBC SEMICOL
 {
 	Bottom-Up:
-	ret.node_syn = make_node("OutputParametersList", outputPList.list_head_syn)
-	free(returns)
+	ret.node_syn = make_node("ParametersList", outputPList.list_head_syn)
+	free(RETURNS)
 	free(SQBO)
 	free(outputPList)
 	free(SQBC)
@@ -81,28 +82,24 @@
 10	ret => epsilon
 {
 	Bottom-Up:
-	ret.node_syn = make_node("OutputParametersList", NULL)
+	ret.node_syn = make_node("ParametersList", NULL)
 	free(epsilon)
 }
 11	inputPList => ID COLON dataType iPList2
 {
-	Top-Down:
-	iPList2.list_head_inh = make_list(make_node("InputVarType", dataType.node_syn, make_node(ID)))
-
 	Bottom-Up:
-	inputPList.list_head_syn = iPList2.list_head_syn
+	inputPList.list_head_syn = insert_at_head(iPList2.list_head_syn, make_node("InputVarType", make_node(ID), dataType.node_syn))
+	free(ID)
 	free(COLON)
 	free(dataType)
 	free(iPList2)
 }
 12	iPList2 => COMMA ID COLON dataType iPList21
 {
-	Top-Down:
-	iPList21.list_head_inh = insert_at_end(iPList2.list_head_inh, make_node("InputVarType", dataType.node_syn, make_node(ID)))
-
 	Bottom-Up:
-	iPList2.list_head_syn = iPList21.list_head_syn
+	iPList21.list_head_inh = insert_at_head(iPList21.list_head_syn, make_node("InputVarType", make_node(ID), dataType.node_syn))
 	free(COMMA)
+	free(ID)
 	free(COLON)
 	free(dataType)
 	free(iPList21)
@@ -110,28 +107,24 @@
 13	iPList2 => epsilon
 {
 	Bottom-Up:
-	iPList2.list_head_syn = iPList2.list_head_inh
+	iPList2.list_head_syn = NULL
 	free(epsilon)
 }
 14	outputPList => ID COLON type oPList2
 {
-	Top-Down:
-	oPList2.list_head_inh = make_list(make_node("OutputVarType", type.node_syn, make_node(ID)))
-
 	Bottom-Up:
-	outputPList.list_head_syn = oPList2.list_head_syn
+	outputPList.list_head_syn = insert_at_head(oPList2.list_head_syn, make_node("OutputVarType", make_node(ID), type.node_syn))
+	free(ID)
 	free(COLON)
 	free(type)
 	free(oPList2)
 }
-15	oPList2 => COMMA ID COLON type oPList2
+15	oPList2 => COMMA ID COLON type oPList21
 {
-	Top-Down:
-	oPList21.list_head_inh = insert_at_end(oPList2.list_head_inh, make_node("OutputVarType", type.node_syn, make_node(ID)))
-
 	Bottom-Up:
-	oPList2.list_head_syn = oPList21.list_head_syn
+	outputPList.list_head_syn = insert_at_head(oPList2.list_head_syn, make_node("OutputVarType", make_node(ID), type.node_syn))
 	free(COMMA)
+	free(ID)
 	free(COLON)
 	free(type)
 	free(oPList21)
@@ -139,29 +132,32 @@
 16	oPList2 => epsilon
 {
 	Bottom-Up:
-	oPList2.list_head_syn = oPList2.list_head_inh
+	oPList2.list_head_syn = NULL
 	free(epsilon)
 }
 17	dataType => INTEGER
 {
 	Bottom-Up:
-	dataType.node_syn = INTEGER
+	dataType.node_syn = make_node(INTEGER)
+	free(INTEGER)
 }
 18	dataType => REAL
 {
 	Bottom-Up:
-	dataType.node_syn = REAL
+	dataType.node_syn = make_node(REAL)
+	free(REAL)
 }
 19	dataType => BOOLEAN
 {
 	Bottom-Up:
-	dataType.node_syn = BOOLEAN
+	dataType.node_syn = make_node(BOOLEAN)
+	free(BOOLEAN)
 }
 20	dataType => ARRAY SQBO arrRange SQBC OF type
 {
 	Bottom-Up:
-	dataType.node_syn = make_node("Array", type.node_syn, arrRange.node_syn)
-	free(array)
+	dataType.node_syn = make_node("Array", arrRange.node_syn, type.node_syn)
+	free(ARRAY)
 	free(SQBO)
 	free(arrRange)
 	free(SQBC)
@@ -179,17 +175,20 @@
 22	type => INTEGER
 {
 	Bottom-Up:
-	type.node_syn = INTEGER
+	type.node_syn = make_node(INTEGER)
+	free(INTEGER)
 }
 23	type => REAL
 {
 	Bottom-Up:
-	type.node_syn = REAL
+	type.node_syn = make_node(REAL)
+	free(REAL)
 }
 24	type => BOOLEAN
 {
 	Bottom-Up:
-	type.node_syn = BOOLEAN
+	type.node_syn = make_node(BOOLEAN)
+	free(BOOLEAN)
 }
 25	moduleDef => START statements END
 {
@@ -248,6 +247,7 @@
 	ioStmt.node_syn = make_node("GetValue", make_node(ID))
 	free(GET_VALUE)
 	free(BO)
+	free(ID)
 	free(BC)
 	free(SEMICOL)
 }
@@ -264,7 +264,7 @@
 35	varPrint => ID arrIndex
 {
 	Top-Down:
-	arrIndex.node_inh = make_node(ID)
+	arrIndex.node_inh = ID
 
 	Bottom-Up:
 	varPrint.node_syn = arrIndex.node_syn
@@ -273,12 +273,14 @@
 36	varPrint => NUM
 {
 	Bottom-Up:
-	varPrint.node_syn = NUM
+	varPrint.node_syn = make_node(NUM)
+	free(NUM)
 }
 37	varPrint => RNUM
 {
 	Bottom-Up:
-	varPrint.node_syn = RNUM
+	varPrint.node_syn = make_node(RNUM)
+	free(RNUM)
 }
 38	varPrint => boolConst
 {
@@ -289,12 +291,14 @@
 39	boolConst => TRUE
 {
 	Bottom-Up:
-	boolConst.node_syn = TRUE
+	boolConst.node_syn = make_node(TRUE)
+	free(TRUE)
 }
 40	boolConst => FALSE
 {
 	Bottom-Up:
-	boolConst.node_syn = FALSE
+	boolConst.node_syn = make_node(FALSE)
+	free(FALSE)
 }
 41	arrIndex => SQBO signedIndex SQBC
 {
@@ -325,7 +329,7 @@
 45	assignmentStmt => ID whichStmt
 {
 	Top-Down:
-	whichStmt.node_inh = make_node(ID)
+	whichStmt.node_inh = ID
 
 	Bottom-Up:
 	assignmentStmt.node_syn = whichStmt.node_syn
@@ -378,22 +382,26 @@
 51	index => NUM
 {
 	Bottom-Up:
-	index.node_syn = NUM
+	index.node_syn = make_node(NUM)
+	free(NUM)
 }
 52	index => ID
 {
 	Bottom-Up:
 	index.node_syn = make_node(ID)
+	free(ID)
 }
 53	sign => PLUS
 {
 	Bottom-Up:
-	sign.node_syn = PLUS
+	sign.node_syn = make_node(PLUS)
+	free(PLUS)
 }
 54	sign => MINUS
 {
 	Bottom-Up:
-	sign.node_syn = MINUS
+	sign.node_syn = make_node(MINUS)
+	free(MINUS)
 }
 55	sign => epsilon
 {
@@ -404,53 +412,50 @@
 56	moduleReuseStmt => optional USE MODULE ID WITH PARAMETERS actualPList SEMICOL
 {
 	Bottom-Up:
-	moduleReuseStmt.node_syn = make_node("FunctionCall", make_node(ID), make_node("VariableList", optional.list_head_syn), make_node("ActualParametersList", actualPList.list_head_syn))
+	moduleReuseStmt.node_syn = make_node("FunctionCall", make_node("VariableList", optional.list_head_syn), make_node(ID), make_node("ActualParametersList", actualPList.list_head_syn))
 	free(optional)
-	free(use)
-	free(module)
-	free(with)
-	free(parameters)
+	free(USE)
+	free(MODULE)
+	free(ID)
+	free(WITH)
+	free(PARAMETERS)
 	free(actualPList)
 	free(SEMICOL)
 }
 57	actualPList => sign param actualPList2
 {
-	Top-Down:
-	actualPList2.list_head_inh = make_list(make_node("SignedParam", sign.node_syn, param.node_syn))
-
 	Bottom-Up:
-	actualPList.list_head_syn = actualPList2.list_head_syn
-	free(actualPList2)
+	actualPList.list_head_syn = insert_at_head(actualPList2.list_head_syn, make_node("SignedParam", sign.node_syn, param.node_syn))
 	free(sign)
 	free(param)
+	free(actualPList2)
 }
 58	actualPList2 => COMMA sign param actualPList21
 {
-	Top-Down:
-	actualPList21.list_head_inh = insert_at_end(actualPList2.list_head_inh, make_node("SignedParam", sign.node_syn, param.node_syn))
-
 	Bottom-Up:
-	actualPList2.list_head_syn = actualPList21.list_head_syn
+	actualPList.list_head_syn = insert_at_head(actualPList21.list_head_syn, make_node("SignedParam", sign.node_syn, param.node_syn))
 	free(COMMA)
-	free(actualPList21)
 	free(sign)
 	free(param)
+	free(actualPList 21)
 }
 59	actualPList2 => epsilon
 {
 	Bottom-Up:
-	actualPList2.list_head_syn = actualPList2.list_head_inh
+	actualPList2.list_head_syn = NULL
 	free(epsilon)
 }
 60	param => NUM
 {
 	Bottom-Up:
-	param.node_syn = NUM
+	param.node_syn = make_node(NUM)
+	free(NUM)
 }
 61	param => RNUM
 {
 	Bottom-Up:
-	param.node_syn = RNUM
+	param.node_syn = make_node(RNUM)
+	free(RNUM)
 }
 62	param => boolConst
 {
@@ -462,6 +467,7 @@
 {
 	Bottom-Up:
 	param.node_syn = make_node("ArrayAccess", make_node(ID), arrIndexWithExpressions.node_syn)
+	free(ID)
 	free(arrIndexWithExpressions)
 }
 64	optional => SQBO idList SQBC ASSIGNOP
@@ -481,27 +487,23 @@
 }
 66	idList => ID idList2
 {
-	Top-Down:
-	idList2.list_head_inh = make_list(ID)
-
 	Bottom-Up:
-	idList.list_head_syn = idList2.list_head_syn
+	idList.list_head_syn = insert_at_head(idList2.list_head_syn, make_list(ID))
+	free(ID)
 	free(idList2)
 }
 67	idList2 => COMMA ID idList21
 {
-	Top-Down:
-	idList21.list_head_inh = insert_at_end(idList2.list_head_inh, make_node(ID))
-
 	Bottom-Up:
-	idList2.list_head_syn = idList21.list_head_syn
+	idList.list_head_syn = insert_at_head(idList21.list_head_syn, make_list(ID))
 	free(COMMA)
-	free(idList21)
+	free(ID)
+	free(idList2)
 }
 68	idList2 => epsilon
 {
 	Bottom-Up:
-	idList2.list_head_syn = idList2.list_head_inh
+	idList2.list_head_syn = NULL
 	free(epsilon)
 }
 69	expression => arithmeticOrLogicalExpr
@@ -527,8 +529,8 @@
 {
 	Bottom-Up:
 	unsignedArithExpr.node_syn = arithmeticExpr.node_syn
-	free(arithmeticExpr)
 	free(BO)
+	free(arithmeticExpr)
 	free(BC)
 }
 73	unsignedArithExpr => varIDNum
@@ -540,27 +542,32 @@
 74	unaryOp => PLUS
 {
 	Bottom-Up:
-	unaryOp.node_syn = PLUS
+	unaryOp.node_syn = make_node(PLUS)
+	free(PLUS)
 }
 75	unaryOp => MINUS
 {
 	Bottom-Up:
-	unaryOp.node_syn = MINUS
+	unaryOp.node_syn = make_node(MINUS)
+	free(MINUS)
 }
 76	varIDNum => ID
 {
 	Bottom-Up:
 	varIDNum.node_syn = make_node(ID)
+	free(ID)
 }
 77	varIDNum => NUM
 {
 	Bottom-Up:
-	varIDNum.node_syn = NUM
+	varIDNum.node_syn = make_node(NUM)
+	free(NUM)
 }
 78	varIDNum => RNUM
 {
 	Bottom-Up:
-	varIDNum.node_syn = RNUM
+	varIDNum.node_syn = make_node(RNUM)
+	free(RNUM)
 }
 79	arithmeticOrLogicalExpr => anyTerm logicalOpExpr
 {
@@ -677,12 +684,14 @@
 92	factor => NUM
 {
 	Bottom-Up:
-	factor.node_syn = NUM
+	factor.node_syn = make_node(NUM)
+	free(NUM)
 }
 93	factor => RNUM
 {
 	Bottom-Up:
-	factor.node_syn = RNUM
+	factor.node_syn = make_node(RNUM)
+	free(RNUM)
 }
 94	factor => boolConst
 {
@@ -776,11 +785,13 @@
 {
 	Bottom-Up:
 	arrFactor.node_syn = make_node(ID)
+	free(ID)
 }
 106	arrFactor => NUM
 {
 	Bottom-Up:
-	arrFactor.node_syn = NUM
+	arrFactor.node_syn = make_node(NUM)
+	free(NUM)
 }
 107	arrFactor => boolConst
 {
@@ -799,12 +810,14 @@
 109	addSubOp => PLUS
 {
 	Bottom-Up:
-	addSubOp.node_syn = PLUS
+	addSubOp.node_syn = make_node(PLUS)
+	free(PLUS)
 }
 110	addSubOp => MINUS
 {
 	Bottom-Up:
-	addSubOp.node_syn = MINUS
+	addSubOp.node_syn = make_node(MINUS)
+	free(MINUS)
 }
 111	mulDivOp => MUL
 {
@@ -910,7 +923,8 @@
 126	caseValue => NUM
 {
 	Bottom-Up:
-	caseValue.node_syn = NUM
+	caseValue.node_syn = make_node(NUM)
+	free(NUM)
 }
 127	caseValue => boolConst
 {

@@ -68,13 +68,13 @@ typedef enum {
 	DT_Array
 } DataType;
 
-typedef struct {
-	DataType type;
-	// To be used for array data
-	DataType arrayType;
-	int lowerBound;
-	int upperBound;
-} TypeInfo;
+// typedef struct {
+// 	DataType type;
+// 	// To be used for array data
+// 	DataType arrayType;
+// 	int lowerBound;
+// 	int upperBound;
+// } TypeInfo;
 
 typedef struct ASTNodeStruct ASTNode;
 struct ASTNodeStruct {
@@ -85,7 +85,7 @@ struct ASTNodeStruct {
 	ASTNode *listNext;
 	ParseTNode *nodeSyn;
 	// TODO symbol table
-	TypeInfo *dataType;
+	// TypeInfo *dataType;
 	TokenInfo *value;
 };
 
