@@ -44,8 +44,7 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type, int ruleNum)
 	temp->prevSibling = NULL;
 	temp->nextSibling = NULL;
 	temp->info.tokIn = NULL;
-	if (type == 'N' || type == 'e')
-		temp->info.ruleNum = ruleNum;
+	temp->inh = NULL;
 
 	if (!parent->child) {
 		parent->child = temp;
@@ -62,15 +61,17 @@ ParseTNode *addNode(ParseTNode *parent, Symbol d, char type, int ruleNum)
 
 void removeNode(ParseTNode *node)
 {
-	if (!node->prevSibling)
-		node->parent->child = node->nextSibling;
-	else
+	if (node->prevSibling)
 		node->prevSibling->nextSibling = node->nextSibling;
+	else if (node->parent)
+		node->parent->child = node->nextSibling;
 	if (node->nextSibling)
 		node->nextSibling->prevSibling = node->prevSibling;
-	if (node->type == 'T' && node->info.tokIn)
+	if (node->type == 'T' && node->info.tokIn) {
+		// printf("Removing %s\n", tokenMap[node->info.tokIn->token]);
+		// fflush(stdout);
 		free(node->info.tokIn);
-	node = node->nextSibling;
+	}
 	free(node);
 }
 

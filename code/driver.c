@@ -8,6 +8,7 @@ Vatsal Pattani:			2019B5A70697P
 #include <stdlib.h>
 #include <time.h>
 
+#include "ast.h"
 #include "lexer.h"
 #include "parser.h"
 
@@ -62,6 +63,8 @@ int main(int argc, char *argv[])
 			runOnlyLexer(argv[1]);
 		} else if (option == 3) {
 			runParser(argv[1], argv[2]);
+			// TODO shift and add syntax correctness check
+			createAST();
 		} else if (option == 4) {
 			clock_t start_time, end_time;
 
@@ -70,6 +73,8 @@ int main(int argc, char *argv[])
 			start_time = clock();
 
 			runParser(argv[1], argv[2]);
+			// TODO shift and add syntax correctness check
+			createAST();
 
 			end_time = clock();
 

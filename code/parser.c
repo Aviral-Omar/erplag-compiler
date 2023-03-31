@@ -291,6 +291,7 @@ void runParser(char *srcFilename, char *outFilename)
 			} else {
 				// printf("Accepted: %s\n\n", nonTerminalStrings[top(s)->data.nt]);
 				ParseTNode *parent = top(s)->treenode;
+				parent->info.ruleNum = ruleNumber;
 				pop(s);
 				pushRuleTokens(s, grammar[ruleNumber]->next, parent, ruleNumber);
 			}
@@ -380,10 +381,11 @@ void clearParserData()
 
 	if (s)
 		deleteStack(s);
-	if (parseTreeRoot)
-		deleteParseTree(parseTreeRoot);
 	s = NULL;
-	parseTreeRoot = NULL;
+	// TODO delete later
+	// if (parseTreeRoot)
+	// 	deleteParseTree(parseTreeRoot);
+	// parseTreeRoot = NULL;
 }
 
 int findSymbol(char *symbol)
@@ -895,6 +897,7 @@ void parseCurrToken()
 
 				// Now pop stack top and put RHS in reverse order
 				ParseTNode *parent = top(s)->treenode;
+				parent->info.ruleNum = ruleNumber;
 				pop(s);
 				pushRuleTokens(s, RHS, parent, ruleNumber);
 				// printf("Applied rule %d\n", ruleNumber);

@@ -1,5 +1,5 @@
-compileAll: lookupTable.o lexer.o lexer.h parser.o parser.h
-	gcc driver.c lookupTable.o lexer.o parser.o stack.o tree.o -o stage1exe
+compileAll: lookupTable.o lexer.o lexer.h parser.o parser.h ast.o ast.h
+	gcc driver.c lookupTable.o lexer.o parser.o stack.o tree.o ast.o -o stage1exe
 
 lookupTable.o: lookupTable.c lookupTable.h
 	gcc -c lookupTable.c
@@ -15,3 +15,6 @@ stack.o: stack.c stackDef.h treeDef.h
 
 tree.o: tree.c treeDef.h
 	gcc -c tree.c
+
+ast.o: ast.c astDef.h
+	gcc -c ast.c

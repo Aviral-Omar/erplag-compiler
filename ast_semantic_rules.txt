@@ -572,22 +572,20 @@
 79	arithmeticOrLogicalExpr => anyTerm logicalOpExpr
 {
 	Top-Down:
-	logicalOpExpr.node_inh = anyTerm.node_syn
+	logicalOpExpr.node_inh = anyTerm
 
 	Bottom-Up:
 	arithmeticOrLogicalExpr.node_syn = logicalOpExpr.node_syn
-	free(anyTerm)
 	free(logicalOpExpr)
 }
 80	logicalOpExpr => logicalOp anyTerm logicalOpExpr1
 {
 	Top-Down:
-	logicalOpExpr1.node_inh = anyTerm.node_syn
+	logicalOpExpr1.node_inh = anyTerm
 
 	Bottom-Up:
 	logicalOpExpr.node_syn = make_node(logicalOp.node_syn, logicalOpExpr.node_inh, logicalOpExpr1.node_syn)
 	free(logicalOp)
-	free(anyTerm)
 	free(logicalOpExpr1)
 }
 81	logicalOpExpr => epsilon
@@ -599,19 +597,18 @@
 82	anyTerm => arithmeticExpr relationOpExpr
 {
 	Top-Down:
-	relationOpExpr.node_inh = arithmeticExpr.node_syn
+	relationOpExpr.node_inh = arithmeticExpr
 
 	Bottom-Up:
 	anyTerm.node_syn = relationOpExpr.node_syn
-	free(arithmeticExpr)
 	free(relationOpExpr)
 }
 83	relationOpExpr => relationalOp arithmeticExpr
 {
 	Bottom-Up:
 	relationOpExpr.node_syn = make_node(relationalOp.node_syn, relationOpExpr.node_inh, arithmeticExpr.node_syn)
-	free(arithmeticExpr)
 	free(relationalOp)
+	free(arithmeticExpr)
 }
 84	relationOpExpr => epsilon
 {
@@ -622,22 +619,20 @@
 85	arithmeticExpr => term addSubExpr
 {
 	Top-Down:
-	addSubExpr.node_inh = term.node_syn
+	addSubExpr.node_inh = term
 
 	Bottom-Up:
 	arithmeticExpr.node_syn = addSubExpr.node_syn
-	free(term)
 	free(addSubExpr)
 }
 86	addSubExpr => addSubOp term addSubExpr1
 {
 	Top-Down:
-	addSubExpr1.node_inh = term.node_syn
+	addSubExpr1.node_inh = term
 
 	Bottom-Up:
 	addSubExpr.node_syn = make_node(addSubOp.node_syn, addSubExpr.node_inh, addSubExpr1.node_syn)
 	free(addSubOp)
-	free(term)
 	free(addSubExpr1)
 }
 87	addSubExpr => epsilon
@@ -649,22 +644,20 @@
 88	term => factor mulDivExpr
 {
 	Top-Down:
-	mulDivExpr.node_inh = factor.node_syn
+	mulDivExpr.node_inh = factor
 
 	Bottom-Up:
 	term.node_syn = mulDivExpr.node_syn
-	free(factor)
 	free(mulDivExpr)
 }
 89	mulDivExpr => mulDivOp factor mulDivExpr1
 {
 	Top-Down:
-	mulDivExpr1.node_inh = factor.node_syn
+	mulDivExpr1.node_inh = factor
 
 	Bottom-Up:
 	mulDivExpr.node_syn = make_node(mulDivOp.node_syn, mulDivExpr.node_inh, mulDivExpr1.node_syn)
 	free(mulDivOp)
-	free(factor)
 	free(mulDivExpr1)
 }
 90	mulDivExpr => epsilon
@@ -732,22 +725,20 @@
 99	arrExpr => arrTerm arrAddSubExpr
 {
 	Top-Down:
-	arrAddSubExpr.node_inh = arrTerm.node_syn
+	arrAddSubExpr.node_inh = arrTerm
 
 	Bottom-Up:
 	arrExpr.node_syn = arrAddSubExpr.node_syn
-	free(arrTerm)
 	free(arrAddSubExpr)
 }
 100	arrAddSubExpr => addSubOp arrTerm arrAddSubExpr1
 {
 	Top-Down:
-	arrAddSubExpr1.node_inh = arrTerm.node_syn
+	arrAddSubExpr1.node_inh = arrTerm
 
 	Bottom-Up:
 	arrAddSubExpr.node_syn = make_node(addSubOp.node_syn, arrAddSubExpr.node_inh, arrAddSubExpr1.node_syn)
 	free(addSubOp)
-	free(arrTerm)
 	free(arrAddSubExpr1)
 }
 101	arrAddSubExpr => epsilon
@@ -759,22 +750,20 @@
 102	arrTerm => arrFactor arrMulDivExpr
 {
 	Top-Down:
-	arrMulDivExpr.node_inh = arrFactor.node_syn
+	arrMulDivExpr.node_inh = arrFactor
 
 	Bottom-Up:
 	arrTerm.node_syn = arrMulDivExpr.node_syn
-	free(arrFactor)
 	free(arrMulDivExpr)
 }
 103	arrMulDivExpr => mulDivOp arrFactor arrMulDivExpr1
 {
 	Top-Down:
-	arrMulDivExpr1.node_inh = arrFactor.node_syn
+	arrMulDivExpr1.node_inh = arrFactor
 
 	Bottom-Up:
 	arrMulDivExpr.node_syn = make_node(mulDivOp.node_syn, arrMulDivExpr.node_inh, arrMulDivExpr1.node_syn)
 	free(mulDivOp)
-	free(arrFactor)
 	free(arrMulDivExpr1)
 }
 104	arrMulDivExpr => epsilon
@@ -813,67 +802,65 @@
 {
 	Bottom-Up:
 	addSubOp.node_syn = make_node(PLUS)
-	free(PLUS)
 }
 110	addSubOp => MINUS
 {
 	Bottom-Up:
 	addSubOp.node_syn = make_node(MINUS)
-	free(MINUS)
 }
 111	mulDivOp => MUL
 {
 	Bottom-Up:
-	mulDivOp.node_syn = MUL
+	mulDivOp.node_syn = make_node(MUL)
 }
 112	mulDivOp => DIV
 {
 	Bottom-Up:
-	mulDivOp.node_syn = DIV
+	mulDivOp.node_syn = make_node(DIV)
 }
 113	logicalOp => AND
 {
 	Bottom-Up:
-	logicalOp.node_syn = AND
+	logicalOp.node_syn = make_node(AND)
 }
 114	logicalOp => OR
 {
 	Bottom-Up:
-	logicalOp.node_syn = OR
+	logicalOp.node_syn = make_node(OR)
 }
 115	relationalOp => LT
 {
 	Bottom-Up:
-	relationalOp.node_syn = LT
+	relationalOp.node_syn = make_node(LT)
 }
 116	relationalOp => LE
 {
 	Bottom-Up:
-	relationalOp.node_syn = LE
+	relationalOp.node_syn = make_node(LE)
 }
 117	relationalOp => GT
 {
-	relationalOp.node_syn = GT
+	relationalOp.node_syn = make_node(GT)
 }
 118	relationalOp => GE
 {
 	Bottom-Up:
-	relationalOp.node_syn = GE
+	relationalOp.node_syn = make_node(GE)
 }
 119	relationalOp => EQ
 {
 	Bottom-Up:
-	relationalOp.node_syn = EQ
+	relationalOp.node_syn = make_node(EQ)
 }
 120	relationalOp => NE
 {
 	Bottom-Up:
-	relationalOp.node_syn = NE
+	relationalOp.node_syn = make_node(NE)
 }
 121	declareStmt => DECLARE idList COLON dataType SEMICOL
 {
 	Bottom-Up:
-	declareStmt.node_syn = make_node("Declare", dataType.node_syn, idList.list_head_syn)
+	declareStmt.node_syn = make_node("Declare", idList.list_head_syn, dataType.node_syn)
 	free(DECLARE)
 	free(idList)
 	free(COLON)
@@ -886,6 +873,7 @@
 	conditionalStmt.node_syn = make_node("Switch", make_node(ID), caseStmts.list_head_syn, defaultCase.node_syn)
 	free(SWITCH)
 	free(BO)
+	free(ID)
 	free(BC)
 	free(START)
 	free(caseStmts)
@@ -953,11 +941,12 @@
 130	iterativeStmt => FOR BO ID IN forLoopRange BC START statements END
 {
 	Bottom-Up:
-	iterativeStmt.node_syn =  make_node("For", forLoopRange.node_syn, make_node("Statements", statements.list_head_syn))
+	iterativeStmt.node_syn =  make_node("For", make_node(ID), forLoopRange.node_syn, make_node("Statements", statements.list_head_syn))
 	free(FOR)
 	free(BO)
+	free(ID)
 	free(IN)
-	5. free(forLoopRange)
+	free(forLoopRange)
 	free(BC)
 	free(START)
 	free(statements)
@@ -980,11 +969,13 @@
 	Bottom-Up:
 	forLoopRange.node_syn = make_node("ForRange", forLoopIndex1.node_syn, forLoopIndex2.node_syn)
 	free(forLoopIndex1)
+	free(RANGEOP)
 	free(forLoopIndex2)
 }
 133	forLoopIndex => sign NUM
 {
 	Bottom-Up:
-	forLoopIndex.node_syn = make_node("SignedForIndex", sign.node_syn, NUM)
+	forLoopIndex.node_syn = make_node("SignedForIndex", sign.node_syn, make_node(NUM))
 	free(sign)
+	free(NUM)
 }

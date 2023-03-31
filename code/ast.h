@@ -4,3 +4,6 @@ Aviral Omar:			2019B3A70411P
 Chandra Sekhar Reddy E:	2019B4A70634P
 Vatsal Pattani:			2019B5A70697P
 */
+#include "astDef.h"
+
+void createAST();
