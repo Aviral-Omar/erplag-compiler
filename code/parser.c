@@ -382,10 +382,6 @@ void clearParserData()
 	if (s)
 		deleteStack(s);
 	s = NULL;
-	// TODO delete later
-	// if (parseTreeRoot)
-	// 	deleteParseTree(parseTreeRoot);
-	// parseTreeRoot = NULL;
 }
 
 int findSymbol(char *symbol)

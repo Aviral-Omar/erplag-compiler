@@ -85,9 +85,9 @@ struct ASTNodeStruct {
 	ASTNodeType nodeType;
 	int childCount;
 	ASTNode **children;
-	// ASTNode *parent;
+	ASTNode *parent;
 	ASTNode *listNext;
-	ParseTNode *nodeSyn;
+	// ParseTNode *nodeSyn;
 	// TODO symbol table
 	// TypeInfo *dataType;
 	TokenInfo *value;

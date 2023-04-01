@@ -7,3 +7,4 @@ Vatsal Pattani:			2019B5A70697P
 #include "astDef.h"
 
 void createAST();
+void printAST(ASTNode* node);

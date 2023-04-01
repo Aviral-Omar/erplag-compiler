@@ -11,6 +11,7 @@ Vatsal Pattani:			2019B5A70697P
 #include "ast.h"
 #include "lexer.h"
 #include "parser.h"
+#include "tree.h"
 
 #define MAX_BUFFER_SIZE 10000
 
@@ -52,7 +53,8 @@ int main(int argc, char *argv[])
 		printf("2: For printing the token list\n");
 		printf("3: For parsing\n");
 		printf("4: For printing the total time taken\n");
-		printf("5: For printing First & Follow sets, Parse Table in respective txt files\n\n");
+		printf("5: For printing First & Follow sets, Parse Table in respective txt files\n");
+		printf("6: For generating and printing Abstract Syntax Tree\n\n");
 		printf("Enter option choice: ");
 		scanf(" %d", &option);
 		printf("\n");
@@ -63,8 +65,9 @@ int main(int argc, char *argv[])
 			runOnlyLexer(argv[1]);
 		} else if (option == 3) {
 			runParser(argv[1], argv[2]);
-			// TODO shift and add syntax correctness check
-			createAST();
+			if (parseTreeRoot)
+				deleteParseTree(parseTreeRoot);
+			parseTreeRoot = NULL;
 		} else if (option == 4) {
 			clock_t start_time, end_time;
 
@@ -73,8 +76,9 @@ int main(int argc, char *argv[])
 			start_time = clock();
 
 			runParser(argv[1], argv[2]);
-			// TODO shift and add syntax correctness check
-			createAST();
+			if (parseTreeRoot)
+				deleteParseTree(parseTreeRoot);
+			parseTreeRoot = NULL;
 
 			end_time = clock();
 
@@ -90,6 +94,13 @@ int main(int argc, char *argv[])
 			printFollowSets();
 			printParseTable();
 			clearParserData();
+		} else if (option == 6) {
+			runParser(argv[1], argv[2]);
+			// TODO shift and add syntax correctness check
+			if (lexerCorrect && parserCorrect) {
+				createAST();
+				printAST(astRoot);
+			}
 		}
 	} while (option);
 

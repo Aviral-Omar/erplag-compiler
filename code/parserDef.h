@@ -45,4 +45,5 @@ typedef int ParseTableEntry;
 typedef struct StackType Stack;
 
 extern char* nonTerminalMap[NON_TERMINAL_COUNT];
+extern int parserCorrect;
 #endif

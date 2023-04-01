@@ -71,18 +71,20 @@ void createAST();
 void insertChild(ASTNode* parent, ASTNode* child);
 void handleIDNumRNum(ParseTNode* idNode, ASTNode** newNode);
 void removeAndAdvance(ParseTNode** treeNodePtr);
+void populateParents(ASTNode* parent, ASTNode* currNode);
 ASTNode* buildAST(ParseTNode* currNode);
+void printAST(ASTNode* node);
 
 ASTNode* createASTNode(ASTNodeType type, int childCount)
 {
 	ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
 	node->nodeType = type;
-	// node->parent = parent;
+	node->parent = NULL;
 	node->childCount = 0;
 	node->children = createChildrenArray(childCount);
 	// node->dataType = NULL;
 	node->listNext = NULL;
-	node->nodeSyn = NULL;
+	// node->nodeSyn = NULL;
 	node->value = NULL;
 
 	return node;
@@ -91,6 +93,7 @@ ASTNode* createASTNode(ASTNodeType type, int childCount)
 void createAST()
 {
 	astRoot = buildAST(parseTreeRoot);
+	populateParents(NULL, astRoot);
 }
 
 void insertChild(ASTNode* parent, ASTNode* child)
@@ -150,6 +153,18 @@ void removeAndAdvance(ParseTNode** treeNodePtr)
 // 		typeInfo->type = DT_Boolean;
 // 	}
 // }
+
+
+void populateParents(ASTNode* parent, ASTNode* currNode)
+{
+	currNode->parent = parent;
+	if (currNode->listNext)
+		populateParents(parent, currNode->listNext);
+	for (int i = 0; i < currNode->childCount; i++)
+		if (currNode->children[i])
+			populateParents(currNode, currNode->children[i]);
+}
+
 
 ASTNode* buildAST(ParseTNode* currNode)
 {
@@ -786,4 +801,18 @@ ASTNode* buildAST(ParseTNode* currNode)
 	// fflush(stdout);
 
 	return currASTNode;
+}
+
+void printAST(ASTNode* node)
+{
+	printf("%s: ", astNodeMap[node->nodeType]);
+	if (node->parent)
+		printf("%s\n", astNodeMap[node->parent->nodeType]);
+	else
+		printf("ROOT\n");
+	for (int i = 0; i < node->childCount; i++)
+		if (node->children[i])
+			printAST(node->children[i]);
+	if (node->listNext)
+		printAST(node->listNext);
 }
