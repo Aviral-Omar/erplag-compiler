@@ -249,6 +249,7 @@ void parseCurrToken();
 void runParser(char *srcFilename, char *outFilename)
 {
 	parserCorrect = 1;
+	ptNodes = 0;
 	// Assuming Stack and Tree are already initialized
 	src = fopen(srcFilename, "r");
 	if (!src) {
@@ -331,7 +332,7 @@ void runParser(char *srcFilename, char *outFilename)
 	if (lexerCorrect)
 		printf("\nInput source code is lexically correct.\n");
 	if (parserCorrect)
-		printf("\nInput source code is syntactically correct.\n");
+		printf("\nInput source code is syntactically correct.\n\n");
 	fflush(stdout);
 
 	clearLexerData();

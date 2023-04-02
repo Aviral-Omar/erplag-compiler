@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
 		printf("3: For parsing\n");
 		printf("4: For printing the total time taken\n");
 		printf("5: For printing First & Follow sets, Parse Table in respective txt files\n");
-		printf("6: For generating and printing Abstract Syntax Tree\n\n");
+		printf("6: For generating and printing Abstract Syntax Tree\n");
+		printf("7: For printing the number of nodes in AST, memory allocated and compression ratio\n");
 		printf("Enter option choice: ");
 		scanf(" %d", &option);
 		printf("\n");
@@ -96,11 +97,23 @@ int main(int argc, char *argv[])
 			clearParserData();
 		} else if (option == 6) {
 			runParser(argv[1], argv[2]);
-			// TODO shift and add syntax correctness check
 			if (lexerCorrect && parserCorrect) {
 				createAST();
 				printAST(astRoot);
 			}
+		} else if (option == 7) {
+			runParser(argv[1], argv[2]);
+			if (lexerCorrect && parserCorrect) {
+				createAST();
+			}
+			printf("Nodes in Parse Tree = %d\n", ptNodes);
+			int ptMem = ptNodes * sizeof(ParseTNode);
+			printf("Memory allocated to Parse Tree = %d\n", ptMem);
+
+			printf("Nodes in Abstract Syntax Tree = %d\n", astNodes);
+			int astMem = astNodes * sizeof(ASTNode);
+			printf("Memory allocated to Abstract Syntax Tree = %d\n", astMem);
+			printf("Compression Ratio = %lf\n", (double)(ptMem - astMem) * 100 / ptMem);
 		}
 	} while (option);
 

@@ -27,4 +27,6 @@ struct ParseTNodeType {
 };
 
 extern ParseTNode* parseTreeRoot;
+extern int ptNodes;
+
 #endif

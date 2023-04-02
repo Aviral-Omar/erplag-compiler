@@ -95,4 +95,5 @@ struct ASTNodeStruct {
 
 extern ASTNode *astRoot;
 extern char *astNodeMap[NODE_TYPE_COUNT];
+extern int astNodes;
 #endif

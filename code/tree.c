@@ -12,6 +12,7 @@ Vatsal Pattani:			2019B5A70697P
 #include "treeDef.h"
 
 ParseTNode *parseTreeRoot;
+int ptNodes;
 
 ParseTNode *createParseTree(Symbol d, char type);
 ParseTNode *addNode(ParseTNode *node, Symbol d, char type, int ruleNum);
@@ -21,19 +22,23 @@ void deleteParseTree(ParseTNode *node);
 
 ParseTNode *createParseTree(Symbol d, char type)
 {
+	ptNodes = 1;
 	ParseTNode *node = (ParseTNode *)malloc(sizeof(ParseTNode));
 	node->child = NULL;
 	node->parent = NULL;
+	node->prevSibling = NULL;
 	node->nextSibling = NULL;
 	node->type = type;
 	node->data = d;
 	node->info.tokIn = NULL;
+	node->inh = NULL;
 	// printf("Parse tree created, root: %d\n",d);
 	return node;
 }
 
 ParseTNode *addNode(ParseTNode *parent, Symbol d, char type, int ruleNum)
 {
+	ptNodes++;
 	ParseTNode *temp, *trav;  // creating new node and one for traversal(to find the terminal node)
 
 	temp = (ParseTNode *)malloc(sizeof(struct ParseTNodeType));

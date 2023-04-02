@@ -65,6 +65,7 @@ char* astNodeMap[NODE_TYPE_COUNT] = {
 	"AST_NE",
 	"AST_AND",
 	"AST_OR"};
+int astNodes;
 
 ASTNode* createASTNode(ASTNodeType type, int childCount);
 void createAST();
@@ -77,6 +78,8 @@ void printAST(ASTNode* node);
 
 ASTNode* createASTNode(ASTNodeType type, int childCount)
 {
+	astNodes++;
+
 	ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
 	node->nodeType = type;
 	node->parent = NULL;
@@ -92,6 +95,7 @@ ASTNode* createASTNode(ASTNodeType type, int childCount)
 
 void createAST()
 {
+	astNodes = 0;
 	astRoot = buildAST(parseTreeRoot);
 	populateParents(NULL, astRoot);
 }
