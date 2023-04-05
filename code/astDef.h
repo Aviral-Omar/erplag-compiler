@@ -7,6 +7,7 @@ Vatsal Pattani:			2019B5A70697P
 #ifndef AST_DEF
 #define AST_DEF
 
+#include "symbolTableDef.h"
 #include "treeDef.h"
 
 #define NODE_TYPE_COUNT 51
@@ -65,21 +66,6 @@ typedef enum {
 	AST_OR
 } ASTNodeType;
 
-// typedef enum {
-// 	DT_Integer,
-// 	DT_Real,
-// 	DT_Boolean,
-// 	DT_Array
-// } DataType;
-
-// typedef struct {
-// 	DataType type;
-// 	// To be used for array data
-// 	DataType arrayType;
-// 	int lowerBound;
-// 	int upperBound;
-// } TypeInfo;
-
 typedef struct ASTNodeStruct ASTNode;
 struct ASTNodeStruct {
 	ASTNodeType nodeType;
@@ -87,9 +73,7 @@ struct ASTNodeStruct {
 	ASTNode **children;
 	ASTNode *parent;
 	ASTNode *listNext;
-	// ParseTNode *nodeSyn;
-	// TODO symbol table
-	// TypeInfo *dataType;
+	SymbolTable *st;
 	TokenInfo *value;
 };
 

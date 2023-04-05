@@ -85,9 +85,8 @@ ASTNode* createASTNode(ASTNodeType type, int childCount)
 	node->parent = NULL;
 	node->childCount = 0;
 	node->children = createChildrenArray(childCount);
-	// node->dataType = NULL;
 	node->listNext = NULL;
-	// node->nodeSyn = NULL;
+	node->st = NULL;
 	node->value = NULL;
 
 	return node;
@@ -124,39 +123,6 @@ void removeAndAdvance(ParseTNode** treeNodePtr)
 	removeNode(*treeNodePtr);
 	*treeNodePtr = next;
 }
-
-// TypeInfo* createTypeInfo(ASTNode* node)
-// {
-// 	TypeInfo* typeInfo = (TypeInfo*)malloc(sizeof(TypeInfo));
-// 	switch (node->nodeType) {
-// 	case AST_Array:
-// 		ASTNode *arr, arrRange, index1, index2;
-// 		typeInfo->type = DT_Array;
-// 		arr = node->children[0];
-// 		arrRange =
-// 		switch (arr->nodeType) {
-// 		case AST_Integer:
-// 			typeInfo->arrayType = DT_Integer;
-// 			break;
-// 		case AST_Real:
-// 			typeInfo->arrayType = DT_Integer;
-// 			break;
-// 		case AST_Boolean:
-// 			typeInfo->arrayType = DT_Boolean;
-// 		}
-
-
-// 		break;
-// 	case AST_Integer:
-// 		typeInfo->type = DT_Integer;
-// 		break;
-// 	case AST_Real:
-// 		typeInfo->type = DT_Integer;
-// 		break;
-// 	case AST_Boolean:
-// 		typeInfo->type = DT_Boolean;
-// 	}
-// }
 
 
 void populateParents(ASTNode* parent, ASTNode* currNode)
