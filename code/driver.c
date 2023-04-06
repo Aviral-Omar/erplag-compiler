@@ -11,6 +11,7 @@ Vatsal Pattani:			2019B5A70697P
 #include "ast.h"
 #include "lexer.h"
 #include "parser.h"
+#include "symbolTable.h"
 #include "tree.h"
 
 #define MAX_BUFFER_SIZE 10000
@@ -56,6 +57,7 @@ int main(int argc, char *argv[])
 		printf("5: For printing First & Follow sets, Parse Table in respective txt files\n");
 		printf("6: For generating and printing Abstract Syntax Tree\n");
 		printf("7: For printing the number of nodes in AST, memory allocated and compression ratio\n");
+		printf("8: For generating and printing symbol table\n\n");
 		printf("Enter option choice: ");
 		scanf(" %d", &option);
 		printf("\n");
@@ -114,6 +116,12 @@ int main(int argc, char *argv[])
 			int astMem = astNodes * sizeof(ASTNode);
 			printf("Memory allocated to Abstract Syntax Tree = %d\n", astMem);
 			printf("Compression Ratio = %lf\n", (double)(ptMem - astMem) * 100 / ptMem);
+		} else if (option == 8) {
+			runParser(argv[1], argv[2]);
+			if (lexerCorrect && parserCorrect) {
+				createAST();
+				createSymbolTables();
+			}
 		}
 	} while (option);
 

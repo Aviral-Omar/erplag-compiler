@@ -9,6 +9,10 @@ Vatsal Pattani:			2019B5A70697P
 
 #define SYMBOL_TABLE_SIZE 149
 
+#define INT_SIZE 4
+#define REAL_SIZE 8
+#define BOOL_SIZE 1
+#define POINTER_SIZE 8
 
 typedef enum {
 	DT_Integer,

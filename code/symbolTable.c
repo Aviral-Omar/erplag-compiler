@@ -15,19 +15,22 @@ FunctionTableEntry* functionTable[SYMBOL_TABLE_SIZE];
 int functionOrder = 1;
 int fnTableOffset = 0;
 
-int hash(char* key);
+int stHash(char* key);
 FunctionTableEntry* findFunctionEntry(char* name);
+SymbolTableEntry* findSymbolEntry(char* name, SymbolTable* st);
 void insertIntoFunctionTable(FunctionTableEntry* fnEntry);
+void insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st);
 int calcSize(TypeInfo* info);
 void insertDeclaration(ASTNode* node);
 TypeInfo* createTypeInfo(ASTNode* node);
+void assignSymbolTables(ASTNode* node, SymbolTable* st);
 void insertStatements(ASTNode* node, SymbolTable* parentST);
 void insertDefinition(ASTNode* node);
 void insertDriver(ASTNode* node);
 void createSymbolTables();
 
 
-int hash(char* key)
+int stHash(char* key)
 {
 	int hashCode = -96 + key[0];
 	int c;
@@ -39,7 +42,7 @@ int hash(char* key)
 
 FunctionTableEntry* findFunctionEntry(char* name)
 {
-	int hashCode = hash(name);
+	int hashCode = stHash(name);
 	FunctionTableEntry* fnEntry = functionTable[hashCode];
 
 	while (fnEntry && strcmp(name, fnEntry->name))
@@ -48,9 +51,24 @@ FunctionTableEntry* findFunctionEntry(char* name)
 	return fnEntry;
 }
 
+SymbolTableEntry* findSymbolEntry(char* name, SymbolTable* st)
+{
+	int hashCode = stHash(name);
+
+	SymbolTableEntry* stEntry = st->stArray[hashCode];
+
+	while (stEntry && strcmp(name, stEntry->idInfo->name))
+		stEntry = stEntry->next;
+
+	if (stEntry || st->isRoot)
+		return stEntry;
+
+	return findSymbolEntry(name, st->parentST);
+}
+
 void insertIntoFunctionTable(FunctionTableEntry* fnEntry)
 {
-	int hashCode = hash(fnEntry->name);
+	int hashCode = stHash(fnEntry->name);
 	if (!functionTable[hashCode])
 		functionTable[hashCode] = fnEntry;
 	else {
@@ -61,9 +79,36 @@ void insertIntoFunctionTable(FunctionTableEntry* fnEntry)
 	}
 }
 
+void insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st)
+{
+	// TODO ask if variable overriding supported
+	int hashCode = stHash(stEntry->idInfo->name);
+	if (!st->stArray[hashCode])
+		st->stArray[hashCode] = stEntry;
+	else {
+		SymbolTableEntry* entry = st->stArray[hashCode];
+		while (entry->next)
+			entry = entry->next;
+		entry->next = stEntry;
+	}
+}
+
 int calcSize(TypeInfo* info)
 {
-	// TODO clear this
+	// TODO clear sizes from maam
+	if (info->type == DT_Integer)
+		return INT_SIZE;
+	if (info->type == DT_Real)
+		return REAL_SIZE;
+	if (info->type == DT_Boolean)
+		return BOOL_SIZE;
+	if (info->type == DT_Array && !info->isStatic)
+		return POINTER_SIZE;
+	// Else it is static array (assumed static)
+	int arrayTypeSize = info->arrInfo->arrayType == DT_Boolean ? 1 : 4;
+	ArrayInfo* arrInfo = info->arrInfo;
+
+	return arrayTypeSize * (arrInfo->uBoundSign * arrInfo->upperBound.numBound - arrInfo->lBoundSign * arrInfo->lowerBound.numBound + 1);
 }
 
 void insertDeclaration(ASTNode* node)
@@ -126,17 +171,51 @@ TypeInfo* createTypeInfo(ASTNode* node)
 			typeInfo->arrInfo->lowerBound.idBound = lBound->value->data.lexeme;
 			typeInfo->isStatic = 0;
 		} else
-			typeInfo->arrInfo->lowerBound.idBound = lBound->value->data.intValue;
+			typeInfo->arrInfo->lowerBound.numBound = lBound->value->data.intValue;
 		if (uBound->nodeType == AST_ID) {
 			typeInfo->arrInfo->upperBound.idBound = uBound->value->data.lexeme;
 			typeInfo->isStatic = 0;
 		} else
-			typeInfo->arrInfo->upperBound.idBound = uBound->value->data.intValue;
+			typeInfo->arrInfo->upperBound.numBound = uBound->value->data.intValue;
 
 		break;
 	}
 
 	return typeInfo;
+}
+
+void assignSymbolTables(ASTNode* node, SymbolTable* st)
+{
+	if (node->nodeType == AST_Statements) {
+		insertStatements(node, st);
+		return;
+	}
+
+	node->st = st;
+
+
+	for (int i = 0; i < node->childCount; i++)
+		assignSymbolTables(node->children[i], st);
+
+	if (node->listNext)
+		assignSymbolTables(node->listNext, st);
+
+	if (node->nodeType == AST_Declare) {
+		TypeInfo* type = createTypeInfo(node->children[1]);
+
+		for (ASTNode* idNode = node->children[0]; idNode != NULL; idNode = idNode->listNext) {
+			SymbolTableEntry* stEntry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
+			stEntry->idInfo = (IDInfo*)malloc(sizeof(IDInfo));
+			stEntry->idInfo->typeInfo = type;
+			stEntry->offset = st->size;
+			stEntry->width = calcSize(type);
+			stEntry->isParam = 0;
+			stEntry->isReturnVar = 0;
+			st->size += stEntry->width;
+
+			insertIntoSymbolTable(stEntry, st);
+		}
+	}
 }
 
 void insertStatements(ASTNode* node, SymbolTable* parentST)
@@ -156,15 +235,31 @@ void insertStatements(ASTNode* node, SymbolTable* parentST)
 			SymbolTableEntry* stEntry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
 			stEntry->idInfo = inputParam;
 			stEntry->offset = symbolTable->size;
-			symbolTable->size += calcSize(inputParam->typeInfo);
+			// TODO ask if array sizes are to be calculated by preprocessing
+			stEntry->width = calcSize(inputParam->typeInfo);
+			stEntry->isParam = 1;
+			stEntry->isReturnVar = 0;
+			symbolTable->size += stEntry->width;
+
+			insertIntoSymbolTable(stEntry, symbolTable);
+		}
+
+		for (IDInfo* retVar = ftEntry->retList; retVar != NULL; retVar = retVar->next) {
+			SymbolTableEntry* stEntry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
+			stEntry->idInfo = retVar;
+			stEntry->offset = symbolTable->size;
+			// TODO ask if array sizes are to be calculated by preprocessing
+			stEntry->width = calcSize(retVar->typeInfo);
+			stEntry->isParam = 0;
+			stEntry->isReturnVar = 1;
+			symbolTable->size += stEntry->width;
+
+			insertIntoSymbolTable(stEntry, symbolTable);
 		}
 
 		node = node->children[2];
 		type = node->nodeType;
 	}
-
-
-	// if (type == AST_Statements) {}
 }
 
 void insertDefinition(ASTNode* node)
@@ -203,7 +298,7 @@ void insertDefinition(ASTNode* node)
 		fnEntry->paramCount++;
 
 		IDInfo* newID = (IDInfo*)malloc(sizeof(IDInfo));
-		newID->name = iPList->children[0];
+		newID->name = iPList->children[0]->value->data.lexeme;
 		newID->typeInfo = createTypeInfo(iPList->children[1]);
 		fnEntry->paramList = newID;
 		iPList = iPList->listNext;
@@ -211,7 +306,7 @@ void insertDefinition(ASTNode* node)
 		while (iPList != NULL) {
 			fnEntry->paramCount++;
 			newID->next = (IDInfo*)malloc(sizeof(IDInfo));
-			newID->name = iPList->children[0];
+			newID->name = iPList->children[0]->value->data.lexeme;
 			newID->typeInfo = createTypeInfo(iPList->children[1]);
 			newID = newID->next;
 			iPList = iPList->listNext;
@@ -222,7 +317,7 @@ void insertDefinition(ASTNode* node)
 		fnEntry->returnCount++;
 
 		IDInfo* newID = (IDInfo*)malloc(sizeof(IDInfo));
-		newID->name = oPList->children[0];
+		newID->name = oPList->children[0]->value->data.lexeme;
 		newID->typeInfo = createTypeInfo(oPList->children[1]);
 		fnEntry->retList = newID;
 		oPList = oPList->listNext;
@@ -230,14 +325,14 @@ void insertDefinition(ASTNode* node)
 		while (oPList != NULL) {
 			fnEntry->returnCount++;
 			newID->next = (IDInfo*)malloc(sizeof(IDInfo));
-			newID->name = oPList->children[0];
+			newID->name = oPList->children[0]->value->data.lexeme;
 			newID->typeInfo = createTypeInfo(oPList->children[1]);
 			newID = newID->next;
 			oPList = oPList->listNext;
 		}
 	}
 
-	// TODO insert statements
+	insertStatements(node->children[3], NULL);
 }
 
 void insertDriver(ASTNode* node)
@@ -264,7 +359,7 @@ void insertDriver(ASTNode* node)
 		return;
 	}
 
-	// TODO insert statements
+	insertStatements(node->children[0], NULL);
 }
 
 void createSymbolTables()
@@ -293,7 +388,7 @@ void createSymbolTables()
 
 	node = astRoot->children[2];
 	if (node) {
-		// TODO insert driver
+		insertDriver(node);
 	}
 
 	node = astRoot->children[3];
