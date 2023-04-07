@@ -263,7 +263,9 @@ void assignSymbolTables(ASTNode* node, SymbolTable* st)
 		for (ASTNode* idNode = node->children[0]; idNode != NULL; idNode = idNode->listNext) {
 			SymbolTableEntry* stEntry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
 			stEntry->idInfo = (IDInfo*)malloc(sizeof(IDInfo));
+			stEntry->idInfo->name = idNode->value->data.lexeme;
 			stEntry->idInfo->typeInfo = type;
+			stEntry->idInfo->next = NULL;
 			stEntry->offset = st->size;
 			stEntry->width = calcSize(type);
 			stEntry->isParam = 0;
