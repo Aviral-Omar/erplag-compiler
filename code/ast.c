@@ -114,6 +114,10 @@ void handleIDNumRNum(ParseTNode* treeNode, ASTNode** newNode)
 	Token token = treeNode->info.tokIn->token;
 	*newNode = createASTNode(token == ID ? AST_ID : (token == NUM ? AST_Num : AST_RNum), 0);
 	(*newNode)->value = treeNode->info.tokIn;
+	if (token == NUM)
+		treeNode->info.tokIn->data.intValue = atoi(treeNode->info.tokIn->data.lexeme);
+	else if (token == RNUM)
+		treeNode->info.tokIn->data.floatValue = atof(treeNode->info.tokIn->data.lexeme);
 	treeNode->info.tokIn = NULL;
 }
 
@@ -775,11 +779,23 @@ ASTNode* buildAST(ParseTNode* currNode)
 
 void printAST(ASTNode* node)
 {
-	printf("%s: ", astNodeMap[node->nodeType]);
+	printf("%s", astNodeMap[node->nodeType]);
+	switch (node->nodeType) {
+	case AST_ID:
+		printf(" - %s", node->value->data.lexeme);
+		break;
+	case AST_Num:
+		printf(" - %d", node->value->data.intValue);
+		break;
+	case AST_RNum:
+		printf(" - %f", node->value->data.floatValue);
+		break;
+	}
+
 	if (node->parent)
-		printf("%s\n", astNodeMap[node->parent->nodeType]);
+		printf(" : %s\n", astNodeMap[node->parent->nodeType]);
 	else
-		printf("ROOT\n");
+		printf(" : ROOT\n");
 	for (int i = 0; i < node->childCount; i++)
 		if (node->children[i])
 			printAST(node->children[i]);
