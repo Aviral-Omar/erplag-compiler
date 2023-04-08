@@ -465,8 +465,11 @@
 }
 63	param => ID arrIndexWithExpressions
 {
+	Top-Down:
+	arrIndexWithExpressions.node_inh = ID
+
 	Bottom-Up:
-	param.node_syn = make_node("ArrayAccess", make_node(ID), arrIndexWithExpressions.node_syn)
+	param.node_syn = arrIndexWithExpressions.node_syn
 	free(ID)
 	free(arrIndexWithExpressions)
 }
@@ -699,6 +702,7 @@
 
 	Bottom-Up:
 	factor.node_syn = arrIndexWithExpressions.node_syn
+	free(ID)
 	free(arrIndexWithExpressions)
 }
 96	arrIndexWithExpressions => SQBO indexWithExpressions SQBC

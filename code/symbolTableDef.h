@@ -23,6 +23,7 @@ typedef enum {
 
 typedef struct {
 	DataType arrayType;
+	int isStatic;
 	int lBoundSign;
 	int uBoundSign;
 	union {
@@ -39,7 +40,6 @@ typedef struct {
 	DataType type;
 	// Can only be Int, Real or Boolean because multi dimensional arrays not supported
 	ArrayInfo* arrInfo;
-	int isStatic;
 } TypeInfo;
 
 typedef struct IDInfoStruct IDInfo;
@@ -50,6 +50,7 @@ struct IDInfoStruct {
 };
 
 typedef struct FTEntryStruct FunctionTableEntry;
+typedef struct SymbolTableStruct SymbolTable;
 struct FTEntryStruct {
 	char* name;
 	int declOrder;
@@ -62,6 +63,7 @@ struct FTEntryStruct {
 	IDInfo* paramList;
 	int returnCount;
 	IDInfo* retList;
+	SymbolTable* st;
 	// For chaining in hash table
 	FunctionTableEntry* next;
 };
@@ -77,7 +79,6 @@ struct STEntryStruct {
 	SymbolTableEntry* next;
 };
 
-typedef struct SymbolTableStruct SymbolTable;
 struct SymbolTableStruct {
 	SymbolTableEntry* stArray[SYMBOL_TABLE_SIZE];
 	SymbolTable* parentST;

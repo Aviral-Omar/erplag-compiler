@@ -71,6 +71,7 @@ ASTNode* createASTNode(ASTNodeType type, int childCount);
 void createAST();
 void insertChild(ASTNode* parent, ASTNode* child);
 void handleIDNumRNum(ParseTNode* idNode, ASTNode** newNode);
+ASTNode* handleOperators(int ruleNum, ParseTNode* treeNode);
 void removeAndAdvance(ParseTNode** treeNodePtr);
 void populateParents(ASTNode* parent, ASTNode* currNode);
 ASTNode* buildAST(ParseTNode* currNode);
@@ -119,6 +120,53 @@ void handleIDNumRNum(ParseTNode* treeNode, ASTNode** newNode)
 	else if (token == RNUM)
 		treeNode->info.tokIn->data.floatValue = atof(treeNode->info.tokIn->data.lexeme);
 	treeNode->info.tokIn = NULL;
+}
+
+ASTNode* handleOperators(int ruleNum, ParseTNode* treeNode)
+{
+	ASTNode* astNode;
+	switch (ruleNum) {
+	case 109:
+		astNode = createASTNode(AST_Plus, 2);
+		break;
+	case 110:
+		astNode = createASTNode(AST_Minus, 2);
+		break;
+	case 111:
+		astNode = createASTNode(AST_Mul, 2);
+		break;
+	case 112:
+		astNode = createASTNode(AST_Div, 2);
+		break;
+	case 113:
+		astNode = createASTNode(AST_AND, 2);
+		break;
+	case 114:
+		astNode = createASTNode(AST_OR, 2);
+		break;
+	case 115:
+		astNode = createASTNode(AST_LT, 2);
+		break;
+	case 116:
+		astNode = createASTNode(AST_LE, 2);
+		break;
+	case 117:
+		astNode = createASTNode(AST_GT, 2);
+		break;
+	case 118:
+		astNode = createASTNode(AST_GE, 2);
+		break;
+	case 119:
+		astNode = createASTNode(AST_EQ, 2);
+		break;
+	case 120:
+		astNode = createASTNode(AST_NE, 2);
+		break;
+	}
+	astNode->value = treeNode->info.tokIn;
+	treeNode->info.tokIn = NULL;
+
+	return astNode;
 }
 
 void removeAndAdvance(ParseTNode** treeNodePtr)
@@ -455,6 +503,7 @@ ASTNode* buildAST(ParseTNode* currNode)
 
 		insertChild(currASTNode, buildAST(currChild));
 		removeAndAdvance(&currChild);
+		currASTNode->value = currASTNode->children[1]->value;
 		break;
 	case 53:
 	case 74:
@@ -510,12 +559,11 @@ ASTNode* buildAST(ParseTNode* currNode)
 		removeAndAdvance(&currChild);
 		break;
 	case 63:
-		currASTNode = createASTNode(AST_ArrayAccess, 2);
+	case 95:
+		currChild = currChild->nextSibling;
+		currChild->inh = currChild->prevSibling;
 
-		handleIDNumRNum(currChild, &currASTNode->children[currASTNode->childCount++]);
-		removeAndAdvance(&currChild);
-
-		insertChild(currASTNode, buildAST(currChild));
+		currASTNode = buildAST(currChild);
 		removeAndAdvance(&currChild);
 
 		break;
@@ -605,14 +653,6 @@ ASTNode* buildAST(ParseTNode* currNode)
 		removeAndAdvance(&currChild);
 		removeNode(currNode->inh);
 		break;
-	case 95:
-		currChild = currChild->nextSibling;
-		currChild->inh = currChild->prevSibling;
-
-		currASTNode = buildAST(currChild);
-		removeAndAdvance(&currChild);
-
-		break;
 	case 96:
 		currASTNode = createASTNode(AST_ArrayAccess, 2);
 		handleIDNumRNum(currNode->inh, &currASTNode->children[currASTNode->childCount++]);
@@ -632,40 +672,18 @@ ASTNode* buildAST(ParseTNode* currNode)
 
 		break;
 	case 109:
-		currASTNode = createASTNode(AST_Plus, 2);
-		break;
 	case 110:
-		currASTNode = createASTNode(AST_Minus, 2);
-		break;
 	case 111:
-		currASTNode = createASTNode(AST_Mul, 2);
-		break;
 	case 112:
-		currASTNode = createASTNode(AST_Div, 2);
-		break;
 	case 113:
-		currASTNode = createASTNode(AST_AND, 2);
-		break;
 	case 114:
-		currASTNode = createASTNode(AST_OR, 2);
-		break;
 	case 115:
-		currASTNode = createASTNode(AST_LT, 2);
-		break;
 	case 116:
-		currASTNode = createASTNode(AST_LE, 2);
-		break;
 	case 117:
-		currASTNode = createASTNode(AST_GT, 2);
-		break;
 	case 118:
-		currASTNode = createASTNode(AST_GE, 2);
-		break;
 	case 119:
-		currASTNode = createASTNode(AST_EQ, 2);
-		break;
 	case 120:
-		currASTNode = createASTNode(AST_NE, 2);
+		currASTNode = handleOperators(rule, currNode);
 		break;
 	case 121:
 		currASTNode = createASTNode(AST_Declare, 2);
