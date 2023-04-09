@@ -91,6 +91,7 @@ TypeInfo* findExpressionType(ASTNode* node)
 	case AST_IndexWithExpressions:
 	case AST_SignedIndex:
 	case AST_UnaryOpExpr:
+	case AST_SignedParam:
 		return findExpressionType(node->children[1]);
 
 	case AST_Plus:
@@ -145,8 +146,15 @@ TypeInfo* findExpressionType(ASTNode* node)
 	case AST_AND:
 	case AST_OR:
 		t1 = findExpressionType(node->children[0]), t2 = findExpressionType(node->children[1]);
-		if (t1->type == DT_Boolean && t2->type == DT_Boolean)
+		if (!t1 || !t2) {
+			if (t1) free(t1);
+			if (t2) free(t2);
+			return NULL;
+		}
+		if (t1->type == DT_Boolean && t2->type == DT_Boolean) {
+			free(t2);
 			return t1;
+		}
 
 		printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
 		return NULL;
@@ -164,7 +172,8 @@ void checkStatements(ASTNode* stmtNode)
 	while (stmtNode) {
 		switch (stmtNode->nodeType) {
 		case AST_Assign:
-			t1 = findExpressionType(stmtNode->children[0]), t2 = findExpressionType(stmtNode->children[1]);
+			t1 = findExpressionType(stmtNode->children[0]);
+			t2 = findExpressionType(stmtNode->children[1]);
 			if (!t1 || !t2 || !areTypesEqual(t1, t2))
 				printf("Line %d: Semantic Error: Mismatch between type of LHS and RHS of assignment\n", stmtNode->children[0]->value->lineNumber);
 			if (t1) free(t1);
@@ -214,11 +223,38 @@ void checkStatements(ASTNode* stmtNode)
 			break;
 		}
 		case AST_For:
+			t1 = findExpressionType(stmtNode->children[0]);
+			if (t1->type != DT_Integer)
+				printf("Line %d: Semantic Error: Variable %s must be of type integer\n", stmtNode->children[0]->value->lineNumber, stmtNode->children[0]->value->data.lexeme);
+			free(t1);
+			checkStatements(stmtNode->children[2]);
 			break;
 		case AST_FunctionCall:
+			int varCount = 0, paramCount = 0;
+			ASTNode *varList = stmtNode->children[0]->children[0], *actualPList = stmtNode->children[2]->children[0];
+			FunctionTableEntry* ftEntry = findFunctionEntry(stmtNode->children[1]->value->data.lexeme);
+
+			IDInfo *retList, *paramList;
+			for (retList = ftEntry->retList; varList && retList; retList = retList->next, varList = varList->listNext, varCount++) {
+				t1 = findExpressionType(varList);
+				if (!areTypesEqual(retList->typeInfo, t1))
+					printf("Line %d: Semantic Error: Variable %s of wrong type\n", stmtNode->children[1]->value->lineNumber, varList->value->data.lexeme);
+				if (t1) free(t1);
+			}
+			if (retList || varList)
+				printf("Line %d: Semantic Error: Variable list size not equal to number of return values\n", stmtNode->children[1]->value->lineNumber);
+
+			for (paramList = ftEntry->paramList; actualPList && paramList; paramList = paramList->next, actualPList = actualPList->listNext, paramCount++) {
+				t1 = findExpressionType(actualPList);
+				if (!areTypesEqual(paramList->typeInfo, t1))
+					printf("Line %d: Semantic Error: Actual Parameter #%d of wrong type\n", stmtNode->children[1]->value->lineNumber, paramCount + 1);
+				if (t1) free(t1);
+			}
+			if (paramList || actualPList)
+				printf("Line %d: Semantic Error: Actual Parameter list size not equal to number of formal parameters\n", stmtNode->children[1]->value->lineNumber);
+
 			break;
 		}
-		// TODO Null check
 		stmtNode = stmtNode->listNext;
 	}
 }
@@ -230,6 +266,9 @@ void checkTypes()
 		checkStatements(module->children[3]);
 		module = module->listNext;
 	}
+
+	module = astRoot->children[2];
+	checkStatements(module->children[0]);
 
 	module = astRoot->children[3]->children[0];
 	while (module) {

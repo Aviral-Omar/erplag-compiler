@@ -683,7 +683,7 @@ ASTNode* buildAST(ParseTNode* currNode)
 	case 118:
 	case 119:
 	case 120:
-		currASTNode = handleOperators(rule, currNode);
+		currASTNode = handleOperators(rule, currNode->child);
 		break;
 	case 121:
 		currASTNode = createASTNode(AST_Declare, 2);
@@ -807,7 +807,6 @@ void printAST(ASTNode* node)
 		break;
 	case AST_RNum:
 		printf(" - %f", node->value->data.floatValue);
-		break;
 	}
 
 	if (node->parent)

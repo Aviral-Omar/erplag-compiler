@@ -19,7 +19,7 @@ int stHash(char* key);
 FunctionTableEntry* findFunctionEntry(char* name);
 SymbolTableEntry* findSymbolEntry(char* name, SymbolTable* st);
 void insertIntoFunctionTable(FunctionTableEntry* fnEntry);
-void insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st);
+int insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st);
 int calcSize(TypeInfo* info);
 void insertDeclaration(ASTNode* node);
 TypeInfo* createTypeInfo(ASTNode* node);
@@ -82,7 +82,7 @@ void insertIntoFunctionTable(FunctionTableEntry* fnEntry)
 	}
 }
 
-void insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st)
+int insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st)
 {
 	// TODO ask if variable overriding supported
 	int hashCode = stHash(stEntry->idInfo->name);
@@ -90,10 +90,16 @@ void insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st)
 		st->stArray[hashCode] = stEntry;
 	else {
 		SymbolTableEntry* entry = st->stArray[hashCode];
-		while (entry->next)
+		while (entry->next) {
+			if (!strcmp(entry->idInfo->name, stEntry->idInfo->name))
+				return 1;
 			entry = entry->next;
+		}
+		if (!strcmp(entry->idInfo->name, stEntry->idInfo->name))
+			return 1;
 		entry->next = stEntry;
 	}
+	return 0;
 }
 
 int calcSize(TypeInfo* info)
@@ -217,7 +223,13 @@ void insertParams(ASTNode* node, SymbolTable* symbolTable)
 		stEntry->next = NULL;
 		symbolTable->size += stEntry->width;
 
-		insertIntoSymbolTable(stEntry, symbolTable);
+		TypeInfo* typeInfo = stEntry->idInfo->typeInfo;
+		if (typeInfo->type == DT_Array && !typeInfo->arrInfo->isStatic && (!findSymbolEntry(typeInfo->arrInfo->lowerBound.idBound, symbolTable) || !findSymbolEntry(typeInfo->arrInfo->upperBound.idBound, symbolTable))) {
+			printf("Line %d: Semantic Error: Identifier in array range not present in input parameters\n", node->children[0]->value->lineNumber);
+		}
+
+		if (insertIntoSymbolTable(stEntry, symbolTable))
+			printf("Line %d: Semantic Error: Reused %s in function parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
 	}
 
 	for (IDInfo* retVar = ftEntry->retList; retVar != NULL; retVar = retVar->next) {
@@ -230,7 +242,8 @@ void insertParams(ASTNode* node, SymbolTable* symbolTable)
 		stEntry->next = NULL;
 		symbolTable->size += stEntry->width;
 
-		insertIntoSymbolTable(stEntry, symbolTable);
+		if (insertIntoSymbolTable(stEntry, symbolTable))
+			printf("Line %d: Semantic Error: Reused %s in function parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
 	}
 	// printf("Params inserted\n");
 	// fflush(stdout);
@@ -247,23 +260,36 @@ void assignSymbolTables(ASTNode* node, SymbolTable* st)
 
 	node->st = st;
 
+	if (node->nodeType == AST_ID) {
+		if (node->parent->nodeType != AST_FunctionCall && !findSymbolEntry(node->value->data.lexeme, st))
+			printf("Line %d: Semantic Error: Variable %s not declared\n", node->value->lineNumber, node->value->data.lexeme);
+		else if (node->parent->nodeType == AST_FunctionCall && !findFunctionEntry(node->value->data.lexeme))
+			printf("Line %d: Semantic Error: Function %s not declared\n", node->value->lineNumber, node->value->data.lexeme);
+	}
+
 	if (node->nodeType == AST_Declare) {
-		TypeInfo* type = createTypeInfo(node->children[1]);
+		TypeInfo *t1 = createTypeInfo(node->children[1]), *t2;
 
 		for (ASTNode* idNode = node->children[0]; idNode != NULL; idNode = idNode->listNext) {
+			t2 = (TypeInfo*)malloc(sizeof(TypeInfo));
+			memcpy(t2, t1, sizeof(TypeInfo));
 			SymbolTableEntry* stEntry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
 			stEntry->idInfo = (IDInfo*)malloc(sizeof(IDInfo));
 			stEntry->idInfo->name = idNode->value->data.lexeme;
-			stEntry->idInfo->typeInfo = type;
+			stEntry->idInfo->typeInfo = t2;
 			stEntry->idInfo->next = NULL;
 			stEntry->offset = st->size;
-			stEntry->width = calcSize(type);
+			stEntry->width = calcSize(t2);
 			stEntry->isParam = 0;
 			stEntry->isReturnVar = 0;
+			stEntry->next = NULL;
 			st->size += stEntry->width;
 
-			insertIntoSymbolTable(stEntry, st);
+			if (insertIntoSymbolTable(stEntry, st))
+				printf("Line %d: Semantic Error: Redeclared variable %s\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
+			;
 		}
+		free(t1);
 	}
 
 	for (int i = 0; i < node->childCount; i++)
@@ -282,6 +308,9 @@ void insertStatements(ASTNode* node, SymbolTable* parentST)
 
 	for (int i = 0; i < SYMBOL_TABLE_SIZE; i++)
 		symbolTable->stArray[i] = NULL;
+
+	if (node->parent->nodeType == AST_Driver)
+		symbolTable->isRoot = 1;
 
 	if (node->parent->nodeType == AST_Module) {
 		symbolTable->isRoot = 1;
@@ -418,7 +447,7 @@ void createSymbolTables()
 			node = node->listNext;
 		}
 	}
-	// TODO semantic rule checks while inserting symbols
+
 	node = astRoot->children[1];
 
 	if (node->childCount) {

@@ -10,4 +10,6 @@ TypeInfo* createTypeInfo(ASTNode* node);
 
 void createSymbolTables();
 
+FunctionTableEntry* findFunctionEntry(char* name);
+
 SymbolTableEntry* findSymbolEntry(char* name, SymbolTable* st);
