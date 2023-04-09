@@ -11,10 +11,10 @@ Vatsal Pattani:			2019B5A70697P
 #include "symbolTableDef.h"
 
 void checkReturnSemantics(FunctionTableEntry* ftEntry, int lineNumber);
-void checkForSemanticsHelper(char* name, ASTNode* stmtNode);
+void checkForSemanticsHelper(SymbolTableEntry* stEntry, ASTNode* stmtNode);
 void checkForSemantics(ASTNode* stmtNode);
 void checkRecursion(ASTNode* stmtNode);
-void handleStatements(ASTNode* stmtsNode);
+void handleStatementsNode(ASTNode* stmtsNode);
 void checkSemantics();
 
 
@@ -31,31 +31,31 @@ void checkReturnSemantics(FunctionTableEntry* ftEntry, int lineNumber)
 	}
 }
 
-void checkForSemanticsHelper(char* name, ASTNode* stmtNode)
+void checkForSemanticsHelper(SymbolTableEntry* stEntry, ASTNode* stmtNode)
 {
 	while (stmtNode) {
 		switch (stmtNode->nodeType) {
 		case AST_Assign:
-			if (!strcmp(name, stmtNode->children[0]->value->data.lexeme))
-				printf("Line %d: Semantic Error: For loop iterator variable %s reassigned\n", stmtNode->children[0]->value->lineNumber, name);
+			if (!strcmp(stEntry->idInfo->name, stmtNode->children[0]->value->data.lexeme) && stEntry == findSymbolEntry(stmtNode->children[0]->value->data.lexeme, stmtNode->st))
+				printf("Line %d: Semantic Error: For loop iterator variable %s reassigned\n", stmtNode->children[0]->value->lineNumber, stEntry->idInfo->name);
 			break;
 		case AST_FunctionCall:
 			for (ASTNode* varNode = stmtNode->children[0]->children[0]; varNode; varNode = varNode->listNext)
-				if (!strcmp(name, varNode->value->data.lexeme))
-					printf("Line %d: Semantic Error: For loop iterator variable %s reassigned\n", varNode->value->lineNumber, name);
+				if (!strcmp(stEntry->idInfo->name, varNode->value->data.lexeme) && stEntry == findSymbolEntry(varNode->value->data.lexeme, varNode->st))
+					printf("Line %d: Semantic Error: For loop iterator variable %s reassigned\n", varNode->value->lineNumber, stEntry->idInfo->name);
 
 			break;
 		case AST_Switch:
 			for (ASTNode* tmp = stmtNode->children[1]; tmp; tmp = tmp->listNext)
-				checkForSemanticsHelper(name, tmp->children[1]->children[0]);
+				checkForSemanticsHelper(stEntry, tmp->children[1]->children[0]);
 			if (stmtNode->children[2])
-				checkForSemanticsHelper(name, stmtNode->children[2]->children[0]->children[0]);
+				checkForSemanticsHelper(stEntry, stmtNode->children[2]->children[0]->children[0]);
 			break;
 		case AST_While:
-			checkForSemanticsHelper(name, stmtNode->children[1]->children[0]);
+			checkForSemanticsHelper(stEntry, stmtNode->children[1]->children[0]);
 			break;
 		case AST_For:
-			checkForSemanticsHelper(name, stmtNode->children[2]->children[0]);
+			checkForSemanticsHelper(stEntry, stmtNode->children[2]->children[0]);
 		}
 		stmtNode = stmtNode->listNext;
 	}
@@ -66,10 +66,11 @@ void checkForSemantics(ASTNode* stmtNode)
 	while (stmtNode) {
 		switch (stmtNode->nodeType) {
 		case AST_For: {
-			char* varName = stmtNode->children[0]->value->data.lexeme;
-			checkForSemanticsHelper(varName, stmtNode->children[2]->children[0]);
+			SymbolTableEntry* stEntry = findSymbolEntry(stmtNode->children[0]->value->data.lexeme, stmtNode->st);
+			checkForSemanticsHelper(stEntry, stmtNode->children[2]->children[0]);
 			checkForSemantics(stmtNode->children[2]->children[0]);
 			break;
+		}
 		case AST_Switch:
 			for (ASTNode* tmp = stmtNode->children[1]; tmp; tmp = tmp->listNext)
 				checkForSemantics(tmp->children[1]->children[0]);
@@ -78,7 +79,6 @@ void checkForSemantics(ASTNode* stmtNode)
 			break;
 		case AST_While:
 			checkForSemantics(stmtNode->children[1]->children[0]);
-		}
 		}
 		stmtNode = stmtNode->listNext;
 	}
@@ -93,7 +93,7 @@ void checkRecursion(ASTNode* stmtNode)
 			ftEntry = findFunctionEntry(stmtNode->children[1]->value->data.lexeme);
 			if (ftEntry) {
 				if (ftEntry->isCalled) {
-					printf("Line %d: Semantic Error: Module %s called recursively", stmtNode->children[1]->value->lineNumber, stmtNode->children[1]->value->data.lexeme);
+					printf("Line %d: Semantic Error: Module %s called recursively\n", stmtNode->children[1]->value->lineNumber, stmtNode->children[1]->value->data.lexeme);
 					break;
 				}
 				ftEntry->isCalled = 1;
@@ -118,7 +118,7 @@ void checkRecursion(ASTNode* stmtNode)
 	}
 }
 
-void handleStatements(ASTNode* stmtsNode)
+void handleStatementsNode(ASTNode* stmtsNode)
 {
 	FunctionTableEntry* ftEntry;
 	if (stmtsNode->parent->nodeType == AST_Module) {
@@ -138,16 +138,16 @@ void checkSemantics()
 {
 	ASTNode* module = astRoot->children[1]->children[0];
 	while (module) {
-		handleStatements(module->children[3]);
+		handleStatementsNode(module->children[3]);
 		module = module->listNext;
 	}
 
 	module = astRoot->children[2];
-	handleStatements(module->children[0]);
+	handleStatementsNode(module->children[0]);
 
 	module = astRoot->children[3]->children[0];
 	while (module) {
-		handleStatements(module->children[3]);
+		handleStatementsNode(module->children[3]);
 		module = module->listNext;
 	}
 }

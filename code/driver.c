@@ -14,7 +14,6 @@ Vatsal Pattani:			2019B5A70697P
 #include "semanticAnalyser.h"
 #include "symbolTable.h"
 #include "tree.h"
-#include "typeChecker.h"
 
 #define MAX_BUFFER_SIZE 10000
 
@@ -133,10 +132,9 @@ int main(int argc, char *argv[])
 			if (lexerCorrect && parserCorrect) {
 				createAST();
 				createSymbolTables();
+				checkSemantics();
 			}
 			deleteParseTree(parseTreeRoot);
-			checkTypes();
-			checkSemantics();
 			// TODO Clean stage 2 data
 		}
 	} while (option);

@@ -55,11 +55,12 @@ typedef struct FTEntryStruct FunctionTableEntry;
 typedef struct SymbolTableStruct SymbolTable;
 struct FTEntryStruct {
 	char* name;
-	int declOrder;
-	int isCalled;
-	int used;
-	int offset;
+	int defnOrder;
+	int isDeclared;
 	int isDefined;
+	int isCalled;
+	int isUsed;
+	int offset;
 	int width;
 	int paramCount;
 	IDInfo* paramList;

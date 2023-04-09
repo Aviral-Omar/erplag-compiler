@@ -450,6 +450,8 @@ ASTNode* buildAST(ParseTNode* currNode)
 	case 39:
 	case 40:
 		currASTNode = createASTNode(rule == 39 ? AST_True : AST_False, 0);
+		currASTNode->value = currChild->info.tokIn;
+		currChild->info.tokIn = NULL;
 		removeAndAdvance(&currChild);
 		break;
 	case 41:
