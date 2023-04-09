@@ -103,25 +103,32 @@ TypeInfo* findExpressionType(ASTNode* node)
 			if (t2) free(t2);
 			return NULL;
 		}
+		// Types should be real or int and should be equal
 		if (areTypesEqual(t1, t2) && t1->type != DT_Array && t1->type != DT_Boolean)
 			return t1;
 		// else error
 		printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
 		return NULL;
 	case AST_Div:
-		t1 = findExpressionType(node->children[0]), t2 = findExpressionType(node->children[1]);
+		t1 = findExpressionType(node->children[0]);
+		t2 = findExpressionType(node->children[1]);
 		if (!t1 || !t2) {
 			if (t1) free(t1);
 			if (t2) free(t2);
 			return NULL;
 		}
+		// types should be real or int only and return real
 		if (t1->type != DT_Array && t1->type != DT_Boolean && t2->type != DT_Array && t2->type != DT_Boolean) {
+			free(t1);
+			free(t2);
 			t1 = (TypeInfo*)malloc(sizeof(TypeInfo));
 			t1->type = DT_Real;
 			t1->arrInfo = NULL;
 			return t1;
 		}
 		printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
+		free(t1);
+		free(t2);
 		return NULL;
 	case AST_LE:
 	case AST_LT:
@@ -135,6 +142,7 @@ TypeInfo* findExpressionType(ASTNode* node)
 			if (t2) free(t2);
 			return NULL;
 		}
+		// types should be int or real only and equal and returns boolean
 		if (areTypesEqual(t1, t2) && t1->type != DT_Array && t1->type != DT_Boolean) {
 			t1 = (TypeInfo*)malloc(sizeof(TypeInfo));
 			t1->type = DT_Boolean;
@@ -151,6 +159,7 @@ TypeInfo* findExpressionType(ASTNode* node)
 			if (t2) free(t2);
 			return NULL;
 		}
+		// types should be boolean only and returns boolean
 		if (t1->type == DT_Boolean && t2->type == DT_Boolean) {
 			free(t2);
 			return t1;
@@ -187,6 +196,7 @@ void checkStatements(ASTNode* stmtNode)
 			if (t2) free(t2);
 			break;
 		case AST_Print:
+			// Done for bound checking
 			t1 = findExpressionType(stmtNode->children[0]);
 			if (t1) free(t1);
 			break;
