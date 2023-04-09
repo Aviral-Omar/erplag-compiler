@@ -33,6 +33,7 @@ void createSymbolTables();
 
 int stHash(char* key)
 {
+	// TODO change hash function
 	// printf("Hashing %s\n", key);
 	// fflush(stdout);
 	int hashCode = -96 + key[0];
@@ -137,14 +138,14 @@ void insertDeclaration(ASTNode* node)
 	FunctionTableEntry* fnEntry = findFunctionEntry(node->value->data.lexeme);
 
 	if (fnEntry) {
-		printf("Line %d: Semantic Error: Redeclared function %s\n", node->value->lineNumber, node->value->data.lexeme);
+		printf("Line %d: Semantic Error: Redeclared module %s\n", node->value->lineNumber, node->value->data.lexeme);
 		return;
 	}
 
 	fnEntry = (FunctionTableEntry*)malloc(sizeof(FunctionTableEntry));
 	fnEntry->declOrder = functionOrder++;
 	fnEntry->isCalled = 0;
-	fnEntry->isDriver = 0;
+	fnEntry->used = 0;
 	fnEntry->width = 0;
 	fnEntry->offset = -1;
 	fnEntry->isDefined = 0;
@@ -155,6 +156,7 @@ void insertDeclaration(ASTNode* node)
 	fnEntry->returnCount = 0;
 	fnEntry->retList = NULL;
 	fnEntry->st = NULL;
+	fnEntry->moduleNode = NULL;
 
 	insertIntoFunctionTable(fnEntry);
 }
@@ -210,6 +212,7 @@ TypeInfo* createTypeInfo(ASTNode* node)
 
 void insertParams(ASTNode* node, SymbolTable* symbolTable)
 {
+	// TODO Top symbol table has input params and return variables only
 	FunctionTableEntry* ftEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
 	ftEntry->st = symbolTable;
 
@@ -220,6 +223,7 @@ void insertParams(ASTNode* node, SymbolTable* symbolTable)
 		stEntry->width = calcSize(inputParam->typeInfo);
 		stEntry->isParam = 1;
 		stEntry->isReturnVar = 0;
+		stEntry->valueAssigned = 0;
 		stEntry->next = NULL;
 		symbolTable->size += stEntry->width;
 
@@ -229,7 +233,7 @@ void insertParams(ASTNode* node, SymbolTable* symbolTable)
 		}
 
 		if (insertIntoSymbolTable(stEntry, symbolTable))
-			printf("Line %d: Semantic Error: Reused %s in function parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
+			printf("Line %d: Semantic Error: Reused %s in module parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
 	}
 
 	for (IDInfo* retVar = ftEntry->retList; retVar != NULL; retVar = retVar->next) {
@@ -239,11 +243,12 @@ void insertParams(ASTNode* node, SymbolTable* symbolTable)
 		stEntry->width = calcSize(retVar->typeInfo);
 		stEntry->isParam = 0;
 		stEntry->isReturnVar = 1;
+		stEntry->valueAssigned = 0;
 		stEntry->next = NULL;
 		symbolTable->size += stEntry->width;
 
 		if (insertIntoSymbolTable(stEntry, symbolTable))
-			printf("Line %d: Semantic Error: Reused %s in function parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
+			printf("Line %d: Semantic Error: Reused %s in module parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
 	}
 	// printf("Params inserted\n");
 	// fflush(stdout);
@@ -264,7 +269,7 @@ void assignSymbolTables(ASTNode* node, SymbolTable* st)
 		if (node->parent->nodeType != AST_FunctionCall && !findSymbolEntry(node->value->data.lexeme, st))
 			printf("Line %d: Semantic Error: Variable %s not declared\n", node->value->lineNumber, node->value->data.lexeme);
 		else if (node->parent->nodeType == AST_FunctionCall && !findFunctionEntry(node->value->data.lexeme))
-			printf("Line %d: Semantic Error: Function %s not declared\n", node->value->lineNumber, node->value->data.lexeme);
+			printf("Line %d: Semantic Error: Module %s not declared\n", node->value->lineNumber, node->value->data.lexeme);
 	}
 
 	if (node->nodeType == AST_Declare) {
@@ -282,12 +287,12 @@ void assignSymbolTables(ASTNode* node, SymbolTable* st)
 			stEntry->width = calcSize(t2);
 			stEntry->isParam = 0;
 			stEntry->isReturnVar = 0;
+			stEntry->valueAssigned = 0;
 			stEntry->next = NULL;
 			st->size += stEntry->width;
 
 			if (insertIntoSymbolTable(stEntry, st))
 				printf("Line %d: Semantic Error: Redeclared variable %s\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
-			;
 		}
 		free(t1);
 	}
@@ -309,14 +314,6 @@ void insertStatements(ASTNode* node, SymbolTable* parentST)
 	for (int i = 0; i < SYMBOL_TABLE_SIZE; i++)
 		symbolTable->stArray[i] = NULL;
 
-	if (node->parent->nodeType == AST_Driver)
-		symbolTable->isRoot = 1;
-
-	if (node->parent->nodeType == AST_Module) {
-		symbolTable->isRoot = 1;
-		insertParams(node->parent, symbolTable);
-	}
-
 	node->st = symbolTable;
 
 	if (node->children[0])
@@ -331,10 +328,8 @@ void insertDefinition(ASTNode* node)
 		fnEntry = (FunctionTableEntry*)malloc(sizeof(FunctionTableEntry));
 		fnEntry->declOrder = functionOrder++;
 		fnEntry->isCalled = 0;
-		fnEntry->isDriver = 0;
+		fnEntry->used = 0;
 		fnEntry->width = 0;
-		fnEntry->offset = -1;
-		fnEntry->isDefined = 0;
 		fnEntry->name = node->children[0]->value->data.lexeme;
 		fnEntry->next = NULL;
 		fnEntry->paramCount = 0;
@@ -345,10 +340,11 @@ void insertDefinition(ASTNode* node)
 
 		insertIntoFunctionTable(fnEntry);
 	} else if (fnEntry->isDefined) {
-		printf("Line %d: Semantic Error: Redefined function %s\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
+		printf("Line %d: Semantic Error: Redefined module %s\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
 		return;
 	}
 
+	fnEntry->moduleNode = node;
 	fnEntry->offset = fnTableOffset;
 	fnEntry->isDefined = 1;
 
@@ -399,7 +395,18 @@ void insertDefinition(ASTNode* node)
 		}
 	}
 
-	insertStatements(node->children[3], NULL);
+	SymbolTable* symbolTable = (SymbolTable*)malloc(sizeof(SymbolTable));
+	symbolTable->parentST = NULL;
+	symbolTable->isRoot = 1;
+
+	for (int i = 0; i < SYMBOL_TABLE_SIZE; i++)
+		symbolTable->stArray[i] = NULL;
+
+	insertParams(node, symbolTable);
+
+	node->st = symbolTable;
+
+	insertStatements(node->children[3], symbolTable);
 }
 
 void insertDriver(ASTNode* node)
@@ -410,7 +417,7 @@ void insertDriver(ASTNode* node)
 		fnEntry = (FunctionTableEntry*)malloc(sizeof(FunctionTableEntry));
 		fnEntry->declOrder = functionOrder++;
 		fnEntry->isCalled = 0;
-		fnEntry->isDriver = 1;
+		fnEntry->used = 0;
 		fnEntry->width = 0;
 		fnEntry->offset = fnTableOffset;
 		fnEntry->isDefined = 1;
@@ -424,11 +431,20 @@ void insertDriver(ASTNode* node)
 
 		insertIntoFunctionTable(fnEntry);
 	} else if (fnEntry->isDefined) {
-		printf("Semantic Error: Driver function already defined\n");
+		printf("Semantic Error: Driver module already defined\n");
 		return;
 	}
 
-	insertStatements(node->children[0], NULL);
+	SymbolTable* symbolTable = (SymbolTable*)malloc(sizeof(SymbolTable));
+	symbolTable->parentST = NULL;
+	symbolTable->isRoot = 1;
+
+	for (int i = 0; i < SYMBOL_TABLE_SIZE; i++)
+		symbolTable->stArray[i] = NULL;
+
+	node->st = symbolTable;
+
+	insertStatements(node->children[0], symbolTable);
 }
 
 void createSymbolTables()

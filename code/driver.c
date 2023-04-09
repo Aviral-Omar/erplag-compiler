@@ -11,6 +11,7 @@ Vatsal Pattani:			2019B5A70697P
 #include "ast.h"
 #include "lexer.h"
 #include "parser.h"
+#include "semanticAnalyser.h"
 #include "symbolTable.h"
 #include "tree.h"
 #include "typeChecker.h"
@@ -135,6 +136,8 @@ int main(int argc, char *argv[])
 			}
 			deleteParseTree(parseTreeRoot);
 			checkTypes();
+			checkSemantics();
+			// TODO Clean stage 2 data
 		}
 	} while (option);
 

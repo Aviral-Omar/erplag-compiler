@@ -4,6 +4,7 @@ Aviral Omar:			2019B3A70411P
 Chandra Sekhar Reddy E:	2019B4A70634P
 Vatsal Pattani:			2019B5A70697P
 */
+// TODO type checking before redeclaration in same scope
 #include <stdlib.h>
 #include <string.h>
 
@@ -20,29 +21,28 @@ void checkBounds(ArrayInfo* arrInfo, ASTNode* indexNode)
 {
 	if (!arrInfo->isStatic)
 		return;
-	if (indexNode->nodeType != AST_Num && indexNode->nodeType != AST_SignedIndex)
-		return;
 
-	int sign = 1;
-	if (indexNode->nodeType == AST_SignedIndex) {
-		if (indexNode->children[1]->nodeType == AST_ID)
-			return;
-		indexNode = indexNode->children[1];
-		sign = indexNode->children[0]->nodeType == AST_Minus ? -1 : 1;
-	}
+	int sign = (indexNode->children[0] && indexNode->children[0]->nodeType) == AST_Minus ? -1 : 1;
+	indexNode = indexNode->children[1];
+
+	if (indexNode->nodeType != AST_Num)
+		return;
 
 	int index = sign * indexNode->value->data.intValue;
-	if (index >= arrInfo->lBoundSign * arrInfo->lowerBound.numBound && index <= arrInfo->uBoundSign * arrInfo->upperBound.numBound)
-		return;
-	printf("Line %d: Semantic Error: Array index out of bounds\n", indexNode->value->lineNumber);
+
+	if (index < arrInfo->lBoundSign * arrInfo->lowerBound.numBound || index > arrInfo->uBoundSign * arrInfo->upperBound.numBound)
+		printf("Line %d: Semantic Error: Index %d used for array %s out of bounds\n", indexNode->value->lineNumber, index, indexNode->parent->parent->children[0]->value->data.lexeme);
 }
 
 int areTypesEqual(TypeInfo* t1, TypeInfo* t2)
 {
 	if (!t1 || !t2)
 		return 0;
+	if (t1->type != t2->type)
+		return 0;
+	// else they are of same type
 	if (t1->type != DT_Array)
-		return t1->type == t2->type;
+		return 1;
 	// else they are arrays
 	ArrayInfo *a1 = t1->arrInfo, *a2 = t2->arrInfo;
 	if (a1->isStatic && a2->isStatic) {
@@ -70,8 +70,8 @@ TypeInfo* findExpressionType(ASTNode* node)
 		SymbolTableEntry* stEntry = findSymbolEntry(node->children[0]->value->data.lexeme, node->children[0]->st);
 		if (!stEntry)
 			return NULL;
-		else
-			checkBounds(stEntry->idInfo->typeInfo->arrInfo, node->children[1]);
+
+		checkBounds(stEntry->idInfo->typeInfo->arrInfo, node->children[1]);
 
 		t1 = (TypeInfo*)malloc(sizeof(TypeInfo));
 		t1->type = stEntry->idInfo->typeInfo->arrInfo->arrayType;
@@ -180,7 +180,10 @@ void checkStatements(ASTNode* stmtNode)
 	TypeInfo *t1, *t2;
 	while (stmtNode) {
 		switch (stmtNode->nodeType) {
-		case AST_Assign:
+		case AST_Assign: {
+			SymbolTableEntry* stEntry = findSymbolEntry(stmtNode->children[0]->value->data.lexeme, stmtNode->st);
+			if (stEntry) stEntry->valueAssigned = 1;
+
 			t1 = findExpressionType(stmtNode->children[0]);
 			t2 = findExpressionType(stmtNode->children[1]);
 			if (!t1 || !t2 || !areTypesEqual(t1, t2))
@@ -188,6 +191,8 @@ void checkStatements(ASTNode* stmtNode)
 			if (t1) free(t1);
 			if (t2) free(t2);
 			break;
+		}
+
 		case AST_ArrayAssign:
 			t1 = findExpressionType(stmtNode->children[0]), t2 = findExpressionType(stmtNode->children[1]);
 			if (!t1 || !t2 || !areTypesEqual(t1, t2))
@@ -195,11 +200,13 @@ void checkStatements(ASTNode* stmtNode)
 			if (t1) free(t1);
 			if (t2) free(t2);
 			break;
+
 		case AST_Print:
 			// Done for bound checking
 			t1 = findExpressionType(stmtNode->children[0]);
 			if (t1) free(t1);
 			break;
+
 		case AST_While:
 			t1 = findExpressionType(stmtNode->children[0]);
 			if (!t1 || t1->type != DT_Boolean)
@@ -207,14 +214,20 @@ void checkStatements(ASTNode* stmtNode)
 			if (t1) free(t1);
 			checkStatements(stmtNode->children[1]);
 			break;
+
 		case AST_Switch: {
 			t1 = findExpressionType(stmtNode->children[0]);
-			if (t1 && t1->type == DT_Boolean && stmtNode->children[3])
+
+			if (t1 && t1->type == DT_Boolean && stmtNode->children[2])
 				printf("Line %d: Semantic Error: Default case in boolean switch\n", stmtNode->children[0]->value->lineNumber);
-			if (t1 && (t1->type != DT_Boolean || t1->type != DT_Integer)) {
+
+			if (t1 && t1->type == DT_Integer && !stmtNode->children[2])
+				printf("Line %d: Semantic Error: No default case in integer switch\n", stmtNode->children[0]->value->lineNumber);
+
+			if (t1 && (t1->type != DT_Boolean && t1->type != DT_Integer)) {
 				printf("Line %d: Semantic Error: Invalid type of switch variable\n", stmtNode->children[0]->value->lineNumber);
 				free(t1);
-				return;
+				break;
 			}
 			ASTNode* caseNode = stmtNode->children[1];
 			while (caseNode) {
@@ -232,6 +245,7 @@ void checkStatements(ASTNode* stmtNode)
 				checkStatements(caseNode->children[0]);
 			break;
 		}
+
 		case AST_For:
 			t1 = findExpressionType(stmtNode->children[0]);
 			if (t1->type != DT_Integer)
@@ -239,6 +253,7 @@ void checkStatements(ASTNode* stmtNode)
 			free(t1);
 			checkStatements(stmtNode->children[2]);
 			break;
+
 		case AST_FunctionCall:
 			int varCount = 0, paramCount = 0;
 			ASTNode *varList = stmtNode->children[0]->children[0], *actualPList = stmtNode->children[2]->children[0];
@@ -257,14 +272,13 @@ void checkStatements(ASTNode* stmtNode)
 			for (paramList = ftEntry->paramList; actualPList && paramList; paramList = paramList->next, actualPList = actualPList->listNext, paramCount++) {
 				t1 = findExpressionType(actualPList);
 				if (!areTypesEqual(paramList->typeInfo, t1))
-					printf("Line %d: Semantic Error: Actual Parameter #%d of wrong type\n", stmtNode->children[1]->value->lineNumber, paramCount + 1);
+					printf("Line %d: Semantic Error: Actual Parameter #%d of wrong type in function call of %s\n", stmtNode->children[1]->value->lineNumber, paramCount + 1, ftEntry->name);
 				if (t1) free(t1);
 			}
 			if (paramList || actualPList)
 				printf("Line %d: Semantic Error: Actual Parameter list size not equal to number of formal parameters\n", stmtNode->children[1]->value->lineNumber);
-
-			break;
 		}
+
 		stmtNode = stmtNode->listNext;
 	}
 }

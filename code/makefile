@@ -1,5 +1,5 @@
-compileAll: lookupTable.o lexer.o lexer.h parser.o parser.h ast.o ast.h symbolTable.o symbolTable.h typeChecker.o typeChecker.h
-	gcc -g driver.c lookupTable.o lexer.o parser.o stack.o tree.o ast.o symbolTable.o typeChecker.o -o stage1exe
+compileAll: lookupTable.o lexer.o lexer.h parser.o parser.h ast.o ast.h symbolTable.o symbolTable.h typeChecker.o typeChecker.h semanticAnalyser.o semanticAnalyser.h
+	gcc -g driver.c lookupTable.o lexer.o parser.o stack.o tree.o ast.o symbolTable.o typeChecker.o semanticAnalyser.o -o stage1exe
 
 lookupTable.o: lookupTable.c lookupTable.h
 	gcc -g -c lookupTable.c
@@ -24,3 +24,6 @@ symbolTable.o: symbolTable.c symbolTableDef.h
 
 typeChecker.o: typeChecker.c
 	gcc -g -c typeChecker.c
+
+semanticAnalyser.o: semanticAnalyser.c
+	gcc -g -c semanticAnalyser.c

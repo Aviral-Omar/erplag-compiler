@@ -14,6 +14,8 @@ Vatsal Pattani:			2019B5A70697P
 #define BOOL_SIZE 1
 #define POINTER_SIZE 8
 
+typedef struct ASTNodeStruct ASTNode;
+
 typedef enum {
 	DT_Integer,
 	DT_Real,
@@ -55,7 +57,7 @@ struct FTEntryStruct {
 	char* name;
 	int declOrder;
 	int isCalled;
-	int isDriver;
+	int used;
 	int offset;
 	int isDefined;
 	int width;
@@ -64,6 +66,7 @@ struct FTEntryStruct {
 	int returnCount;
 	IDInfo* retList;
 	SymbolTable* st;
+	ASTNode* moduleNode;
 	// For chaining in hash table
 	FunctionTableEntry* next;
 };
@@ -75,6 +78,7 @@ struct STEntryStruct {
 	int width;
 	int isParam;
 	int isReturnVar;
+	int valueAssigned;
 	// For chaining in hash table
 	SymbolTableEntry* next;
 };

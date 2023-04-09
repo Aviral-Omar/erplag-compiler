@@ -8,6 +8,7 @@
 		"stackdef.h": "c",
 		"lexerdef.h": "c",
 		"tree.h": "c",
-		"treedef.h": "c"
+		"treedef.h": "c",
+		"astdef.h": "c"
 	}
 }
