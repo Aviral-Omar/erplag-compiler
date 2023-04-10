@@ -55,7 +55,7 @@ typedef struct FTEntryStruct FunctionTableEntry;
 typedef struct SymbolTableStruct SymbolTable;
 struct FTEntryStruct {
 	char* name;
-	int defnOrder;
+	int defnFound;
 	int isDeclared;
 	int isDefined;
 	int isCalled;

@@ -22,5 +22,5 @@ ast.o: ast.c astDef.h
 symbolTable.o: symbolTable.c symbolTableDef.h
 	gcc -g -c symbolTable.c
 
-semanticAnalyser.o: semanticAnalyser.c
+semanticAnalyser.o: semanticAnalyser.c semanticAnalyserDef.h
 	gcc -g -c semanticAnalyser.c

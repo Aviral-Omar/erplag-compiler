@@ -4,15 +4,20 @@ Aviral Omar:			2019B3A70411P
 Chandra Sekhar Reddy E:	2019B4A70634P
 Vatsal Pattani:			2019B5A70697P
 */
+#include <stdlib.h>
 #include <string.h>
 
 #include "astDef.h"
+#include "semanticAnalyserDef.h"
 #include "symbolTable.h"
 #include "symbolTableDef.h"
 
 void checkReturnSemantics(FunctionTableEntry* ftEntry, int lineNumber);
 void checkForSemanticsHelper(SymbolTableEntry* stEntry, ASTNode* stmtNode);
 void checkForSemantics(ASTNode* stmtNode);
+WhileLL* extractIDs(ASTNode* exprNode);
+int checkWhileSemanticsHelper(ASTNode* stmtNode, WhileLL* wll);
+void checkWhileSemantics(ASTNode* stmtNode);
 void checkRecursion(ASTNode* stmtNode);
 void handleStatementsNode(ASTNode* stmtsNode);
 void checkSemantics();
@@ -84,6 +89,101 @@ void checkForSemantics(ASTNode* stmtNode)
 	}
 }
 
+WhileLL* extractIDs(ASTNode* exprNode)
+{
+	WhileLL *wll = NULL, *tmp = NULL;
+	if (exprNode->nodeType == AST_ID) {
+		wll = (WhileLL*)malloc(sizeof(WhileLL));
+		wll->stEntry = findSymbolEntry(exprNode->value->data.lexeme, exprNode->st);
+		wll->next = NULL;
+		return wll;
+	}
+	if (exprNode->nodeType == AST_ArrayAccess) {
+		wll = (WhileLL*)malloc(sizeof(WhileLL));
+		wll->stEntry = findSymbolEntry(exprNode->children[0]->value->data.lexeme, exprNode->st);
+		wll->next = NULL;
+		return wll;
+	}
+	if (exprNode->childCount) {
+		wll = extractIDs(exprNode->children[0]);
+		tmp = wll;
+		if (tmp) {
+			while (tmp->next)
+				tmp = tmp->next;
+			tmp->next = extractIDs(exprNode->children[1]);
+		} else
+			wll = extractIDs(exprNode->children[1]);
+	}
+	return wll;
+}
+
+int checkWhileSemanticsHelper(ASTNode* stmtNode, WhileLL* wll)
+{
+	while (stmtNode) {
+		switch (stmtNode->nodeType) {
+		case AST_Assign:
+			for (WhileLL* tmp = wll; tmp; tmp = tmp->next)
+				if (!strcmp(tmp->stEntry->idInfo->name, stmtNode->children[0]->value->data.lexeme) && tmp->stEntry == findSymbolEntry(stmtNode->children[0]->value->data.lexeme, stmtNode->st))
+					return 1;
+
+			break;
+
+		case AST_FunctionCall:
+			for (WhileLL* tmp = wll; tmp; tmp = tmp->next)
+				for (ASTNode* varNode = stmtNode->children[0]->children[0]; varNode; varNode = varNode->listNext)
+					if (!strcmp(tmp->stEntry->idInfo->name, varNode->value->data.lexeme) && tmp->stEntry == findSymbolEntry(varNode->value->data.lexeme, varNode->st))
+						return 1;
+
+			break;
+
+		case AST_Switch:
+			for (ASTNode* caseNode = stmtNode->children[1]; caseNode; caseNode = caseNode->listNext)
+				if (checkWhileSemanticsHelper(caseNode->children[1]->children[0], wll))
+					return 1;
+			if (stmtNode->children[2])
+				if (checkWhileSemanticsHelper(stmtNode->children[2]->children[0]->children[0], wll))
+					return 1;
+			break;
+		case AST_While:
+			if (checkWhileSemanticsHelper(stmtNode->children[1]->children[0], wll))
+				return 1;
+			break;
+		case AST_For:
+			if (checkWhileSemanticsHelper(stmtNode->children[2]->children[0], wll))
+				return 1;
+		}
+		stmtNode = stmtNode->listNext;
+	}
+	return 0;
+}
+
+void checkWhileSemantics(ASTNode* stmtNode)
+{
+	while (stmtNode) {
+		switch (stmtNode->nodeType) {
+		case AST_For: {
+			checkWhileSemantics(stmtNode->children[2]->children[0]);
+			break;
+		}
+		case AST_Switch:
+			for (ASTNode* tmp = stmtNode->children[1]; tmp; tmp = tmp->listNext)
+				checkWhileSemantics(tmp->children[1]->children[0]);
+			if (stmtNode->children[2])
+				checkWhileSemantics(stmtNode->children[2]->children[0]->children[0]);
+			break;
+		case AST_While: {
+			WhileLL* wll = extractIDs(stmtNode->children[0]);
+			if (!checkWhileSemanticsHelper(stmtNode->children[1]->children[0], wll))
+				printf("Line %d: Semantic Error: None of the conditional variables in while condition is assigned any value\n", stmtNode->children[0]->value->lineNumber);
+			for (WhileLL* tmp = wll->next; wll; wll = tmp, tmp = tmp ? tmp->next : NULL)
+				free(wll);
+			checkWhileSemantics(stmtNode->children[1]->children[0]);
+		}
+		}
+		stmtNode = stmtNode->listNext;
+	}
+}
+
 void checkRecursion(ASTNode* stmtNode)
 {
 	FunctionTableEntry* ftEntry;
@@ -131,7 +231,8 @@ void handleStatementsNode(ASTNode* stmtsNode)
 
 
 	checkForSemantics(stmtsNode->children[0]);
-	// TODO assign while variables some value (TC5)
+
+	checkWhileSemantics(stmtsNode->children[0]);
 }
 
 void checkSemantics()

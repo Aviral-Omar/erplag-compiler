@@ -354,7 +354,7 @@ void insertDeclaration(ASTNode* node)
 	}
 
 	fnEntry = (FunctionTableEntry*)malloc(sizeof(FunctionTableEntry));
-	fnEntry->defnOrder = 0;
+	fnEntry->defnFound = 0;
 	fnEntry->isCalled = 0;
 	fnEntry->isUsed = 0;
 	fnEntry->width = 0;
@@ -613,7 +613,8 @@ void insertDefinition(ASTNode* node)
 		insertIntoFunctionTable(fnEntry);
 	}
 
-	fnEntry->defnOrder = ++functionOrder;
+	fnEntry->defnFound = 1;
+	++functionOrder;
 	fnEntry->moduleNode = node;
 	fnEntry->offset = fnTableOffset;
 
@@ -668,7 +669,8 @@ void insertDefinition(ASTNode* node)
 void insertDriver(ASTNode* node)
 {
 	FunctionTableEntry* fnEntry = (FunctionTableEntry*)malloc(sizeof(FunctionTableEntry));
-	fnEntry->defnOrder = ++functionOrder;
+	fnEntry->defnFound = 1;
+	++functionOrder;
 	fnEntry->isCalled = 0;
 	fnEntry->isDeclared = 0;
 	fnEntry->isUsed = 0;
@@ -712,7 +714,7 @@ void createSymbolTables()
 		node = node->children[0];
 		while (node) {
 			fnEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
-			if (!fnEntry || !fnEntry->defnOrder)
+			if (!fnEntry || !fnEntry->defnFound)
 				insertDefinition(node);
 			else
 				printf("Line %d: Semantic Error: Redefined module %s\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
@@ -730,7 +732,7 @@ void createSymbolTables()
 		node = node->children[0];
 		while (node) {
 			fnEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
-			if (!fnEntry || !fnEntry->defnOrder)
+			if (!fnEntry || !fnEntry->defnFound)
 				insertDefinition(node);
 			else
 				printf("Line %d: Semantic Error: Redefined module %s\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
