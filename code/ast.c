@@ -267,6 +267,8 @@ ASTNode* buildAST(ParseTNode* currNode)
 		currASTNode = createASTNode(AST_Driver, 1);
 
 		removeAndAdvance(&currChild);
+		currASTNode->value = currChild->info.tokIn;
+		currChild->info.tokIn = NULL;
 		removeAndAdvance(&currChild);
 		removeAndAdvance(&currChild);
 		removeAndAdvance(&currChild);
@@ -799,22 +801,31 @@ ASTNode* buildAST(ParseTNode* currNode)
 
 void printAST(ASTNode* node)
 {
-	printf("%s", astNodeMap[node->nodeType]);
+	printf("%-30s", astNodeMap[node->nodeType]);
 	switch (node->nodeType) {
 	case AST_ID:
-		printf(" - %s", node->value->data.lexeme);
+		printf("%-22s", node->value->data.lexeme);
 		break;
 	case AST_Num:
-		printf(" - %d", node->value->data.intValue);
+		printf("%-22d", node->value->data.intValue);
 		break;
 	case AST_RNum:
-		printf(" - %f", node->value->data.floatValue);
+		printf("%-22f", node->value->data.floatValue);
+		break;
+	default:
+		printf("%-22s", "---");
 	}
 
 	if (node->parent)
-		printf(" : %s\n", astNodeMap[node->parent->nodeType]);
+		printf("%-30s", astNodeMap[node->parent->nodeType]);
 	else
-		printf(" : ROOT\n");
+		printf("%-30s", "ROOT");
+
+	if (node->listNext)
+		printf("%-30s", astNodeMap[node->listNext->nodeType]);
+	else
+		printf("%-30s", "---");
+	printf("%-16d\n", node->childCount);
 	for (int i = 0; i < node->childCount; i++)
 		if (node->children[i])
 			printAST(node->children[i]);

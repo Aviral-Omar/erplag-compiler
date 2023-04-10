@@ -97,9 +97,8 @@ void deleteParseTree(ParseTNode *node)
 
 void printParseTree(ParseTNode *node, FILE *outFile)
 {
-	if (node == NULL)
-		return;
-	printParseTree(node->child, outFile);
+	if (node->child)
+		printParseTree(node->child, outFile);
 	if (node->type == 'N') {
 		fprintf(outFile, "%-24s\t", "---");
 		fprintf(outFile, "%-10s\t", "---");
@@ -142,7 +141,7 @@ void printParseTree(ParseTNode *node, FILE *outFile)
 
 	if (node->child) {
 		ParseTNode *nextSibling = node->child->nextSibling;
-		while (nextSibling != NULL) {
+		while (nextSibling) {
 			printParseTree(nextSibling, outFile);
 			nextSibling = nextSibling->nextSibling;
 		}

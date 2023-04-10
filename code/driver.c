@@ -82,6 +82,16 @@ int main(int argc, char *argv[])
 			runParser(argv[1], argv[2]);
 			if (lexerCorrect && parserCorrect) {
 				createAST();
+				printf("AST Printing Order: Node --> Children in Order --> Next Node in Linked List if any\n\n");
+				printf("%-30s", "Node Type");
+				printf("%-22s", "Value");
+				printf("%-30s", "Parent Node Type");
+				printf("%-30s", "Next Node in List");
+				printf("%-16s\n", "Children Count");
+				printf("-----------------------------------------------------");
+				printf("-----------------------------------------------------");
+				printf("---------------------\n");
+
 				printAST(astRoot);
 			}
 			deleteParseTree(parseTreeRoot);
