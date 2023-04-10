@@ -9,8 +9,8 @@ Vatsal Pattani:			2019B5A70697P
 
 #define SYMBOL_TABLE_SIZE 149
 
-#define INT_SIZE 4
-#define REAL_SIZE 8
+#define INT_SIZE 2
+#define REAL_SIZE 4
 #define BOOL_SIZE 1
 #define POINTER_SIZE 8
 
@@ -89,7 +89,7 @@ struct SymbolTableStruct {
 	SymbolTable* parentST;
 	int startLine;
 	int endLine;
-	int isRoot;
+	int nestingLevel;
 	int size;
 };
 
