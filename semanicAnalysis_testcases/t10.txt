@@ -1,5 +1,5 @@
-** Test case 10: Testing execution flow statements - switch and for 
-This Includes 
+** Test case 10: Testing execution flow statements - switch and for
+This Includes
 1. Switch variable type and case values plus the presence of default statement
 2. Whether the loop variable is not assigned a value in for loop **
 
@@ -20,17 +20,17 @@ start
 			 declare Q: integer;
 			 declare B: array[-10..30] of integer;
 			 declare E: array[4..10] of integer;
-			 B[12]:= k*20; 	                  	
+			 B[12]:= k*20;
 			 break;
-		case 20: p:= 12.90 + p;       
+		case 20: p:= 12.90 + p;
 			 get_value(n);
 			 for(m in 10..15)
 			 start
 				m:= n+m;		**ERROR: loop variable cannot be assigned any value**
-			 end       
+			 end
 			 break;
 		default: m:=m*2;
-			 break;			 	
+			 break;
 	end
 
 	u:= u+ x*m-n;
@@ -49,23 +49,23 @@ start
 			 declare Q: integer;
 			 declare B: array[10..30] of integer;
 			 declare E: array[4..10] of integer;
-			 B[12]:= k*20; 	                  	
+			 B[12]:= k*20;
 			 break;
 		case 20: A:= 12.90 + p;       		**ERROR: Case value is incorrect as condiiton variable type is boolean**
-			 get_value(Q);
+			 get_value(Q);			**ERROR: variable Q not declared**
 			 for(m in 10..15)
 			 start
 				n:= n+m;
 			 end
-			 E[7]:= k+12 - Q*10;       
+			 E[7]:= k+12 - Q*10;		**ERROR: variable E not declared**
 			 break;
 		case true: m:=m-n;
-			 print(m);			
+			 print(m);
 			 break;
-		default: E[9]:= B[15]+Q;	      **ERROR: presence of default statement is incorrect as condiiton variable type is boolean** 
-			 break;			 	
+		default: E[9]:= B[15]+Q;	      **ERROR: presence of default statement is incorrect as condiiton variable type is boolean and variable E not declared**
+			 break;
 	end
-	
+
 end
 
 <<module for_loop_demo>>
@@ -77,8 +77,8 @@ start
 	for(k in 12..70)
 	start
 		u:= x+k;
-		k:= k+2;                            **ERROR: for loop variable k cannot be assigned a value** 
-	end 
+		k:= k+2;                            **ERROR: for loop variable k cannot be assigned a value**
+	end
 end
 
 <<<driver program>>>
