@@ -498,17 +498,18 @@ void handleNodes(ASTNode* node, SymbolTable* st)
 	case AST_Switch: {
 		t1 = findExpressionType(node->children[0], st);
 
+		if (!t1 || (t1->type != DT_Boolean && t1->type != DT_Integer)) {
+			printf("Line %d: Semantic Error: Invalid type of switch variable\n", node->children[0]->value->lineNumber);
+			free(t1);
+			break;
+		}
+
 		if (t1 && t1->type == DT_Boolean && node->children[2])
 			printf("Line %d: Semantic Error: Default case in boolean switch\n", node->children[0]->value->lineNumber);
 
 		if (t1 && t1->type == DT_Integer && !node->children[2])
 			printf("Line %d: Semantic Error: No default case in integer switch\n", node->children[0]->value->lineNumber);
 
-		if (t1 && (t1->type != DT_Boolean && t1->type != DT_Integer)) {
-			printf("Line %d: Semantic Error: Invalid type of switch variable\n", node->children[0]->value->lineNumber);
-			free(t1);
-			break;
-		}
 		ASTNode* caseNode = node->children[1];
 		while (caseNode) {
 			t2 = findExpressionType(caseNode->children[0], st);
@@ -621,7 +622,6 @@ void insertDefinition(ASTNode* node)
 	ASTNode* iPList = node->children[1];
 	ASTNode* oPList = node->children[2];
 
-	// TODO handle array reference in Input parameters
 	if (iPList->childCount) {
 		iPList = iPList->children[0];
 		fnEntry->paramCount++;

@@ -87,6 +87,8 @@ struct STEntryStruct {
 struct SymbolTableStruct {
 	SymbolTableEntry* stArray[SYMBOL_TABLE_SIZE];
 	SymbolTable* parentST;
+	int startLine;
+	int endLine;
 	int isRoot;
 	int size;
 };

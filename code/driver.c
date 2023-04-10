@@ -51,62 +51,43 @@ int main(int argc, char *argv[])
 	do {
 		printf("\n============ Select Option ============\n");
 		printf("0: For exit\n");
-		printf("1: For removal of comments\n");
-		printf("2: For printing the token list\n");
-		printf("3: For parsing\n");
-		printf("4: For printing the total time taken\n");
-		printf("5: For printing First & Follow sets, Parse Table in respective txt files\n");
-		printf("6: For generating and printing Abstract Syntax Tree\n");
-		printf("7: For printing the number of nodes in AST, memory allocated and compression ratio\n");
-		printf("8: For generating and printing symbol table\n");
-		printf("9: For verifying semantic correctness\n\n");
+		printf("1: For printing the token list\n");
+		printf("2: For parsing\n");
+		printf("3: For generating and printing Abstract Syntax Tree\n");
+		printf("4: For printing the number of nodes in AST, memory allocated and compression ratio\n");
+		printf("5: For generating and printing symbol table\n");
+		printf("6: For printing activation record size for each function\n");
+		printf("7: For printing type expressions and width of arrays\n");
+		printf("8: For error reporting and printing the total time taken\n");
+		printf("9: For producing assembly code\n");
+		printf("10: For removal of comments\n");
+		printf("11: For printing First & Follow sets, Parse Table in respective txt files\n\n");
 		printf("Enter option choice: ");
 		scanf(" %d", &option);
 		printf("\n");
 
-		if (option == 1) {
-			removeComments(argv[1], "cleaned");
-		} else if (option == 2) {
+		switch (option) {
+		case 1:
 			runOnlyLexer(argv[1]);
-		} else if (option == 3) {
+			break;
+
+		case 2:
 			runParser(argv[1], argv[2]);
 			if (parseTreeRoot)
 				deleteParseTree(parseTreeRoot);
 			parseTreeRoot = NULL;
-		} else if (option == 4) {
-			clock_t start_time, end_time;
+			break;
 
-			double total_CPU_time, total_CPU_time_in_seconds;
-
-			start_time = clock();
-
-			runParser(argv[1], argv[2]);
-			if (parseTreeRoot)
-				deleteParseTree(parseTreeRoot);
-			parseTreeRoot = NULL;
-
-			end_time = clock();
-
-			total_CPU_time = (double)(end_time - start_time);
-
-			total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
-
-			printf("Total CPU Time: %f\n", total_CPU_time);
-			printf("Total CPU Time in seconds: %f\n\n", total_CPU_time_in_seconds);
-		} else if (option == 5) {
-			initParser();
-			printFirstSets();
-			printFollowSets();
-			printParseTable();
-			clearParserData();
-		} else if (option == 6) {
+		case 3:
 			runParser(argv[1], argv[2]);
 			if (lexerCorrect && parserCorrect) {
 				createAST();
 				printAST(astRoot);
 			}
 			deleteParseTree(parseTreeRoot);
-		} else if (option == 7) {
+			break;
+
+		case 4:
 			runParser(argv[1], argv[2]);
 			if (lexerCorrect && parserCorrect) {
 				createAST();
@@ -120,22 +101,53 @@ int main(int argc, char *argv[])
 			printf("Memory allocated to Abstract Syntax Tree = %d\n", astMem);
 			printf("Compression Ratio = %lf\n", (double)(ptMem - astMem) * 100 / ptMem);
 			deleteParseTree(parseTreeRoot);
-		} else if (option == 8) {
+			break;
+
+		case 5:
+			break;
+		case 6:
+			break;
+		case 7:
+			break;
+		case 8:
+			clock_t start_time, end_time;
+
+			double total_CPU_time, total_CPU_time_in_seconds;
+
+			start_time = clock();
+
 			runParser(argv[1], argv[2]);
 			if (lexerCorrect && parserCorrect) {
 				createAST();
 				createSymbolTables();
-			}
-			deleteParseTree(parseTreeRoot);
-		} else if (option == 9) {
-			runParser(argv[1], argv[2]);
-			if (lexerCorrect && parserCorrect) {
-				createAST();
-				createSymbolTables();
-				checkSemantics();
+				runSemanticAnalyser();
 			}
 			deleteParseTree(parseTreeRoot);
 			// TODO Clean stage 2 data
+
+			end_time = clock();
+
+			total_CPU_time = (double)(end_time - start_time);
+
+			total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
+
+			printf("\nTotal CPU Time: %f\n", total_CPU_time);
+			printf("Total CPU Time in seconds: %f\n\n", total_CPU_time_in_seconds);
+			break;
+
+		case 9:
+			break;
+
+		case 10:
+			removeComments(argv[1], "cleaned");
+			break;
+
+		case 11:
+			initParser();
+			printFirstSets();
+			printFollowSets();
+			printParseTable();
+			clearParserData();
 		}
 	} while (option);
 
