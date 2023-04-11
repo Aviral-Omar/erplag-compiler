@@ -12,7 +12,9 @@ Vatsal Pattani:			2019B5A70697P
 
 FunctionTableEntry* functionTable[SYMBOL_TABLE_SIZE];
 
-int fnTableOffset = 0;
+int semanticPrint = 1;
+
+char* typeArray[4] = {"integer", "real", "boolean", "array"};
 
 int stHash(char* key);
 FunctionTableEntry* findFunctionEntry(char* name);
@@ -25,13 +27,15 @@ int areTypesEqual(TypeInfo* t1, TypeInfo* t2);
 TypeInfo* findExpressionType(ASTNode* node, SymbolTable* st);
 TypeInfo* createTypeInfo(ASTNode* node);
 void insertDeclaration(ASTNode* node);
-void insertParams(ASTNode* moduleNode, SymbolTable* st);
+void insertParams(ASTNode* node, FunctionTableEntry* fnEntry);
 int getLineNumber(ASTNode* node);
-void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber);
-int insertStatements(ASTNode* node, SymbolTable* parentST);
+void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber, FunctionTableEntry* fnEntry);
+int insertStatements(ASTNode* node, SymbolTable* parentST, FunctionTableEntry* fnEntry);
 void insertDefinition(ASTNode* node);
 void insertDriver(ASTNode* node);
 void createSymbolTables();
+void printFunctionEntries(FunctionTableEntry* fnEntry);
+void printTableEntries(ASTNode* node, char* fnName);
 void printSymbolTable();
 
 
@@ -89,7 +93,6 @@ void insertIntoFunctionTable(FunctionTableEntry* fnEntry)
 
 int insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st)
 {
-	// TODO ask if variable overriding supported
 	int hashCode = stHash(stEntry->idInfo->name);
 	if (!st->stArray[hashCode])
 		st->stArray[hashCode] = stEntry;
@@ -109,7 +112,6 @@ int insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st)
 
 int calcSize(TypeInfo* info)
 {
-	// TODO clear sizes from maam
 	// printf("Type = %d\n", info->type);
 	// fflush(stdout);
 
@@ -121,6 +123,7 @@ int calcSize(TypeInfo* info)
 		return BOOL_SIZE;
 	// Else it is array
 	ArrayInfo* arrInfo = info->arrInfo;
+	// TODO confirm this
 	if (!arrInfo->isStatic)
 		return POINTER_SIZE;
 	int arrayTypeSize, arrayLen;
@@ -134,7 +137,7 @@ int calcSize(TypeInfo* info)
 	arrayLen = arrInfo->uBoundSign * arrInfo->upperBound.numBound - arrInfo->lBoundSign * arrInfo->lowerBound.numBound + 1;
 	// printf("Array Type = %d, Size = %d, uBound = %d %d, lBound = %d %d, Len = %d\n", arrInfo->arrayType, arrayTypeSize, arrInfo->uBoundSign, arrInfo->upperBound.numBound, arrInfo->lBoundSign, arrInfo->lowerBound.numBound, arrayLen);
 	// fflush(stdout);
-	return arrayTypeSize * arrayLen;
+	return arrayTypeSize * arrayLen + 1;
 }
 
 void checkBounds(ArrayInfo* arrInfo, ASTNode* indexNode)
@@ -151,7 +154,7 @@ void checkBounds(ArrayInfo* arrInfo, ASTNode* indexNode)
 	int index = sign * indexNode->value->data.intValue;
 
 	if (index < arrInfo->lBoundSign * arrInfo->lowerBound.numBound || index > arrInfo->uBoundSign * arrInfo->upperBound.numBound)
-		printf("Line %d: Semantic Error: Index %d used for array %s out of bounds\n", indexNode->value->lineNumber, index, indexNode->parent->parent->children[0]->value->data.lexeme);
+		if (semanticPrint) printf("Line %d: Semantic Error: Index %d used for array %s out of bounds\n", indexNode->value->lineNumber, index, indexNode->parent->parent->children[0]->value->data.lexeme);
 }
 
 int areTypesEqual(TypeInfo* t1, TypeInfo* t2)
@@ -184,7 +187,7 @@ TypeInfo* findExpressionType(ASTNode* node, SymbolTable* st)
 	case AST_ArrayAccess: {
 		t1 = findExpressionType(node->children[1]->children[1], st);
 		if (t1 && t1->type != DT_Integer) {
-			printf("Line %d: Semantic Error: Array Expression not of type integer\n", node->value->lineNumber);
+			if (semanticPrint) printf("Line %d: Semantic Error: Array Expression not of type integer\n", node->value->lineNumber);
 			free(t1);
 		}
 		SymbolTableEntry* stEntry = findSymbolEntry(node->children[0]->value->data.lexeme, st);
@@ -228,7 +231,7 @@ TypeInfo* findExpressionType(ASTNode* node, SymbolTable* st)
 		if (areTypesEqual(t1, t2) && t1->type != DT_Array && t1->type != DT_Boolean)
 			return t1;
 		// else error
-		printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
+		if (semanticPrint) printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
 		return NULL;
 	case AST_Div:
 		t1 = findExpressionType(node->children[0], st);
@@ -247,7 +250,7 @@ TypeInfo* findExpressionType(ASTNode* node, SymbolTable* st)
 			t1->arrInfo = NULL;
 			return t1;
 		}
-		printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
+		if (semanticPrint) printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
 		free(t1);
 		free(t2);
 		return NULL;
@@ -271,7 +274,7 @@ TypeInfo* findExpressionType(ASTNode* node, SymbolTable* st)
 			t1->arrInfo = NULL;
 			return t1;
 		}
-		printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
+		if (semanticPrint) printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
 		return NULL;
 	case AST_AND:
 	case AST_OR:
@@ -288,7 +291,7 @@ TypeInfo* findExpressionType(ASTNode* node, SymbolTable* st)
 			return t1;
 		}
 
-		printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
+		if (semanticPrint) printf("Line %d: Semantic Error: Mismatched/wrong types in expression\n", node->value->lineNumber);
 		return NULL;
 	default:
 		return NULL;
@@ -350,7 +353,7 @@ void insertDeclaration(ASTNode* node)
 	FunctionTableEntry* fnEntry = findFunctionEntry(node->value->data.lexeme);
 
 	if (fnEntry) {
-		printf("Line %d: Semantic Error: Redeclared module %s\n", node->value->lineNumber, node->value->data.lexeme);
+		if (semanticPrint) printf("Line %d: Semantic Error: Redeclared module %s\n", node->value->lineNumber, node->value->data.lexeme);
 		return;
 	}
 
@@ -358,8 +361,7 @@ void insertDeclaration(ASTNode* node)
 	fnEntry->defnFound = 0;
 	fnEntry->isCalled = 0;
 	fnEntry->isUsed = 0;
-	fnEntry->width = 0;
-	fnEntry->offset = -1;
+	fnEntry->size = 0;
 	fnEntry->isDeclared = 1;
 	fnEntry->isDefined = 0;
 	fnEntry->name = node->value->data.lexeme;
@@ -374,47 +376,43 @@ void insertDeclaration(ASTNode* node)
 	insertIntoFunctionTable(fnEntry);
 }
 
-void insertParams(ASTNode* node, SymbolTable* symbolTable)
+void insertParams(ASTNode* node, FunctionTableEntry* fnEntry)
 {
-	// TODO Top symbol table has input params and return variables only
-	FunctionTableEntry* ftEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
-	ftEntry->st = symbolTable;
-
-	for (IDInfo* inputParam = ftEntry->paramList; inputParam != NULL; inputParam = inputParam->next) {
+	for (IDInfo* inputParam = fnEntry->paramList; inputParam != NULL; inputParam = inputParam->next) {
 		SymbolTableEntry* stEntry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
 		stEntry->idInfo = inputParam;
-		stEntry->offset = symbolTable->size;
+		stEntry->offset = fnEntry->size;
 		stEntry->width = calcSize(inputParam->typeInfo);
 		stEntry->isParam = 1;
 		stEntry->isReturnVar = 0;
 		stEntry->valueAssigned = 0;
 		stEntry->next = NULL;
-		symbolTable->size += stEntry->width;
+		fnEntry->size += stEntry->width;
 
 		TypeInfo* typeInfo = stEntry->idInfo->typeInfo;
-		if (typeInfo->type == DT_Array && !typeInfo->arrInfo->isStatic && (!findSymbolEntry(typeInfo->arrInfo->lowerBound.idBound, symbolTable) || !findSymbolEntry(typeInfo->arrInfo->upperBound.idBound, symbolTable))) {
-			printf("Line %d: Semantic Error: Identifier in array range not present in input parameters\n", node->children[0]->value->lineNumber);
+		if (typeInfo->type == DT_Array && !typeInfo->arrInfo->isStatic && (!findSymbolEntry(typeInfo->arrInfo->lowerBound.idBound, fnEntry->st) || !findSymbolEntry(typeInfo->arrInfo->upperBound.idBound, fnEntry->st))) {
+			if (semanticPrint) printf("Line %d: Semantic Error: Identifier in array range not present in input parameters\n", node->children[0]->value->lineNumber);
 		}
 
-		if (insertIntoSymbolTable(stEntry, symbolTable))
-			printf("Line %d: Semantic Error: Reused %s in module parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
+		if (insertIntoSymbolTable(stEntry, fnEntry->st))
+			if (semanticPrint) printf("Line %d: Semantic Error: Reused %s in module parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
 	}
 
-	for (IDInfo* retVar = ftEntry->retList; retVar != NULL; retVar = retVar->next) {
+	for (IDInfo* retVar = fnEntry->retList; retVar != NULL; retVar = retVar->next) {
 		SymbolTableEntry* stEntry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
 		stEntry->idInfo = retVar;
-		stEntry->offset = symbolTable->size;
+		stEntry->offset = fnEntry->size;
 		stEntry->width = calcSize(retVar->typeInfo);
 		stEntry->isParam = 0;
 		stEntry->isReturnVar = 1;
 		stEntry->valueAssigned = 0;
 		stEntry->next = NULL;
-		symbolTable->size += stEntry->width;
+		fnEntry->size += stEntry->width;
 
-		if (insertIntoSymbolTable(stEntry, symbolTable))
-			printf("Line %d: Semantic Error: Reused %s in module parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
+		if (insertIntoSymbolTable(stEntry, fnEntry->st))
+			if (semanticPrint) printf("Line %d: Semantic Error: Reused %s in module parameters\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
 	}
-	// printf("Params inserted\n");
+	// if (semanticPrint) printf("Params inserted\n");
 	// fflush(stdout);
 }
 
@@ -439,9 +437,9 @@ int getLineNumber(ASTNode* node)
 }
 
 // returns last line number
-void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
+void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber, FunctionTableEntry* fnEntry)
 {
-	// printf("Assigning %s\n", astNodeMap[node->nodeType]);
+	// if (semanticPrint) printf("Assigning %s\n", astNodeMap[node->nodeType]);
 	// fflush(stdout);
 	node->st = st;
 
@@ -449,9 +447,10 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
 	switch (node->nodeType) {
 	case AST_ID: {
 		if (node->parent->nodeType != AST_FunctionCall && !findSymbolEntry(node->value->data.lexeme, st))
-			printf("Line %d: Semantic Error: Variable %s not declared\n", node->value->lineNumber, node->value->data.lexeme);
-		else if (node->parent->nodeType == AST_FunctionCall && !findFunctionEntry(node->value->data.lexeme))
-			printf("Line %d: Semantic Error: Module %s not declared\n", node->value->lineNumber, node->value->data.lexeme);
+			if (semanticPrint)
+				printf("Line %d: Semantic Error: Variable %s not declared\n", node->value->lineNumber, node->value->data.lexeme);
+			else if (node->parent->nodeType == AST_FunctionCall && !findFunctionEntry(node->value->data.lexeme))
+				if (semanticPrint) printf("Line %d: Semantic Error: Module %s not declared\n", node->value->lineNumber, node->value->data.lexeme);
 		break;
 	}
 
@@ -474,16 +473,16 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
 			stEntry->idInfo->name = idNode->value->data.lexeme;
 			stEntry->idInfo->typeInfo = t2;
 			stEntry->idInfo->next = NULL;
-			stEntry->offset = st->size;
+			stEntry->offset = fnEntry->size;
 			stEntry->width = calcSize(t2);
 			stEntry->isParam = 0;
 			stEntry->isReturnVar = 0;
 			stEntry->valueAssigned = 0;
 			stEntry->next = NULL;
-			st->size += stEntry->width;
+			fnEntry->size += stEntry->width;
 
 			if (insertIntoSymbolTable(stEntry, st))
-				printf("Line %d: Semantic Error: Redeclared variable %s\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
+				if (semanticPrint) printf("Line %d: Semantic Error: Redeclared variable %s\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
 		}
 		free(t1);
 		break;
@@ -497,7 +496,7 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
 		t1 = findExpressionType(node->children[0], st);
 		t2 = findExpressionType(node->children[1], st);
 		if (!t1 || !t2 || !areTypesEqual(t1, t2))
-			printf("Line %d: Semantic Error: Mismatch between type of LHS and RHS of assignment\n", node->children[0]->value->lineNumber);
+			if (semanticPrint) printf("Line %d: Semantic Error: Mismatch between type of LHS and RHS of assignment\n", node->children[0]->value->lineNumber);
 		if (t1) free(t1);
 		if (t2) free(t2);
 		break;
@@ -508,7 +507,7 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
 		t1 = findExpressionType(node->children[0], st);
 		t2 = findExpressionType(node->children[1], st);
 		if (!t1 || !t2 || !areTypesEqual(t1, t2))
-			printf("Line %d: Semantic Error: Mismatch between type of LHS and RHS of assignment\n", node->children[0]->children[0]->value->lineNumber);
+			if (semanticPrint) printf("Line %d: Semantic Error: Mismatch between type of LHS and RHS of assignment\n", node->children[0]->children[0]->value->lineNumber);
 		if (t1) free(t1);
 		if (t2) free(t2);
 		break;
@@ -524,7 +523,7 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
 		*lineNumber = node->children[0]->value->lineNumber;
 		t1 = findExpressionType(node->children[0], st);
 		if (!t1 || t1->type != DT_Boolean)
-			printf("Line %d: Semantic Error: While expression is not of boolean type\n", node->children[0]->value->lineNumber);
+			if (semanticPrint) printf("Line %d: Semantic Error: While expression is not of boolean type\n", node->children[0]->value->lineNumber);
 		if (t1) free(t1);
 		break;
 
@@ -533,22 +532,22 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
 		t1 = findExpressionType(node->children[0], st);
 
 		if (!t1 || (t1->type != DT_Boolean && t1->type != DT_Integer)) {
-			printf("Line %d: Semantic Error: Invalid type of switch variable\n", node->children[0]->value->lineNumber);
+			if (semanticPrint) printf("Line %d: Semantic Error: Invalid type of switch variable\n", node->children[0]->value->lineNumber);
 			free(t1);
 			break;
 		}
 
 		if (t1 && t1->type == DT_Boolean && node->children[2])
-			printf("Line %d: Semantic Error: Default case in boolean switch\n", node->children[0]->value->lineNumber);
+			if (semanticPrint) printf("Line %d: Semantic Error: Default case in boolean switch\n", node->children[0]->value->lineNumber);
 
 		if (t1 && t1->type == DT_Integer && !node->children[2])
-			printf("Line %d: Semantic Error: No default case in integer switch\n", node->children[0]->value->lineNumber);
+			if (semanticPrint) printf("Line %d: Semantic Error: No default case in integer switch\n", node->children[0]->value->lineNumber);
 
 		ASTNode* caseNode = node->children[1];
 		while (caseNode) {
 			t2 = findExpressionType(caseNode->children[0], st);
 			if (!t2 || t2->type != t1->type)
-				printf("Line %d: Semantic Error: Mismatch type of case value\n", caseNode->children[0]->value->lineNumber);
+				if (semanticPrint) printf("Line %d: Semantic Error: Mismatch type of case value\n", caseNode->children[0]->value->lineNumber);
 			if (t2) free(t2);
 
 			caseNode = caseNode->listNext;
@@ -561,7 +560,7 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
 		*lineNumber = node->children[0]->value->lineNumber;
 		t1 = findExpressionType(node->children[0], st);
 		if (t1->type != DT_Integer)
-			printf("Line %d: Semantic Error: Variable %s must be of type integer\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
+			if (semanticPrint) printf("Line %d: Semantic Error: Variable %s must be of type integer\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
 		free(t1);
 		break;
 
@@ -575,7 +574,7 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
 
 		ftEntry->isUsed = 1;
 		if (!ftEntry->isDeclared && !ftEntry->isDefined) {
-			printf("Line %d: Semantic Error: Module %s not defined\n", node->children[1]->value->lineNumber, node->children[1]->value->data.lexeme);
+			if (semanticPrint) printf("Line %d: Semantic Error: Module %s not defined\n", node->children[1]->value->lineNumber, node->children[1]->value->data.lexeme);
 			break;
 		}
 
@@ -583,41 +582,41 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber)
 		for (retList = ftEntry->retList; varList && retList; retList = retList->next, varList = varList->listNext, varCount++) {
 			t1 = findExpressionType(varList, st);
 			if (!areTypesEqual(retList->typeInfo, t1))
-				printf("Line %d: Semantic Error: Output parameter %s of wrong type\n", node->children[1]->value->lineNumber, varList->value->data.lexeme);
+				if (semanticPrint) printf("Line %d: Semantic Error: Output parameter %s of wrong type\n", node->children[1]->value->lineNumber, varList->value->data.lexeme);
 			if (t1) free(t1);
 		}
 		if (retList || varList)
-			printf("Line %d: Semantic Error: Output parameter list size not equal to number of return values\n", node->children[1]->value->lineNumber);
+			if (semanticPrint) printf("Line %d: Semantic Error: Output parameter list size not equal to number of return values\n", node->children[1]->value->lineNumber);
 
 		for (paramList = ftEntry->paramList; actualPList && paramList; paramList = paramList->next, actualPList = actualPList->listNext, paramCount++) {
 			t1 = findExpressionType(actualPList, st);
 			if (!areTypesEqual(paramList->typeInfo, t1))
-				printf("Line %d: Semantic Error: Actual Parameter #%d of wrong type in function call of %s\n", node->children[1]->value->lineNumber, paramCount + 1, ftEntry->name);
+				if (semanticPrint) printf("Line %d: Semantic Error: Actual Parameter #%d of wrong type in function call of %s\n", node->children[1]->value->lineNumber, paramCount + 1, ftEntry->name);
 			if (t1) free(t1);
 		}
 		if (paramList || actualPList)
-			printf("Line %d: Semantic Error: Actual Parameter list size not equal to number of formal parameters\n", node->children[1]->value->lineNumber);
+			if (semanticPrint) printf("Line %d: Semantic Error: Actual Parameter list size not equal to number of formal parameters\n", node->children[1]->value->lineNumber);
 	}
 	}
 
 	for (int i = 0; i < node->childCount; i++) {
 		if (node->children[i]) {
 			if (node->children[i]->nodeType != AST_Statements)
-				handleNodes(node->children[i], st, lineNumber);
+				handleNodes(node->children[i], st, lineNumber, fnEntry);
 			else
-				*lineNumber = insertStatements(node->children[i], st);
+				*lineNumber = insertStatements(node->children[i], st, fnEntry);
 		}
 	}
 
 	if (node->listNext)
-		handleNodes(node->listNext, st, lineNumber);
+		handleNodes(node->listNext, st, lineNumber, fnEntry);
 }
 
-int insertStatements(ASTNode* node, SymbolTable* parentST)
+int insertStatements(ASTNode* node, SymbolTable* parentST, FunctionTableEntry* fnEntry)
 {
 	SymbolTable* symbolTable = (SymbolTable*)malloc(sizeof(SymbolTable));
 	symbolTable->parentST = parentST;
-	symbolTable->nestingLevel = parentST->nestingLevel + 1;
+	symbolTable->nestingLevel = parentST ? parentST->nestingLevel + 1 : 0;
 	symbolTable->startLine = getLineNumber(node->children[0]);
 
 	for (int i = 0; i < SYMBOL_TABLE_SIZE; i++)
@@ -626,7 +625,7 @@ int insertStatements(ASTNode* node, SymbolTable* parentST)
 	node->st = symbolTable;
 
 	if (node->children[0])
-		handleNodes(node->children[0], symbolTable, &symbolTable->endLine);
+		handleNodes(node->children[0], symbolTable, &symbolTable->endLine, fnEntry);
 	else
 		symbolTable->endLine = symbolTable->startLine;
 	return symbolTable->endLine;
@@ -642,7 +641,7 @@ void insertDefinition(ASTNode* node)
 		fnEntry->isDeclared = 0;
 		fnEntry->isDefined = 0;
 		fnEntry->isUsed = 0;
-		fnEntry->width = 0;
+		fnEntry->size = 0;
 		fnEntry->name = node->children[0]->value->data.lexeme;
 		fnEntry->next = NULL;
 		fnEntry->paramCount = 0;
@@ -656,7 +655,6 @@ void insertDefinition(ASTNode* node)
 
 	fnEntry->defnFound = 1;
 	fnEntry->moduleNode = node;
-	fnEntry->offset = fnTableOffset;
 
 	ASTNode* iPList = node->children[1];
 	ASTNode* oPList = node->children[2];
@@ -712,8 +710,7 @@ void insertDriver(ASTNode* node)
 	fnEntry->isCalled = 0;
 	fnEntry->isDeclared = 0;
 	fnEntry->isUsed = 0;
-	fnEntry->width = 0;
-	fnEntry->offset = fnTableOffset;
+	fnEntry->size = 0;
 	fnEntry->isDefined = 0;
 	fnEntry->name = "driver";
 	fnEntry->next = NULL;
@@ -752,7 +749,7 @@ void createSymbolTables()
 			fnEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
 			if (!fnEntry || !fnEntry->defnFound)
 				insertDefinition(node);
-			else
+			else if (semanticPrint)
 				printf("Line %d: Semantic Error: Redefined module %s\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
 			node = node->listNext;
 		}
@@ -770,7 +767,7 @@ void createSymbolTables()
 			fnEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
 			if (!fnEntry || !fnEntry->defnFound)
 				insertDefinition(node);
-			else
+			else if (semanticPrint)
 				printf("Line %d: Semantic Error: Redefined module %s\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
 			node = node->listNext;
 		}
@@ -791,14 +788,15 @@ void createSymbolTables()
 				for (int i = 0; i < SYMBOL_TABLE_SIZE; i++)
 					symbolTable->stArray[i] = NULL;
 
-				insertParams(node, symbolTable);
+				fnEntry->st = symbolTable;
+				insertParams(node, fnEntry);
 
 				node->st = symbolTable;
 
 				if (fnEntry->isDeclared && !fnEntry->isUsed)
-					printf("Line %d: Semantic Error: Module %s definition and its declaration both appear before its call\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
+					if (semanticPrint) printf("Line %d: Semantic Error: Module %s definition and its declaration both appear before its call\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
 
-				symbolTable->endLine = insertStatements(node->children[3], symbolTable);
+				symbolTable->endLine = insertStatements(node->children[3], symbolTable, fnEntry);
 				fnEntry->isDefined = 1;
 			}
 
@@ -818,11 +816,12 @@ void createSymbolTables()
 		for (int i = 0; i < SYMBOL_TABLE_SIZE; i++)
 			symbolTable->stArray[i] = NULL;
 
+		fnEntry->st = symbolTable;
 		node->st = symbolTable;
 
-		symbolTable->endLine = insertStatements(node->children[0], symbolTable);
+		symbolTable->endLine = insertStatements(node->children[0], symbolTable, fnEntry);
 		fnEntry->isDefined = 1;
-	} else
+	} else if (semanticPrint)
 		printf("Line %d: Semantic Error: Driver module redefined\n", node->value->lineNumber);
 
 	node = astRoot->children[3];
@@ -840,14 +839,15 @@ void createSymbolTables()
 				for (int i = 0; i < SYMBOL_TABLE_SIZE; i++)
 					symbolTable->stArray[i] = NULL;
 
-				insertParams(node, symbolTable);
+				fnEntry->st = symbolTable;
+				insertParams(node, fnEntry);
 
 				node->st = symbolTable;
 
 				if (fnEntry->isDeclared && !fnEntry->isUsed)
-					printf("Line %d: Semantic Error: Module %s definition and its declaration both appear before its call\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
+					if (semanticPrint) printf("Line %d: Semantic Error: Module %s definition and its declaration both appear before its call\n", node->children[0]->value->lineNumber, node->children[0]->value->data.lexeme);
 
-				symbolTable->endLine = insertStatements(node->children[3], symbolTable);
+				symbolTable->endLine = insertStatements(node->children[3], symbolTable, fnEntry);
 				fnEntry->isDefined = 1;
 			}
 
@@ -862,12 +862,180 @@ void createSymbolTables()
 		while (node) {
 			fnEntry = findFunctionEntry(node->value->data.lexeme);
 			if (fnEntry->isDeclared && !fnEntry->isDefined)
-				printf("Semantic Error: Module %s declared but never defined\n", node->value->data.lexeme);
+				if (semanticPrint) printf("Semantic Error: Module %s declared but never defined\n", node->value->data.lexeme);
 			node = node->listNext;
 		}
 	}
 }
 
+void printFunctionEntries(FunctionTableEntry* fnEntry)
+{
+	SymbolTableEntry* stEntry;
+	TypeInfo* typeInfo;
+
+	for (IDInfo* idInfo = fnEntry->paramList; idInfo; idInfo = idInfo->next) {
+		stEntry = findSymbolEntry(idInfo->name, fnEntry->st);
+		typeInfo = stEntry->idInfo->typeInfo;
+
+		printf("%-22s", stEntry->idInfo->name);
+		printf("%-22s", fnEntry->name);
+		printf("%6d-%-6d ", fnEntry->st->startLine, fnEntry->st->endLine);
+		if (typeInfo->type == DT_Array) {
+			printf("%-10s", typeArray[typeInfo->arrInfo->arrayType]);
+			printf("%-10s", "yes");
+			if (typeInfo->arrInfo->isStatic) {
+				printf("%-15s", "static");
+				printf("%10d-%-10d", typeInfo->arrInfo->lBoundSign * typeInfo->arrInfo->lowerBound.numBound, typeInfo->arrInfo->uBoundSign * typeInfo->arrInfo->upperBound.numBound);
+			} else {
+				printf("%-15s", "dynamic");
+				printf("%10s-%-10s", typeInfo->arrInfo->lowerBound.idBound, typeInfo->arrInfo->upperBound.idBound);
+			}
+		} else {
+			printf("%-10s", typeArray[typeInfo->type]);
+			printf("%-10s", "no");
+			printf("%-15s", "---");
+			printf("%-21s", "---");
+		}
+		// TODO Calculate these
+		printf("%-8d", stEntry->width);
+		printf("%-8d", stEntry->offset);
+		printf("%-14d\n", fnEntry->st->nestingLevel);
+	}
+	for (IDInfo* idInfo = fnEntry->retList; idInfo; idInfo = idInfo->next) {
+		stEntry = findSymbolEntry(idInfo->name, fnEntry->st);
+		typeInfo = stEntry->idInfo->typeInfo;
+
+		printf("%-22s", stEntry->idInfo->name);
+		printf("%-22s", fnEntry->name);
+		printf("%6d-%-6d ", fnEntry->st->startLine, fnEntry->st->endLine);
+		if (typeInfo->type == DT_Array) {
+			printf("%-10s", typeArray[typeInfo->arrInfo->arrayType]);
+			printf("%-10s", "yes");
+			if (typeInfo->arrInfo->isStatic) {
+				printf("%-15s", "static");
+				printf("%10d-%-10d", typeInfo->arrInfo->lBoundSign * typeInfo->arrInfo->lowerBound.numBound, typeInfo->arrInfo->uBoundSign * typeInfo->arrInfo->upperBound.numBound);
+			} else {
+				printf("%-15s", "dynamic");
+				printf("%10s-%-10s", typeInfo->arrInfo->lowerBound.idBound, typeInfo->arrInfo->upperBound.idBound);
+			}
+		} else {
+			printf("%-10s", typeArray[typeInfo->type]);
+			printf("%-10s", "no");
+			printf("%-15s", "---");
+			printf("%-21s", "---");
+		}
+		// TODO Calculate these
+		printf("%-8d", stEntry->width);
+		printf("%-8d", stEntry->offset);
+		printf("%-14d\n", fnEntry->st->nestingLevel);
+	}
+}
+
+void printTableEntries(ASTNode* node, char* fnName)
+{
+	while (node) {
+		switch (node->nodeType) {
+		case AST_Declare: {
+			SymbolTableEntry* stEntry;
+			TypeInfo* typeInfo;
+			for (ASTNode* idNode = node->children[0]; idNode; idNode = idNode->listNext) {
+				stEntry = findSymbolEntry(idNode->value->data.lexeme, node->st);
+				typeInfo = stEntry->idInfo->typeInfo;
+				if (!areTypesEqual(typeInfo, createTypeInfo(node->children[1])))
+					continue;
+
+				printf("%-22s", idNode->value->data.lexeme);
+				printf("%-22s", fnName);
+				printf("%6d-%-6d ", node->st->startLine, node->st->endLine);
+				if (typeInfo->type == DT_Array) {
+					printf("%-10s", typeArray[typeInfo->arrInfo->arrayType]);
+					printf("%-10s", "yes");
+					if (typeInfo->arrInfo->isStatic) {
+						printf("%-15s", "static");
+						printf("%10d-%-10d", typeInfo->arrInfo->lBoundSign * typeInfo->arrInfo->lowerBound.numBound, typeInfo->arrInfo->uBoundSign * typeInfo->arrInfo->upperBound.numBound);
+					} else {
+						printf("%-15s", "dynamic");
+						printf("%10s-%-10s", typeInfo->arrInfo->lowerBound.idBound, typeInfo->arrInfo->upperBound.idBound);
+					}
+				} else {
+					printf("%-10s", typeArray[typeInfo->type]);
+					printf("%-10s", "no");
+					printf("%-15s", "---");
+					printf("%-21s", "---");
+				}
+				// TODO Calculate these
+				printf("%-8d", stEntry->width);
+				printf("%-8d", stEntry->offset);
+				printf("%-14d\n", node->st->nestingLevel);
+			}
+			break;
+		}
+		case AST_For: {
+			printTableEntries(node->children[2]->children[0], fnName);
+			break;
+		}
+
+		case AST_Switch: {
+			for (ASTNode* tmp = node->children[1]; tmp; tmp = tmp->listNext)
+				printTableEntries(tmp->children[1]->children[0], fnName);
+			if (node->children[2])
+				printTableEntries(node->children[2]->children[0]->children[0], fnName);
+			break;
+		}
+
+		case AST_While: {
+			printTableEntries(node->children[1]->children[0], fnName);
+		}
+		}
+		node = node->listNext;
+	}
+}
+
 void printSymbolTable()
 {
+	printf("%-22s", "Variable Name");
+	printf("%-22s", "Module Name");
+	printf("%-14s", "Scope Lines");
+	printf("%-10s", "Type");
+	printf("%-10s", "Is Array");
+	printf("%-15s", "Static/Dynamic");
+	printf("%-21s", "Array Range");
+	printf("%-8s", "Width");
+	printf("%-8s", "Offset");
+	printf("%-14s\n", "Nesting Level");
+	printf("-----------------------------------------------------");
+	printf("-----------------------------------------------------");
+	printf("------------------------------\n");
+
+	FunctionTableEntry* fnEntry;
+	ASTNode* node = astRoot->children[1];
+
+	if (node->childCount) {
+		node = node->children[0];
+		while (node) {
+			fnEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
+
+			printFunctionEntries(fnEntry);
+			printTableEntries(node->children[3]->children[0], fnEntry->name);
+
+			node = node->listNext;
+		}
+	}
+
+	node = astRoot->children[2];
+	printTableEntries(node->children[0]->children[0], "driver");
+
+	node = astRoot->children[3];
+
+	if (node->childCount) {
+		node = node->children[0];
+		while (node) {
+			fnEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
+
+			printFunctionEntries(fnEntry);
+			printTableEntries(node->children[3]->children[0], fnEntry->name);
+
+			node = node->listNext;
+		}
+	}
 }

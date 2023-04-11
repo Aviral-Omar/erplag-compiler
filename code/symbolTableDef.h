@@ -60,8 +60,7 @@ struct FTEntryStruct {
 	int isDefined;
 	int isCalled;
 	int isUsed;
-	int offset;
-	int width;
+	int size;
 	int paramCount;
 	IDInfo* paramList;
 	int returnCount;
@@ -77,6 +76,7 @@ struct STEntryStruct {
 	IDInfo* idInfo;
 	int offset;
 	int width;
+	// TODO remove these 2
 	int isParam;
 	int isReturnVar;
 	int valueAssigned;
@@ -90,9 +90,8 @@ struct SymbolTableStruct {
 	int startLine;
 	int endLine;
 	int nestingLevel;
-	int size;
 };
 
 extern FunctionTableEntry* functionTable[SYMBOL_TABLE_SIZE];
-;
+extern int semanticPrint;
 #endif

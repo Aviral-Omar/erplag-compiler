@@ -114,6 +114,14 @@ int main(int argc, char *argv[])
 			break;
 
 		case 5:
+			runParser(argv[1], argv[2]);
+			if (lexerCorrect && parserCorrect) {
+				createAST();
+				semanticPrint = 0;
+				createSymbolTables();
+				printSymbolTable();
+			}
+			deleteParseTree(parseTreeRoot);
 			break;
 		case 6:
 			break;
@@ -129,6 +137,7 @@ int main(int argc, char *argv[])
 			runParser(argv[1], argv[2]);
 			if (lexerCorrect && parserCorrect) {
 				createAST();
+				semanticPrint = 1;
 				createSymbolTables();
 				runSemanticAnalyser();
 			}
