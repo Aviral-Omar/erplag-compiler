@@ -503,7 +503,7 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber, FunctionTableE
 
 		t1 = findExpressionType(node->children[0], st);
 		t2 = findExpressionType(node->children[1], st);
-		if (!t1 || !t2 || !areTypesEqual(t1, t2))
+		if (t1 && t2 && !areTypesEqual(t1, t2))
 			if (semanticPrint) printf("Line %d: Semantic Error: Mismatch between type of LHS and RHS of assignment\n", node->children[0]->value->lineNumber);
 		if (t1) free(t1);
 		if (t2) free(t2);
@@ -542,7 +542,9 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber, FunctionTableE
 		if (!t1 || (t1->type != DT_Boolean && t1->type != DT_Integer)) {
 			if (semanticPrint) printf("Line %d: Semantic Error: Invalid type of switch variable\n", node->children[0]->value->lineNumber);
 			free(t1);
-			break;
+			if (node->listNext)
+				handleNodes(node->listNext, st, lineNumber, fnEntry);
+			return;
 		}
 
 		if (t1 && t1->type == DT_Boolean && node->children[2])

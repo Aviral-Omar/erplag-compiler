@@ -48,10 +48,10 @@ int main(int argc, char *argv[])
 	// 	printf("Invalid buffer size.\n");
 	// 	exit(EXIT_FAILURE);
 	// }
-	// if (bufferSize > MAX_BUFFER_SIZE) {
-	// 	printf("Buffer size too large.\n");
-	// 	exit(EXIT_FAILURE);
-	// }
+	if (bufferSize > MAX_BUFFER_SIZE) {
+		printf("Buffer size too large.\n");
+		exit(EXIT_FAILURE);
+	}
 	bufferSize = BUFFER_SIZE;
 
 	int option;

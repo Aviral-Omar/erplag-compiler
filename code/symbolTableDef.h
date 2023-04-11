@@ -77,7 +77,6 @@ struct STEntryStruct {
 	IDInfo* idInfo;
 	int offset;
 	int width;
-	// TODO remove these 2
 	int isParam;
 	int isReturnVar;
 	int valueAssigned;

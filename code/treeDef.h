@@ -22,7 +22,6 @@ struct ParseTNodeType {
 	ParseTNode* parent;
 	ParseTNode* prevSibling;
 	ParseTNode* nextSibling;
-	// TODO added field for inherited attribute and type
 	ParseTNode* inh;
 };
 
