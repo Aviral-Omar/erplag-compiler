@@ -21,7 +21,7 @@ FunctionTableEntry* findFunctionEntry(char* name);
 SymbolTableEntry* findSymbolEntry(char* name, SymbolTable* st);
 void insertIntoFunctionTable(FunctionTableEntry* fnEntry);
 int insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st);
-int calcSize(TypeInfo* info);
+int calcSize(TypeInfo* info, int isParam);
 void checkBounds(ArrayInfo* arrInfo, ASTNode* indexNode);
 int areTypesEqual(TypeInfo* t1, TypeInfo* t2);
 TypeInfo* findExpressionType(ASTNode* node, SymbolTable* st);
@@ -37,6 +37,7 @@ void createSymbolTables();
 void printFunctionEntries(FunctionTableEntry* fnEntry);
 void printTableEntries(ASTNode* node, char* fnName);
 void printSymbolTable();
+void printActivationRecords();
 
 
 int stHash(char* key)
@@ -110,7 +111,7 @@ int insertIntoSymbolTable(SymbolTableEntry* stEntry, SymbolTable* st)
 	return 0;
 }
 
-int calcSize(TypeInfo* info)
+int calcSize(TypeInfo* info, int isParam)
 {
 	// printf("Type = %d\n", info->type);
 	// fflush(stdout);
@@ -123,7 +124,9 @@ int calcSize(TypeInfo* info)
 		return BOOL_SIZE;
 	// Else it is array
 	ArrayInfo* arrInfo = info->arrInfo;
-	// TODO confirm this
+	if (isParam)
+		return POINTER_SIZE + 2 * INT_SIZE;
+	// else not a parameter
 	if (!arrInfo->isStatic)
 		return POINTER_SIZE;
 	int arrayTypeSize, arrayLen;
@@ -364,6 +367,7 @@ void insertDeclaration(ASTNode* node)
 	fnEntry->size = 0;
 	fnEntry->isDeclared = 1;
 	fnEntry->isDefined = 0;
+	fnEntry->isDriver = 0;
 	fnEntry->name = node->value->data.lexeme;
 	fnEntry->next = NULL;
 	fnEntry->paramCount = 0;
@@ -382,8 +386,8 @@ void insertParams(ASTNode* node, FunctionTableEntry* fnEntry)
 		SymbolTableEntry* stEntry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
 		stEntry->idInfo = inputParam;
 		stEntry->offset = fnEntry->size;
-		stEntry->width = calcSize(inputParam->typeInfo);
 		stEntry->isParam = 1;
+		stEntry->width = calcSize(inputParam->typeInfo, stEntry->isParam);
 		stEntry->isReturnVar = 0;
 		stEntry->valueAssigned = 0;
 		stEntry->next = NULL;
@@ -402,8 +406,8 @@ void insertParams(ASTNode* node, FunctionTableEntry* fnEntry)
 		SymbolTableEntry* stEntry = (SymbolTableEntry*)malloc(sizeof(SymbolTableEntry));
 		stEntry->idInfo = retVar;
 		stEntry->offset = fnEntry->size;
-		stEntry->width = calcSize(retVar->typeInfo);
 		stEntry->isParam = 0;
+		stEntry->width = calcSize(retVar->typeInfo, stEntry->isParam);
 		stEntry->isReturnVar = 1;
 		stEntry->valueAssigned = 0;
 		stEntry->next = NULL;
@@ -474,15 +478,16 @@ void handleNodes(ASTNode* node, SymbolTable* st, int* lineNumber, FunctionTableE
 			stEntry->idInfo->typeInfo = t2;
 			stEntry->idInfo->next = NULL;
 			stEntry->offset = fnEntry->size;
-			stEntry->width = calcSize(t2);
 			stEntry->isParam = 0;
+			stEntry->width = calcSize(t2, stEntry->isParam);
 			stEntry->isReturnVar = 0;
 			stEntry->valueAssigned = 0;
 			stEntry->next = NULL;
-			fnEntry->size += stEntry->width;
 
-			if (insertIntoSymbolTable(stEntry, st))
+			if (insertIntoSymbolTable(stEntry, st)) {
 				if (semanticPrint) printf("Line %d: Semantic Error: Redeclared variable %s\n", node->children[0]->value->lineNumber, stEntry->idInfo->name);
+			} else
+				fnEntry->size += stEntry->width;
 		}
 		free(t1);
 		break;
@@ -641,6 +646,7 @@ void insertDefinition(ASTNode* node)
 		fnEntry->isDeclared = 0;
 		fnEntry->isDefined = 0;
 		fnEntry->isUsed = 0;
+		fnEntry->isDriver = 0;
 		fnEntry->size = 0;
 		fnEntry->name = node->children[0]->value->data.lexeme;
 		fnEntry->next = NULL;
@@ -713,12 +719,14 @@ void insertDriver(ASTNode* node)
 	fnEntry->size = 0;
 	fnEntry->isDefined = 0;
 	fnEntry->name = "driver";
+	fnEntry->isDriver = 1;
 	fnEntry->next = NULL;
 	fnEntry->paramCount = 0;
 	fnEntry->paramList = NULL;
 	fnEntry->returnCount = 0;
 	fnEntry->retList = NULL;
 	fnEntry->st = NULL;
+	fnEntry->moduleNode = node;
 
 	insertIntoFunctionTable(fnEntry);
 }
@@ -941,6 +949,7 @@ void printTableEntries(ASTNode* node, char* fnName)
 			for (ASTNode* idNode = node->children[0]; idNode; idNode = idNode->listNext) {
 				stEntry = findSymbolEntry(idNode->value->data.lexeme, node->st);
 				typeInfo = stEntry->idInfo->typeInfo;
+				// To prevent overriding variables
 				if (!areTypesEqual(typeInfo, createTypeInfo(node->children[1])))
 					continue;
 
@@ -1007,35 +1016,26 @@ void printSymbolTable()
 	printf("-----------------------------------------------------");
 	printf("------------------------------\n");
 
-	FunctionTableEntry* fnEntry;
-	ASTNode* node = astRoot->children[1];
-
-	if (node->childCount) {
-		node = node->children[0];
-		while (node) {
-			fnEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
-
+	for (int i = 0; i < SYMBOL_TABLE_SIZE; i++) {
+		FunctionTableEntry* fnEntry = functionTable[i];
+		while (fnEntry) {
 			printFunctionEntries(fnEntry);
-			printTableEntries(node->children[3]->children[0], fnEntry->name);
-
-			node = node->listNext;
+			if (fnEntry->isDriver)
+				printTableEntries(fnEntry->moduleNode->children[0]->children[0], fnEntry->name);
+			else
+				printTableEntries(fnEntry->moduleNode->children[3]->children[0], fnEntry->name);
+			fnEntry = fnEntry->next;
 		}
 	}
+}
 
-	node = astRoot->children[2];
-	printTableEntries(node->children[0]->children[0], "driver");
-
-	node = astRoot->children[3];
-
-	if (node->childCount) {
-		node = node->children[0];
-		while (node) {
-			fnEntry = findFunctionEntry(node->children[0]->value->data.lexeme);
-
-			printFunctionEntries(fnEntry);
-			printTableEntries(node->children[3]->children[0], fnEntry->name);
-
-			node = node->listNext;
+void printActivationRecords()
+{
+	for (int i = 0; i < SYMBOL_TABLE_SIZE; i++) {
+		FunctionTableEntry* fnEntry = functionTable[i];
+		while (fnEntry) {
+			printf("%-22s%-10d\n", fnEntry->name, fnEntry->size);
+			fnEntry = fnEntry->next;
 		}
 	}
 }

@@ -8,9 +8,12 @@ Vatsal Pattani:			2019B5A70697P
 
 TypeInfo* createTypeInfo(ASTNode* node);
 
-void createSymbolTables();
-void printSymbolTable();
-
 FunctionTableEntry* findFunctionEntry(char* name);
 
 SymbolTableEntry* findSymbolEntry(char* name, SymbolTable* st);
+
+void createSymbolTables();
+
+void printSymbolTable();
+
+void printActivationRecords();

@@ -12,7 +12,7 @@ Vatsal Pattani:			2019B5A70697P
 #define INT_SIZE 2
 #define REAL_SIZE 4
 #define BOOL_SIZE 1
-#define POINTER_SIZE 8
+#define POINTER_SIZE 1
 
 typedef struct ASTNodeStruct ASTNode;
 
@@ -60,6 +60,7 @@ struct FTEntryStruct {
 	int isDefined;
 	int isCalled;
 	int isUsed;
+	int isDriver;
 	int size;
 	int paramCount;
 	IDInfo* paramList;

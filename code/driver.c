@@ -123,10 +123,21 @@ int main(int argc, char *argv[])
 			}
 			deleteParseTree(parseTreeRoot);
 			break;
+
 		case 6:
+			runParser(argv[1], argv[2]);
+			if (lexerCorrect && parserCorrect) {
+				createAST();
+				semanticPrint = 0;
+				createSymbolTables();
+				printActivationRecords();
+			}
+			deleteParseTree(parseTreeRoot);
 			break;
+
 		case 7:
 			break;
+
 		case 8:
 			clock_t start_time, end_time;
 
