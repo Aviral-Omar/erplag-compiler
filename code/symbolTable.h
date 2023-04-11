@@ -17,3 +17,5 @@ void createSymbolTables();
 void printSymbolTable();
 
 void printActivationRecords();
+
+void printArrays();

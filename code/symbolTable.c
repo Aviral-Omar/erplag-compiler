@@ -38,6 +38,9 @@ void printFunctionEntries(FunctionTableEntry* fnEntry);
 void printTableEntries(ASTNode* node, char* fnName);
 void printSymbolTable();
 void printActivationRecords();
+void printArraysParams(FunctionTableEntry* fnEntry);
+void printArraysStmts(ASTNode* node, char* fnName);
+void printArrays();
 
 
 int stHash(char* key)
@@ -904,7 +907,6 @@ void printFunctionEntries(FunctionTableEntry* fnEntry)
 			printf("%-15s", "---");
 			printf("%-21s", "---");
 		}
-		// TODO Calculate these
 		printf("%-8d", stEntry->width);
 		printf("%-8d", stEntry->offset);
 		printf("%-14d\n", fnEntry->st->nestingLevel);
@@ -932,7 +934,6 @@ void printFunctionEntries(FunctionTableEntry* fnEntry)
 			printf("%-15s", "---");
 			printf("%-21s", "---");
 		}
-		// TODO Calculate these
 		printf("%-8d", stEntry->width);
 		printf("%-8d", stEntry->offset);
 		printf("%-14d\n", fnEntry->st->nestingLevel);
@@ -972,7 +973,6 @@ void printTableEntries(ASTNode* node, char* fnName)
 					printf("%-15s", "---");
 					printf("%-21s", "---");
 				}
-				// TODO Calculate these
 				printf("%-8d", stEntry->width);
 				printf("%-8d", stEntry->offset);
 				printf("%-14d\n", node->st->nestingLevel);
@@ -1014,7 +1014,7 @@ void printSymbolTable()
 	printf("%-14s\n", "Nesting Level");
 	printf("-----------------------------------------------------");
 	printf("-----------------------------------------------------");
-	printf("------------------------------\n");
+	printf("--------------------------------------\n");
 
 	for (int i = 0; i < SYMBOL_TABLE_SIZE; i++) {
 		FunctionTableEntry* fnEntry = functionTable[i];
@@ -1035,6 +1035,129 @@ void printActivationRecords()
 		FunctionTableEntry* fnEntry = functionTable[i];
 		while (fnEntry) {
 			printf("%-22s%-10d\n", fnEntry->name, fnEntry->size);
+			fnEntry = fnEntry->next;
+		}
+	}
+}
+
+void printArraysParams(FunctionTableEntry* fnEntry)
+{
+	SymbolTableEntry* stEntry;
+	TypeInfo* typeInfo;
+
+	for (IDInfo* idInfo = fnEntry->paramList; idInfo; idInfo = idInfo->next) {
+		stEntry = findSymbolEntry(idInfo->name, fnEntry->st);
+		typeInfo = stEntry->idInfo->typeInfo;
+
+		if (typeInfo->type != DT_Array)
+			continue;
+
+		printf("%-22s", fnEntry->name);
+		printf("%6d-%-6d ", fnEntry->st->startLine, fnEntry->st->endLine);
+		printf("%-22s", stEntry->idInfo->name);
+		if (typeInfo->arrInfo->isStatic) {
+			printf("%-15s", "static");
+			printf("%10d-%-10d", typeInfo->arrInfo->lBoundSign * typeInfo->arrInfo->lowerBound.numBound, typeInfo->arrInfo->uBoundSign * typeInfo->arrInfo->upperBound.numBound);
+		} else {
+			printf("%-15s", "dynamic");
+			printf("%10s-%-10s", typeInfo->arrInfo->lowerBound.idBound, typeInfo->arrInfo->upperBound.idBound);
+		}
+		printf("%-10s\n", typeArray[typeInfo->arrInfo->arrayType]);
+	}
+
+	for (IDInfo* idInfo = fnEntry->retList; idInfo; idInfo = idInfo->next) {
+		stEntry = findSymbolEntry(idInfo->name, fnEntry->st);
+		typeInfo = stEntry->idInfo->typeInfo;
+
+		if (typeInfo->type != DT_Array)
+			continue;
+
+		printf("%-22s", fnEntry->name);
+		printf("%6d-%-6d ", fnEntry->st->startLine, fnEntry->st->endLine);
+		printf("%-22s", stEntry->idInfo->name);
+		if (typeInfo->arrInfo->isStatic) {
+			printf("%-15s", "static");
+			printf("%10d-%-10d", typeInfo->arrInfo->lBoundSign * typeInfo->arrInfo->lowerBound.numBound, typeInfo->arrInfo->uBoundSign * typeInfo->arrInfo->upperBound.numBound);
+		} else {
+			printf("%-15s", "dynamic");
+			printf("%10s-%-10s", typeInfo->arrInfo->lowerBound.idBound, typeInfo->arrInfo->upperBound.idBound);
+		}
+		printf("%-10s\n", typeArray[typeInfo->arrInfo->arrayType]);
+	}
+}
+
+void printArraysStmts(ASTNode* node, char* fnName)
+{
+	while (node) {
+		switch (node->nodeType) {
+		case AST_Declare: {
+			SymbolTableEntry* stEntry;
+			TypeInfo* typeInfo;
+			for (ASTNode* idNode = node->children[0]; idNode; idNode = idNode->listNext) {
+				stEntry = findSymbolEntry(idNode->value->data.lexeme, node->st);
+				typeInfo = stEntry->idInfo->typeInfo;
+
+				if (typeInfo->type != DT_Array)
+					continue;
+
+				// To prevent overriding variables
+				if (!areTypesEqual(typeInfo, createTypeInfo(node->children[1])))
+					continue;
+
+				printf("%-22s", fnName);
+				printf("%6d-%-6d ", node->st->startLine, node->st->endLine);
+				printf("%-22s", stEntry->idInfo->name);
+				if (typeInfo->arrInfo->isStatic) {
+					printf("%-15s", "static");
+					printf("%10d-%-10d", typeInfo->arrInfo->lBoundSign * typeInfo->arrInfo->lowerBound.numBound, typeInfo->arrInfo->uBoundSign * typeInfo->arrInfo->upperBound.numBound);
+				} else {
+					printf("%-15s", "dynamic");
+					printf("%10s-%-10s", typeInfo->arrInfo->lowerBound.idBound, typeInfo->arrInfo->upperBound.idBound);
+				}
+				printf("%-10s\n", typeArray[typeInfo->arrInfo->arrayType]);
+			}
+			break;
+		}
+		case AST_For: {
+			printArraysStmts(node->children[2]->children[0], fnName);
+			break;
+		}
+
+		case AST_Switch: {
+			for (ASTNode* tmp = node->children[1]; tmp; tmp = tmp->listNext)
+				printArraysStmts(tmp->children[1]->children[0], fnName);
+			if (node->children[2])
+				printArraysStmts(node->children[2]->children[0]->children[0], fnName);
+			break;
+		}
+
+		case AST_While: {
+			printArraysStmts(node->children[1]->children[0], fnName);
+		}
+		}
+		node = node->listNext;
+	}
+}
+
+void printArrays()
+{
+	printf("%-22s", "Module Name");
+	printf("%-14s", "Scope Lines");
+	printf("%-22s", "Variable Name");
+	printf("%-15s", "Static/Dynamic");
+	printf("%-21s", "Array Range");
+	printf("%-10s\n", "Type");
+	printf("-----------------------------------------------------");
+	printf("-----------------------------------------------------\n");
+
+	for (int i = 0; i < SYMBOL_TABLE_SIZE; i++) {
+		FunctionTableEntry* fnEntry = functionTable[i];
+		while (fnEntry) {
+			printArraysParams(fnEntry);
+			if (fnEntry->isDriver)
+				printArraysStmts(fnEntry->moduleNode->children[0]->children[0], fnEntry->name);
+			else
+				printArraysStmts(fnEntry->moduleNode->children[3]->children[0], fnEntry->name);
 			fnEntry = fnEntry->next;
 		}
 	}

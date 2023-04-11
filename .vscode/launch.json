@@ -9,7 +9,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/code/stage1exe",
-			"args": ["testcase.txt", "parsetreeOutFile.txt", "4096"],
+			"args": ["testcase.txt", "code.asm"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}/code",
 			"environment": [],
