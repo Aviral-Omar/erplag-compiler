@@ -74,18 +74,20 @@ int main(int argc, char *argv[])
 		printf("\n");
 
 		switch (option) {
-		case 1:
+		case 1: {
 			runOnlyLexer(argv[1]);
 			break;
+		}
 
-		case 2:
+		case 2: {
 			runParser(argv[1], "parsetreeOutFile.txt");
 			if (parseTreeRoot)
 				deleteParseTree(parseTreeRoot);
 			parseTreeRoot = NULL;
 			break;
+		}
 
-		case 3:
+		case 3: {
 			runParser(argv[1], "parsetreeOutFile.txt");
 			if (lexerCorrect && parserCorrect) {
 				createAST();
@@ -103,8 +105,9 @@ int main(int argc, char *argv[])
 			}
 			deleteParseTree(parseTreeRoot);
 			break;
+		}
 
-		case 4:
+		case 4: {
 			runParser(argv[1], "parsetreeOutFile.txt");
 			if (lexerCorrect && parserCorrect) {
 				createAST();
@@ -119,8 +122,9 @@ int main(int argc, char *argv[])
 			printf("Compression Ratio = %lf\n", (double)(ptMem - astMem) * 100 / ptMem);
 			deleteParseTree(parseTreeRoot);
 			break;
+		}
 
-		case 5:
+		case 5: {
 			runParser(argv[1], "parsetreeOutFile.txt");
 			if (lexerCorrect && parserCorrect) {
 				createAST();
@@ -130,8 +134,9 @@ int main(int argc, char *argv[])
 			}
 			deleteParseTree(parseTreeRoot);
 			break;
+		}
 
-		case 6:
+		case 6: {
 			runParser(argv[1], "parsetreeOutFile.txt");
 			if (lexerCorrect && parserCorrect) {
 				createAST();
@@ -141,8 +146,9 @@ int main(int argc, char *argv[])
 			}
 			deleteParseTree(parseTreeRoot);
 			break;
+		}
 
-		case 7:
+		case 7: {
 			runParser(argv[1], "parsetreeOutFile.txt");
 			if (lexerCorrect && parserCorrect) {
 				createAST();
@@ -152,8 +158,9 @@ int main(int argc, char *argv[])
 			}
 			deleteParseTree(parseTreeRoot);
 			break;
+		}
 
-		case 8:
+		case 8: {
 			clock_t start_time, end_time;
 
 			double total_CPU_time, total_CPU_time_in_seconds;
@@ -179,20 +186,23 @@ int main(int argc, char *argv[])
 			printf("\nTotal CPU Time: %f\n", total_CPU_time);
 			printf("Total CPU Time in seconds: %f\n\n", total_CPU_time_in_seconds);
 			break;
+		}
 
 		case 9:
 			break;
 
-		case 10:
+		case 10: {
 			removeComments(argv[1], "cleaned");
 			break;
+		}
 
-		case 11:
+		case 11: {
 			initParser();
 			printFirstSets();
 			printFollowSets();
 			printParseTable();
 			clearParserData();
+		}
 		}
 	} while (option);
 
