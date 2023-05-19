@@ -1,6 +1,7 @@
 *.o
 *.out
 code/cleaned
+code/compiler
 code/parser_tester.c
 code/parseTable
 code/parsetreeOutFile.txt

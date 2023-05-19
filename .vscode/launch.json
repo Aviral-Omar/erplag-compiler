@@ -8,7 +8,7 @@
 			"name": "(gdb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/code/stage1exe",
+			"program": "${workspaceFolder}/code/compiler",
 			"args": ["testcase.txt", "code.asm"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}/code",
